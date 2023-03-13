@@ -19,7 +19,7 @@ const apiHost =
   window.location.href.includes("localhost") ||
   window.location.href.includes("127.0.0.1")
     ? "http://localhost:3000"
-    : "https://crypto-feed-trader.herokuapp.com";
+    : "https://icryptotrade.herokuapp.com";
 
 const getIdToken = async () => {
   return await auth.currentUser?.getIdToken();

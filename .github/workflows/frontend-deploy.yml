@@ -1,8 +1,8 @@
 name: Deploy to Firebase Hosting
 "on":
   push:
-    # paths:
-    #   - apps/frontend/**
+    paths:
+      - apps/frontend/**
     branches:
       - main
 jobs:

@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.7.9",
   "type": "module",
+  "author": "Davide Ghiotto",
   "scripts": {
     "dev": "vite --port 8080",
     "build": "vue-tsc && vite build",

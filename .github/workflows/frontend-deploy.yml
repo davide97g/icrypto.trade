@@ -21,7 +21,7 @@ jobs:
       - run: cd apps/frontend && pnpm i && pnpm build
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
-          entrypoint: apps/frontend/firebase.json
+          entrypoint: apps/frontend
           firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_CRYPTO_FEED_TRADER }}"
           channelId: live
           projectId: crypto-feed-trader

@@ -1,25 +1,27 @@
 import WebSocket from "ws";
-import { WsLikeMessage } from "../models/websocket";
+import { WsNTALikeMessage, WsNTANewsMessage } from "../models/websocket";
 
-export const openWS = (wsURL: string) => {
+export function wsConnect<T extends WsNTALikeMessage | WsNTANewsMessage>(
+  wsURL: string,
+  callback: (data: T) => void
+): WebSocket {
   const socket = new WebSocket(wsURL);
 
   socket.addEventListener("open", (event) => {
-    console.log("WebSocket connection established");
+    console.log(wsURL, "WebSocket connection established");
   });
 
-  socket.addEventListener("message", (event) => {
-    const data = JSON.parse(event.data.toString()) as WsLikeMessage;
-    console.log(`Received message: ${data}`);
-  });
+  socket.addEventListener("message", (event) =>
+    callback(JSON.parse(event.data.toString()) as T)
+  );
 
   socket.addEventListener("close", (event) => {
-    console.log("WebSocket connection closed");
+    console.log(wsURL, "WebSocket connection closed");
   });
 
   socket.addEventListener("error", (event) => {
-    console.error("WebSocket error", event);
+    console.error(wsURL, "WebSocket error", event);
   });
 
   return socket;
-};
+}

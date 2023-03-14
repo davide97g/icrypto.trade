@@ -31,7 +31,7 @@ importers:
       express: ^4.18.2
       firebase: ^9.17.1
       firebase-admin: ^11.5.0
-      icrypto-trade-models: '*'
+      icrypto-trade-models: ../../packages/models/
       node-schedule: ^2.1.1
       nodemailer: ^6.9.1
       nodemon: ^2.0.20

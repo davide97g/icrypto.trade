@@ -1,12 +1,9 @@
 import { BinanceClient } from "../config/binance";
 import { DataBaseClient } from "../connections/database";
-import { BinanceError, MyTrade } from "icrypto-trade-models/binance";
-import { FeedItem } from "icrypto-trade-models/feed";
-import { BinanceOrderDetails } from "icrypto-trade-models/orders";
-import {
-  BinanceOrder,
-  NewOrderRequest,
-} from "icrypto-trade-models/transactions";
+import { BinanceError, MyTrade } from "../models/binance";
+import { FeedItem } from "../models/feed";
+import { BinanceOrderDetails } from "../models/orders";
+import { BinanceOrder, NewOrderRequest } from "../models/transactions";
 import { analyzeGoodFeed } from "./scheduler";
 import { getAccount, getExchangeInfo, newTransaction } from "./transactions";
 

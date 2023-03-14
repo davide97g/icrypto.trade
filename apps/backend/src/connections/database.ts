@@ -10,8 +10,8 @@ import {
 } from "firebase/firestore";
 import { set, get, ref } from "firebase/database";
 import "firebase/auth";
-import { News } from "icrypto-trade-models/feed";
-import { TradeConfig, Transaction } from "icrypto-trade-models/transactions";
+import { News } from "../models/feed";
+import { TradeConfig, Transaction } from "../models/transactions";
 import { db, rtdb } from "../config/firebase";
 
 export const DataBaseClient = {

@@ -15,7 +15,6 @@
   "type": "commonjs",
   "dependencies": {
     "@binance/connector": "^2.0.1",
-    "icrypto-trade-models": "../../packages/models/",
     "axios": "^1.3.4",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",

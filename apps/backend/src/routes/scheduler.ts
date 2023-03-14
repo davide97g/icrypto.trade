@@ -4,7 +4,7 @@ import {
   checkIfAdmin,
   checkIfAuthenticated,
 } from "../middlewares/auth-middleware";
-import { TradeConfig } from "icrypto-trade-models/transactions";
+import { TradeConfig } from "../models/transactions";
 import {
   getSchedulerStatus,
   startScheduler,

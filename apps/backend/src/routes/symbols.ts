@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { DataBaseClient } from "../connections/database";
 import { checkIfAuthenticated } from "../middlewares/auth-middleware";
-import { KlineInterval } from "icrypto-trade-models/transactions";
+import { KlineInterval } from "../models/transactions";
 import {
   extractSymbolsFromTitle,
   getAverageMove24h,

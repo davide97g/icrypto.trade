@@ -14,6 +14,7 @@ const fixieAuth = fixieUrl.auth?.split(":");
 
 const options = {
   baseURL: env.baseUrl,
+  wsURL: env.wsUrl,
   timeout: 5000,
   proxy:
     FIXIE && !env.test

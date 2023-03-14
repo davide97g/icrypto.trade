@@ -12,7 +12,11 @@ import {
 
 import exchangeInfo from "../config/exchange-info/exchange-info-clean.json";
 import { env } from "../config/environment";
-import { BinanceAccount, BinanceError } from "../models/binance";
+import {
+  BinanceAccount,
+  BinanceError,
+  BinanceTradeStream,
+} from "../models/binance";
 import { BinanceOrderDetails } from "../models/orders";
 
 export const getAccount = async (): Promise<BinanceAccount> => {
@@ -52,44 +56,6 @@ export const newTransaction = async (
   return BinanceClient.newOrder(request.symbol, request.side, request.type, {
     quantity: request.quantity,
     newOrderRespType: "FULL",
-  })
-    .then(
-      (response: any) => ({ transaction: response.data } as BinanceTransaction)
-    )
-    .catch((error: BinanceError) => {
-      console.error(error.response.data);
-      return { error } as BinanceTransaction;
-    });
-};
-
-export const takeProfitOrder = async (
-  request: NewTakeProfitStopLossLimitRequest
-): Promise<BinanceTransaction> => {
-  return BinanceClient.newOrder(request.symbol, "SELL", "TAKE_PROFIT_LIMIT", {
-    stopPrice: request.stopPrice,
-    quantity: request.quantity,
-    price: request.price,
-    newOrderRespType: "FULL",
-    timeInForce: request.timeInForce,
-  })
-    .then(
-      (response: any) => ({ transaction: response.data } as BinanceTransaction)
-    )
-    .catch((error: BinanceError) => {
-      console.error(error.response.data);
-      return { error } as BinanceTransaction;
-    });
-};
-
-export const stopLossOrder = async (
-  request: NewTakeProfitStopLossLimitRequest
-): Promise<BinanceTransaction> => {
-  return BinanceClient.newOrder(request.symbol, "SELL", "STOP_LOSS_LIMIT", {
-    stopPrice: request.stopPrice,
-    quantity: request.quantity,
-    price: request.price,
-    newOrderRespType: "FULL",
-    timeInForce: request.timeInForce,
   })
     .then(
       (response: any) => ({ transaction: response.data } as BinanceTransaction)
@@ -146,4 +112,23 @@ export const getTransactionById = async (
       console.error(err.response.data);
       return err.response.data;
     });
+};
+
+// *** WEBSOCKET ON NEW TRANSACTION ***
+
+export const subscribeSymbolTrade = async (symbol: string) => {
+  const callbacks = {
+    open: () => console.info("opened"),
+    close: () => console.info("closed"),
+    message: (data: string) => {
+      const res: BinanceTradeStream = JSON.parse(data);
+      const orderId = res.b;
+      console.info("ws transaction with order id", orderId);
+    },
+  };
+  return BinanceClient.tradeWS(symbol, callbacks);
+};
+
+export const unsubscribeSymbolTrade = (wsRef: any, timeout?: number) => {
+  setTimeout(() => BinanceClient.unsubscribe(wsRef), timeout || 30000);
 };

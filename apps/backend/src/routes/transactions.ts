@@ -8,6 +8,8 @@ import {
   getTransactionById,
   getTransactions,
   newTransaction,
+  subscribeSymbolTrade,
+  unsubscribeSymbolTrade,
 } from "../services/transactions";
 import { getCircularReplacer } from "../utils/utils";
 
@@ -32,17 +34,22 @@ router.post("/new-order", checkIfAdmin, async (req, res) => {
   if (!orderRequest) return res.status(400).send("Empty order");
   if (!orderRequest.symbol) return res.status(400).send("symbol is required");
   if (!orderRequest.side) return res.status(400).send("side is required");
-  const order = await newTransaction(orderRequest).catch((error: any) => {
-    const status = (error.response as any).status;
-    const response = JSON.stringify(error.response, getCircularReplacer());
-    res.status(status).send(response);
-  });
-  if (order && order.transaction) {
-    const responseAddTransaction = await DataBaseClient.Transaction.add(
-      order.transaction
-    );
-    res.send({ order, savedDB: responseAddTransaction });
-  }
+  const wsRef = await subscribeSymbolTrade(orderRequest.symbol);
+  setTimeout(async () => {
+    const order = await newTransaction(orderRequest).catch((error: any) => {
+      const status = (error.response as any).status;
+      const response = JSON.stringify(error.response, getCircularReplacer());
+      res.status(status).send(response);
+    });
+    unsubscribeSymbolTrade(wsRef);
+    if (order && order.transaction) {
+      console.info(order.transaction);
+      const responseAddTransaction = await DataBaseClient.Transaction.add(
+        order.transaction
+      );
+      res.send({ order, savedDB: responseAddTransaction });
+    }
+  }, 1000);
 });
 
 router.get("/", checkIfAdmin, async (req, res) => {

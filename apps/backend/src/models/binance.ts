@@ -55,3 +55,16 @@ export interface MyTrade {
   isMaker: boolean;
   isBestMatch: boolean;
 }
+
+export interface BinanceTradeStream {
+  e: string; // event type
+  E: number; // event time
+  s: string; // Option trading symbol
+  t: number; // trade ID
+  p: string; // price
+  q: string; // quantity
+  b: string; // buy order ID
+  a: string; // sell order ID
+  T: number; // trade completed time
+  S: string; // direction
+}

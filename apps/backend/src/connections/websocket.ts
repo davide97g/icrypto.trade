@@ -1,5 +1,5 @@
 import WebSocket from "ws";
-import { WsLikeMessage } from "../models/websocket";
+import { WsLikeMessage } from "icrypto-trade-models/websocket";
 
 export const openWS = (wsURL: string) => {
   const socket = new WebSocket(wsURL);

@@ -1,24 +1,21 @@
 import schedule from "node-schedule";
-import { env } from "../config/environment";
 import { DataBaseClient } from "../connections/database";
-import { BinanceError } from "../models/binance";
-import { FeedItem, News } from "../models/feed";
-import { Scheduler } from "../models/scheduler";
+import { BinanceError } from "icrypto-trade-models/binance";
+import { FeedItem, News } from "icrypto-trade-models/feed";
+import { Scheduler } from "icrypto-trade-models/scheduler";
 import {
   ExchangeInfoSymbol,
   NewOrderRequest,
-  NewTakeProfitStopLossLimitRequest,
   StopLossTakeProfitRequest,
   TradeConfig,
   Transaction,
-} from "../models/transactions";
+} from "icrypto-trade-models/transactions";
 import { roundToNDigits } from "../utils/utils";
 import { addSymbolsGuessToFeed, filterGoodFeed, getFeed } from "./feed";
 import {
   sendErrorMail,
   sendNewOrderMail,
   sendNewPotentialOrderMail,
-  sendProspectOrderMail,
 } from "./mail";
 import { getTickerPrice } from "./symbols";
 import {

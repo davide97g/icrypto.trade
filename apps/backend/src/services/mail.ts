@@ -1,13 +1,12 @@
 import { defaultAddresses, MailClient } from "../config/email";
-import { BinanceErrorData } from "../models/binance";
-import { FeedItem, News } from "../models/feed";
+import { FeedItem, News } from "icrypto-trade-models/feed";
 import {
   BinanceOCOOrder,
   BinanceTransaction,
   NewOrderRequest,
   NewTakeProfitStopLossLimitRequest,
   Transaction,
-} from "../models/transactions";
+} from "icrypto-trade-models/transactions";
 
 export const sendMail = async (to: string, feedMatch: FeedItem[]) => {
   try {

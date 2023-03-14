@@ -1,6 +1,6 @@
 import { BinanceClient } from "../config/binance";
-import { BinanceError, BinanceTicker } from "../models/binance";
-import { Kline, KlineInterval } from "../models/transactions";
+import { BinanceError, BinanceTicker } from "icrypto-trade-models/binance";
+import { Kline, KlineInterval } from "icrypto-trade-models/transactions";
 import {
   stopWords,
   specialCharacters,

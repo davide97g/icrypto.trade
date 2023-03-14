@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { DataBaseClient } from "../connections/database";
 import { checkIfAuthenticated } from "../middlewares/auth-middleware";
-import { News } from "../models/feed";
+import { News } from "icrypto-trade-models/feed";
 import { updateById } from "../services/news";
 
 const router = Router();

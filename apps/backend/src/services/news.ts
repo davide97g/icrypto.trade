@@ -1,5 +1,5 @@
 import { DataBaseClient } from "../connections/database";
-import { News } from "../models/feed";
+import { News } from "icrypto-trade-models/feed";
 
 // TODO: move function here from router (decouple db instance from router)
 

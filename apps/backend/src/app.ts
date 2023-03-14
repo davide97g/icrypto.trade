@@ -18,13 +18,7 @@ dotenv.config();
 
 const app: Express = express();
 
-const whitelist = [
-  "http://localhost:8080",
-  "http://127.0.0.1:8080",
-  "https://crypto-feed-trader.netlify.app",
-  "https://crypto-feed-trader.web.app",
-  "https://icrypto.trade",
-];
+const whitelist = ["http://localhost:8080", "https://icrypto.trade"];
 
 const corsOptions: cors.CorsOptions = {
   origin: function (origin: any, callback: any) {
@@ -54,7 +48,7 @@ app.use(express.json()).use(cors(corsOptions));
 const port = process.env.PORT || 3000;
 
 app.get("/", (req: Request, res: Response, next: NextFunction) => {
-  res.send("Crypto Feed Trader Server ⚡️");
+  res.send("iCrypto Trade Server ⚡️");
 });
 
 app.get("/info", (req: Request, res: Response, next: NextFunction) => {

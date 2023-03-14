@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { checkIfAdmin } from "../middlewares/auth-middleware";
-import { BinanceErrorData } from "../models/binance";
+import { BinanceErrorData } from "icrypto-trade-models/binance";
 import {
   cancelAllOpenOrders,
   cancelOrder,

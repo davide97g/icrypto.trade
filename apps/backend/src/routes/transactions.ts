@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { DataBaseClient } from "../connections/database";
 import { checkIfAdmin } from "../middlewares/auth-middleware";
-import { NewOrderRequest } from "../models/transactions";
+import { NewOrderRequest } from "icrypto-trade-models/transactions";
 import {
   getAccount,
   getExchangeInfo,

@@ -8,12 +8,12 @@ import {
   NewOrderRequest,
   NewTakeProfitStopLossLimitRequest,
   StopLossTakeProfitRequest,
-} from "../models/transactions";
+} from "icrypto-trade-models/transactions";
 
 import exchangeInfo from "../config/exchange-info/exchange-info-clean.json";
 import { env } from "../config/environment";
-import { BinanceAccount, BinanceError } from "../models/binance";
-import { BinanceOrderDetails } from "../models/orders";
+import { BinanceAccount, BinanceError } from "icrypto-trade-models/binance";
+import { BinanceOrderDetails } from "icrypto-trade-models/orders";
 
 export const getAccount = async (): Promise<BinanceAccount> => {
   return BinanceClient.account()

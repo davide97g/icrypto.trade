@@ -8,6 +8,7 @@ import {
   BinanceTransaction,
   Transaction,
 } from "../models/transactions";
+import { getCircularReplacer } from "../utils/utils";
 
 // ? Generic template for sending an email
 const sendMail = async (subject: string, content: string) => {
@@ -170,7 +171,10 @@ export const sendErrorMail = async (
   message: string,
   err: any
 ) => {
-  const content = `🤯 Error: ${message}\n ${err}`;
+  const content = `🤯 Error: ${message}\n ${JSON.stringify(
+    err,
+    getCircularReplacer()
+  )}`;
   telegramApi.sendMessageToAdmins(subject + "\n" + content);
   await sendMail(subject, content);
 };

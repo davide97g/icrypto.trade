@@ -3,6 +3,7 @@ import {
   checkIfAdmin,
   checkIfAuthenticated,
 } from "../middlewares/auth-middleware";
+import { trackTickerWS } from "../services/trade";
 import {
   getWS,
   getWsFeed,
@@ -34,8 +35,18 @@ router.post("/start", checkIfAdmin, async (req, res) => {
 
 router.post("/stop", checkIfAdmin, async (req, res) => {
   try {
-    const resStop = await stopWebSockets();
+    const resStop = stopWebSockets();
     res.status(200).send(resStop);
+  } catch (err) {
+    res.status(500).send(err);
+  }
+});
+
+router.post("/ticker", checkIfAdmin, async (req, res) => {
+  const symbol = (req.body.symbol as string) || "";
+  if (!symbol) return res.status(400).send("Symbol is required");
+  try {
+    res.status(200).send(await trackTickerWS(symbol));
   } catch (err) {
     res.status(500).send(err);
   }

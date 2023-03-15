@@ -476,5 +476,24 @@ export const Server = {
         .catch((err) => console.error(err))
         .finally(() => setIsLoading(false));
     },
+    track: async (symbol: string) => {
+      setIsLoading(true);
+      return await axios
+        .post(
+          `${apiHost}/websocket/ticker`,
+          { symbol },
+          {
+            headers: { authorization: `Bearer ${await getIdToken()}` },
+          }
+        )
+        .then(
+          (res) =>
+            res.data as {
+              message: string;
+            }
+        )
+        .catch((err) => console.log(err))
+        .finally(() => setIsLoading(false));
+    },
   },
 };

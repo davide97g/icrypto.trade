@@ -10,6 +10,9 @@
     <a-button type="primary" @click="getKlines" :disabled="!selectedSymbol"
       >Get Klines</a-button
     >
+    <a-button type="primary" @click="trackTicker" :disabled="!selectedSymbol"
+      >Track Ticker</a-button
+    >
   </a-row>
   <br />
   <a-row v-if="selectedSymbol">
@@ -139,6 +142,15 @@ const klines = ref<Kline[]>([]);
 const getKlines = async () => {
   await Server.Symbols.getKlines(selectedSymbol.value)
     .then((res) => (klines.value = res))
+    .catch((err) => {
+      console.log(err);
+      message.error(err.message);
+    });
+};
+
+const trackTicker = async () => {
+  await Server.WebSocket.track(selectedSymbol.value)
+    .then((res) => console.info(res))
     .catch((err) => {
       console.log(err);
       message.error(err.message);

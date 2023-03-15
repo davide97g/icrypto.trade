@@ -2,8 +2,18 @@ import { BinanceClient } from "../config/binance";
 import { DataBaseClient } from "../connections/database";
 import { BinanceError, MyTrade } from "../models/binance";
 import { FeedItem } from "../models/feed";
-import { BinanceOrderDetails } from "../models/orders";
-import { BinanceOrder, NewOrderRequest } from "../models/transactions";
+import {
+  BinanceOrderDetails,
+  BinanceOrderResult,
+  Order,
+} from "../models/orders";
+import {
+  BinanceOCOOrder,
+  BinanceOrder,
+  BinanceTransaction,
+  NewOCOOrderRequest,
+  NewOrderRequest,
+} from "../models/transactions";
 import { analyzeGoodFeed } from "./scheduler";
 import { getAccount, getExchangeInfo, newTransaction } from "./transactions";
 
@@ -87,4 +97,49 @@ export const sellAll = async (symbol: string) => {
     if (res.error) throw res.error;
     return res.transaction;
   });
+};
+
+export const newOrder = async ({
+  symbol,
+  side,
+  type,
+  quantity,
+}: NewOrderRequest): Promise<Order> => {
+  return BinanceClient.newOrder(symbol, side, type, {
+    quantity,
+    newOrderRespType: "FULL",
+  })
+    .then((response: any) => ({ order: response.data }))
+    .catch((error: BinanceError) => {
+      console.error(error.response.data);
+      throw { error };
+    });
+};
+
+export const newOCOOrder = async ({
+  symbol,
+  quantity,
+  takeProfitPrice,
+  stopLossPrice: stopLimitPrice,
+  timeInForce: stopLimitTimeInForce,
+  marketBuyOrderId: listClientOrderId,
+}: NewOCOOrderRequest): Promise<BinanceOCOOrder> => {
+  return BinanceClient.newOCOOrder(
+    symbol,
+    "SELL",
+    quantity,
+    takeProfitPrice,
+    stopLimitPrice,
+    {
+      stopLimitPrice,
+      stopLimitTimeInForce,
+      listClientOrderId,
+      newOrderRespType: "FULL",
+    }
+  )
+    .then((response: any) => ({ order: response.data }))
+    .catch((error: BinanceError) => {
+      console.error(error.response.data);
+      throw { error };
+    });
 };

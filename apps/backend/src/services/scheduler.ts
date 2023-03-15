@@ -6,7 +6,7 @@ import { Scheduler } from "../models/scheduler";
 import {
   ExchangeInfoSymbol,
   NewOrderRequest,
-  StopLossTakeProfitRequest,
+  NewOCOOrderRequest,
   TradeConfig,
   Transaction,
 } from "../models/transactions";
@@ -156,7 +156,7 @@ const newOrder = async (
 ): Promise<(News | null)[]> => {
   if (!item.symbolsGuess.length) {
     console.info("👎🏻 no symbols found for", item._id);
-    const news: News = { ...item, orderStatus: "prospect" };
+    const news: News = { ...item, status: "missing" };
     await sendNewPotentialOrderMail(news);
     return [news];
   }
@@ -183,7 +183,7 @@ const newOrder = async (
   );
   if (!requests.length) {
     console.info("👎🏻 no symbols available for", item._id);
-    const news: News = { ...item, orderStatus: "error" };
+    const news: News = { ...item, status: "unavailable" };
     return [news];
   }
 
@@ -206,7 +206,7 @@ const newOrder = async (
     .map((bT) => bT?.error) as BinanceError[];
 
   if (errors.length)
-    DataBaseClient.News.update([{ ...item, orderStatus: "error" }]);
+    DataBaseClient.News.update([{ ...item, status: "oco-error" }]);
 
   const updatedNews = await Promise.all(
     transactions.map((t) =>
@@ -286,7 +286,7 @@ const executeOrderRequest = async (
         request.precision
       );
 
-      const stopLossTakeProfitRequest: StopLossTakeProfitRequest = {
+      const stopLossTakeProfitRequest: NewOCOOrderRequest = {
         symbol: request.symbol,
         quantity,
         timeInForce: "GTC",

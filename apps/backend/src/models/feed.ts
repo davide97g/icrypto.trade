@@ -24,9 +24,16 @@ export interface FeedItem {
   percent1h: any;
 }
 
-export type ProspectOrderStatus = "prospect" | "error" | "linked" | "ignored";
+export type NewsStatus =
+  | "missing" // ? no symbols guess available
+  | "unavailable" // ? guess available but no match with the current tradable symbols on brokers (e.i. Binance)
+  | "pending" // ? still waiting for market order to be filled and oco order to be created (the news is already saved in DB)
+  | "ignore" // ? manually ignored by admin with FE interface
+  | "market-error" // ? error while creating market order
+  | "oco-error" // ? error while creating oco order (market order was created)
+  | "success"; // ? market order and oco order were created successfully
 
 export interface News extends FeedItem {
   orderId?: number;
-  orderStatus?: ProspectOrderStatus;
+  status?: NewsStatus;
 }

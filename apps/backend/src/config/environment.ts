@@ -11,4 +11,5 @@ export const env = {
   fixieUrl: process.env.FIXIE_URL,
   env: process.env.NODE_ENV,
   test: process.env.NODE_ENV !== "prod",
+  domain: process.env.DOMAIN,
 };

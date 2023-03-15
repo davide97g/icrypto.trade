@@ -6,8 +6,7 @@ import {
   ExchangeInfo,
   ExchangeInfoSymbol,
   NewOrderRequest,
-  NewTakeProfitStopLossLimitRequest,
-  StopLossTakeProfitRequest,
+  NewOCOOrderRequest,
 } from "../models/transactions";
 
 import exchangeInfo from "../config/exchange-info/exchange-info-clean.json";
@@ -16,6 +15,7 @@ import {
   BinanceAccount,
   BinanceError,
   BinanceTradeStream,
+  MyTrade,
 } from "../models/binance";
 import { BinanceOrderDetails } from "../models/orders";
 
@@ -67,7 +67,7 @@ export const newTransaction = async (
 };
 
 export const newStopLossTakeProfitOrder = async (
-  request: StopLossTakeProfitRequest
+  request: NewOCOOrderRequest
 ): Promise<BinanceTransaction<BinanceOCOOrder>> => {
   return BinanceClient.newOCOOrder(
     request.symbol,
@@ -94,8 +94,17 @@ export const newStopLossTakeProfitOrder = async (
 
 // ****
 
-export const getTrades = async (symbol: string) => {
+export const getTrades = async (symbol: string): Promise<MyTrade[]> => {
   return BinanceClient.myTrades(symbol).then((response: any) => response.data);
+};
+
+export const getTradesByOrderId = async (
+  symbol: string,
+  orderId: string
+): Promise<MyTrade[]> => {
+  return BinanceClient.myTrades(symbol, { orderId }).then(
+    (response: any) => response.data
+  );
 };
 
 export const getTransactions = async (time?: number) => {
@@ -116,19 +125,45 @@ export const getTransactionById = async (
 
 // *** WEBSOCKET ON NEW TRANSACTION ***
 
-export const subscribeSymbolTrade = async (symbol: string) => {
+const WS_TRADES = new Map<string, any>(); // LOCAL MAP TO STORE WS REFERENCES
+
+export const subscribeSymbolTrade = (symbol: string, orderIds: string[]) => {
   const callbacks = {
-    open: () => console.info("opened"),
-    close: () => console.info("closed"),
-    message: (data: string) => {
+    open: () => console.info(`listening to ${symbol}@trade`),
+    close: () => console.info(`closing ${symbol}@trade`),
+    message: async (data: string) => {
       const res: BinanceTradeStream = JSON.parse(data);
       const orderId = res.b;
-      console.info("ws transaction with order id", orderId);
+      if (orderIds.includes(orderId)) {
+        console.info(`${symbol}@trade`, orderId, res);
+        const trades = await getTradesByOrderId(symbol, orderId);
+        await DataBaseClient.Trade.insertMany(trades);
+        unsubscribeSymbolTrade(symbol);
+      }
     },
+    error: (error: any) => console.error(`${symbol}@trade`, error),
   };
-  return BinanceClient.tradeWS(symbol, callbacks);
+  const wsRef = BinanceClient.tradeWS(symbol, callbacks);
+  if (!wsRef) {
+    console.error(`Error subscribing to ${symbol}@trade`);
+    return;
+  }
+  WS_TRADES.set(symbol, wsRef);
 };
 
-export const unsubscribeSymbolTrade = (wsRef: any, timeout?: number) => {
-  setTimeout(() => BinanceClient.unsubscribe(wsRef), timeout || 30000);
+export const unsubscribeSymbolTrade = (symbol: string) => {
+  const wsRef = WS_TRADES.get(symbol);
+  if (!wsRef) {
+    console.warn(`Warn: no WS for ${symbol}`);
+    console.info("Availables WS@trades", WS_TRADES.keys);
+    return;
+  }
+  BinanceClient.unsubscribe(wsRef)
+    .then(() => {
+      console.info(`Unsubscribed from ${symbol}@trade`);
+      WS_TRADES.delete(symbol);
+    })
+    .catch((err: any) =>
+      console.error(`Error unsubscribing from ${symbol}@trade`, err)
+    );
 };

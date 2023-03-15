@@ -91,22 +91,7 @@ export interface NewOrderRequest {
   precision: number;
 }
 
-export interface NewTakeProfitStopLossRequest {
-  symbol: string;
-  quantity: number;
-  stopPrice: number;
-  timeInForce: OrderTimeInForce;
-}
-
-export interface NewTakeProfitStopLossLimitRequest {
-  symbol: string;
-  quantity: number;
-  price: number;
-  stopPrice: number;
-  timeInForce: OrderTimeInForce;
-}
-
-export interface StopLossTakeProfitRequest {
+export interface NewOCOOrderRequest {
   symbol: string;
   quantity: number;
   takeProfitPrice: number;

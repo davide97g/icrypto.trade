@@ -1,12 +1,17 @@
 import { BinanceClient } from "../config/binance";
 import { BinanceError, BinanceTicker } from "../models/binance";
-import { Kline, KlineInterval } from "../models/transactions";
+import {
+  ExchangeInfoSymbol,
+  Kline,
+  KlineInterval,
+} from "../models/transactions";
 import {
   stopWords,
   specialCharacters,
   customStopWords,
 } from "../utils/stopwords";
 import { tokens as TOKENS } from "../utils/tokens";
+import { getExchangeInfo, getExchangeInfoSymbols } from "./transactions";
 
 const tokens = TOKENS.filter(
   (token) =>
@@ -154,4 +159,37 @@ export const getTickerPrice = async (
       console.error(err.response.data);
       throw err.response.data;
     });
+};
+
+export const getTickersPrice = async (
+  symbols: string[]
+): Promise<BinanceTicker[]> => {
+  return BinanceClient.tickerPrice("", symbols)
+    .then((response: any) => response.data as BinanceTicker[])
+    .catch((err: BinanceError) => {
+      console.error(err.response.data);
+      throw err.response.data;
+    });
+};
+
+export const getBinanceExchangeInfoSymbols = async () => {
+  return await getExchangeInfo()
+    .then((info) => info.symbols.filter((s) => s.quoteAsset === "USDT"))
+    .catch((err) => {
+      console.error(err);
+      return [] as ExchangeInfoSymbol[];
+    });
+};
+
+export const getAvailableSymbolsOnBinance = async (symbols: string[]) => {
+  const exchangeInfoSymbols = await getBinanceExchangeInfoSymbols();
+  const availableInfoSymbols = exchangeInfoSymbols.filter(
+    (exchangeInfoSymbol) => symbols.some((s) => s === exchangeInfoSymbol.symbol)
+  );
+  if (!availableInfoSymbols.length) return [];
+
+  const updatedInfoSymbols = await getExchangeInfoSymbols(
+    availableInfoSymbols.map((s) => s.symbol)
+  );
+  return updatedInfoSymbols;
 };

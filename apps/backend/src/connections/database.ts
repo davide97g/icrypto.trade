@@ -10,9 +10,10 @@ import {
 } from "firebase/firestore";
 import { set, get, ref } from "firebase/database";
 import "firebase/auth";
-import { News } from "../models/feed";
+import { News, NewsStatus } from "../models/feed";
 import { TradeConfig, Transaction } from "../models/transactions";
 import { db, rtdb } from "../config/firebase";
+import { MyTrade } from "../models/binance";
 
 export const DataBaseClient = {
   News: {
@@ -36,6 +37,9 @@ export const DataBaseClient = {
     },
     updateById: async (id: string, news: News) => {
       await setDoc(doc(db, "news", id), news);
+    },
+    updateStatus: async (id: string, status: NewsStatus) => {
+      await setDoc(doc(db, "news", id), { status }, { merge: true });
     },
     delete: async (news: News[]) => {
       await Promise.all(
@@ -80,6 +84,35 @@ export const DataBaseClient = {
         transactions.map((item) =>
           setDoc(doc(db, "transactions", String(item.orderId)), item)
         )
+      ).catch((err) => {
+        console.log(err);
+        return false;
+      });
+      return true;
+    },
+  },
+  Trade: {
+    get: async (time?: number) => {
+      const q = time
+        ? query(collection(db, "trades"), where("time", ">", time))
+        : query(collection(db, "trades"));
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map((doc) => doc.data()) as MyTrade[];
+    },
+    getById: async (id: string): Promise<MyTrade | null> => {
+      const querySnapshot = await getDoc(doc(db, "trades", id));
+      return querySnapshot.data() as MyTrade;
+    },
+    add: async (trade: MyTrade) => {
+      await setDoc(doc(db, "trades", String(trade.id)), trade).catch((err) => {
+        console.log(err);
+        return false;
+      });
+      return true;
+    },
+    insertMany: async (trades: MyTrade[]) => {
+      await Promise.all(
+        trades.map((item) => setDoc(doc(db, "trades", String(item.id)), item))
       ).catch((err) => {
         console.log(err);
         return false;

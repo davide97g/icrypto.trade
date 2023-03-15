@@ -26,6 +26,7 @@ import {
   removeBannedSymbols,
 } from "./symbols";
 import { getTradesByOrderId, subscribeSymbolTrade } from "./transactions";
+import { telegramApi } from "../config/telegram";
 
 interface WsFeedItem {
   _id: string;
@@ -172,7 +173,7 @@ const analyzeFeedItem = async (
       ...feedWithGuess,
       status: "missing",
     };
-    await DataBaseClient.News.updateById(news._id, news); //  created for the first time with "potential" status
+    await DataBaseClient.News.updateById(item._id, news); //  created for the first time with "potential" status
     await sendNewPotentialOrderMail(news);
   }
   const availableSymbols = await getAvailableSymbolsOnBinance(
@@ -183,7 +184,7 @@ const analyzeFeedItem = async (
       ...feedWithGuess,
       status: "unavailable",
     };
-    await DataBaseClient.News.updateById(news._id, news); //  created for the first time with "potential" status
+    await DataBaseClient.News.updateById(item._id, news); //  created for the first time with "potential" status
     await sendNewPotentialOrderMail(news);
   } else {
     // * THERE ARE AVAILABLE SYMBOLS
@@ -191,7 +192,7 @@ const analyzeFeedItem = async (
       ...feedWithGuess,
       status: "pending",
     };
-    await DataBaseClient.News.updateById(news._id, news); //  created for the first time with "pending" status
+    await DataBaseClient.News.updateById(item._id, news); //  created for the first time with "pending" status
     try {
       // ? get current price of the symbols
       const tickersPrice = await getTickersPrice(
@@ -203,7 +204,7 @@ const analyzeFeedItem = async (
       let i = 0;
       const interval = setInterval(() => {
         const symbol = availableSymbols[i];
-        trade(news._id, symbol, tradeConfig, tickersPrice);
+        trade(item._id, symbol, tradeConfig, tickersPrice);
         i++;
         if (i === availableSymbols.length) clearInterval(interval);
       }, INTERVAL_MS);
@@ -236,6 +237,9 @@ const trade = async (
   tickersPrice: BinanceTicker[]
 ) => {
   console.info("Trade", newsId, exchangeInfoSymbol.symbol, tradeConfig);
+  telegramApi.sendMessageToAdmins(
+    `Trade ${newsId} ${exchangeInfoSymbol.symbol}`
+  );
   try {
     const marketOrderTransaction = await newMarketOrder(
       exchangeInfoSymbol,

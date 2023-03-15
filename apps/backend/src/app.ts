@@ -13,6 +13,7 @@ import orders from "./routes/orders";
 import websocket from "./routes/websocket";
 import "./config/telegram";
 import { env } from "./config/environment";
+import { telegramApi } from "./config/telegram";
 
 const packageJson = require("../package.json");
 
@@ -82,4 +83,8 @@ app.use("/websocket", websocket);
 
 app.listen(port, () => {
   console.log(`⚡️ [server]: Server is live!`);
+  if (!env.test)
+    telegramApi.sendMessageToAdmins(
+      `⚡️ Server is live! v${packageJson.version} click <a href="${env.domain}/settings">here</a> to start the bot.`
+    );
 });

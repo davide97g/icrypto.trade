@@ -12,6 +12,29 @@
       <a-button type="danger" @click="stopScheduler" :disabled="!info?.running"
         >Stop Scheduler</a-button
       >
+      <br />
+      <h4 v-if="infoWS?.newsStartTime">
+        [News] Running since:
+        {{ new Date(infoWS?.newsStartTime).toLocaleDateString() }}
+        {{ new Date(infoWS?.newsStartTime).toLocaleTimeString() }}
+      </h4>
+      <h4 v-if="infoWS?.likesStartTime">
+        [Likes] Running since:
+        {{ new Date(infoWS?.likesStartTime).toLocaleDateString() }}
+        {{ new Date(infoWS?.likesStartTime).toLocaleTimeString() }}
+      </h4>
+      <a-button
+        type="info"
+        @click="startWS"
+        :disabled="infoWS?.news || infoWS?.likes"
+        >Start WS</a-button
+      >
+      <a-button
+        type="danger"
+        @click="stopWS"
+        :disabled="!infoWS?.news && !infoWS?.likes"
+        >Stop WS</a-button
+      >
     </div>
     <div class="m1">
       <h3>Scheduler Trade Config</h3>
@@ -163,7 +186,14 @@ const info = ref<{
   startTime: number;
 }>();
 
-const getFeedInfo = () =>
+const infoWS = ref<{
+  news?: WebSocket | undefined;
+  likes?: WebSocket | undefined;
+  newsStartTime?: number | undefined;
+  likesStartTime?: number | undefined;
+}>();
+
+const getSchedulerInfo = () =>
   Server.Scheduler.getScheduler()
     .then((res) => (info.value = res))
     .catch((err) => console.log(err));
@@ -175,7 +205,7 @@ const startScheduler = async () => {
       console.error(err);
       message.error(err.message);
     })
-    .finally(() => getFeedInfo());
+    .finally(() => getSchedulerInfo());
 };
 
 const stopScheduler = async () => {
@@ -185,9 +215,45 @@ const stopScheduler = async () => {
       console.error(err);
       message.error(err.message);
     })
-    .finally(() => getFeedInfo());
+    .finally(() => getSchedulerInfo());
+};
+
+const getWSInfo = () =>
+  Server.WebSocket.get()
+    .then((res) => (infoWS.value = res || undefined))
+    .catch((err) => console.log(err));
+
+const startWS = async () => {
+  await Server.WebSocket.start()
+    .then((res) => {
+      if (res) {
+        message.success(res.news.message);
+        message.success(res.likes.message);
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      message.error(err.message);
+    })
+    .finally(() => getWSInfo());
+};
+
+const stopWS = async () => {
+  await Server.WebSocket.stop()
+    .then((res) => {
+      if (res) {
+        message.success(res.news.message);
+        message.success(res.likes.message);
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      message.error(err.message);
+    })
+    .finally(() => getWSInfo());
 };
 
 getTradeConfig();
-getFeedInfo();
+getSchedulerInfo();
+getWSInfo();
 </script>

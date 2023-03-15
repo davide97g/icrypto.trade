@@ -426,4 +426,64 @@ export const Server = {
         .finally(() => setIsLoading(false));
     },
   },
+  WebSocket: {
+    start: async () => {
+      setIsLoading(true);
+      return await axios
+        .post(
+          `${apiHost}/websocket/start`,
+          {},
+          {
+            headers: { authorization: `Bearer ${await getIdToken()}` },
+          }
+        )
+        .then(
+          (res) =>
+            res.data as {
+              news: { message: string };
+              likes: { message: string };
+            }
+        )
+        .catch((err) => console.log(err))
+        .finally(() => setIsLoading(false));
+    },
+    stop: async () => {
+      setIsLoading(true);
+      return await axios
+        .post(
+          `${apiHost}/websocket/stop`,
+          {},
+          {
+            headers: { authorization: `Bearer ${await getIdToken()}` },
+          }
+        )
+        .then(
+          (res) =>
+            res.data as {
+              news: { message: string };
+              likes: { message: string };
+            }
+        )
+        .catch((err) => console.log(err))
+        .finally(() => setIsLoading(false));
+    },
+    get: async () => {
+      setIsLoading(true);
+      return await axios
+        .get(`${apiHost}/websocket/info`, {
+          headers: { authorization: `Bearer ${await getIdToken()}` },
+        })
+        .then(
+          (res) =>
+            res.data as {
+              news?: WebSocket;
+              likes?: WebSocket;
+              newsStartTime?: number;
+              likesStartTime?: number;
+            }
+        )
+        .catch((err) => console.error(err))
+        .finally(() => setIsLoading(false));
+    },
+  },
 };

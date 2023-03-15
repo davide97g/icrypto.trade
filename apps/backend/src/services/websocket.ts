@@ -1,11 +1,10 @@
 import { DataBaseClient } from "../connections/database";
+import WebSocket from "ws";
 import { wsConnect } from "../connections/websocket";
 import { BinanceTicker } from "../models/binance";
 import { FeedItem, News } from "../models/feed";
-import { BinanceOrderResult, Order } from "../models/orders";
+import { Order } from "../models/orders";
 import {
-  BinanceOCOOrder,
-  BinanceTransaction,
   ExchangeInfoSymbol,
   NewOCOOrderRequest,
   NewOrderRequest,
@@ -47,7 +46,17 @@ const FEED: WsNTAFeed = {};
 
 let bannedTokens: { symbol: string }[] = [];
 
-const StartNewsWebSocket = async () => {
+const WS: {
+  news?: WebSocket;
+  likes?: WebSocket;
+  newsStartTime?: number;
+  likesStartTime?: number;
+} = {};
+
+export const getWS = () => WS;
+
+export const StartNewsWebSocket = async () => {
+  if (WS.news) return { message: "WS News already connected" };
   const feed = await getFeed();
   feed.forEach((item) => {
     FEED[item._id] = {
@@ -60,7 +69,7 @@ const StartNewsWebSocket = async () => {
   });
 
   const WsNewsURL = "wss://news.treeofalpha.com/ws";
-  wsConnect<WsNTANewsMessage>(WsNewsURL, (data) => {
+  WS.news = wsConnect<WsNTANewsMessage>(WsNewsURL, (data) => {
     FEED[data._id] = {
       _id: data._id,
       title: data.title,
@@ -70,15 +79,18 @@ const StartNewsWebSocket = async () => {
     };
     console.log("[News]", data._id);
   });
+  WS.newsStartTime = Date.now();
+  return { message: "WS News connected" };
 };
 
-const StartLikesWebSocket = async () => {
+export const StartLikesWebSocket = async () => {
+  if (WS.likes) return { message: "WS Likes already connected" };
   const config = await DataBaseClient.Scheduler.getTradeConfig();
   if (!config) throw new Error("Trade config not found");
   if (!bannedTokens.length)
     bannedTokens = await DataBaseClient.Token.getBannedTokens();
   const WsNewsURL = "wss://news.treeofalpha.com/ws/likes";
-  wsConnect<WsNTALikeMessage>(WsNewsURL, (data) => {
+  WS.likes = wsConnect<WsNTALikeMessage>(WsNewsURL, (data) => {
     if (FEED[data.newsId]) {
       FEED[data.newsId].dislikes = data.dislikes;
       FEED[data.newsId].likes = data.likes;
@@ -94,10 +106,25 @@ const StartLikesWebSocket = async () => {
         analyzeFeedItem(FEED[data.newsId], config, bannedTokens);
     } else console.warn("News not found in FEED", data.newsId);
   });
+  WS.likesStartTime = Date.now();
+  return { message: "WS Likes connected" };
 };
 
-StartNewsWebSocket();
-StartLikesWebSocket();
+export const StopNewsWebSocket = () => {
+  if (!WS.news) return { message: "WS News already disconnected" };
+  WS.news.close();
+  WS.news = undefined;
+  WS.newsStartTime = undefined;
+  return { message: "WS News disconnected" };
+};
+
+export const StopLikesWebSocket = () => {
+  if (!WS.likes) return { message: "WS Likes already disconnected" };
+  WS.likes.close();
+  WS.likes = undefined;
+  WS.likesStartTime = undefined;
+  return { message: "WS Likes disconnected" };
+};
 
 const isGood = (item: WsFeedItem, tradeConfig: TradeConfig): boolean => {
   return (

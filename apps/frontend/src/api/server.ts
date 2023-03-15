@@ -440,8 +440,7 @@ export const Server = {
         .then(
           (res) =>
             res.data as {
-              news: { message: string };
-              likes: { message: string };
+              message: string;
             }
         )
         .catch((err) => console.log(err))
@@ -457,13 +456,7 @@ export const Server = {
             headers: { authorization: `Bearer ${await getIdToken()}` },
           }
         )
-        .then(
-          (res) =>
-            res.data as {
-              news: { message: string };
-              likes: { message: string };
-            }
-        )
+        .then((res) => res.data as { message: string })
         .catch((err) => console.log(err))
         .finally(() => setIsLoading(false));
     },
@@ -476,10 +469,8 @@ export const Server = {
         .then(
           (res) =>
             res.data as {
-              news?: WebSocket;
-              likes?: WebSocket;
-              newsStartTime?: number;
-              likesStartTime?: number;
+              startTime: number;
+              isRunning: boolean;
             }
         )
         .catch((err) => console.error(err))

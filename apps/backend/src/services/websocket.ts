@@ -49,13 +49,38 @@ let bannedTokens: { symbol: string }[] = [];
 const WS: {
   news?: WebSocket;
   likes?: WebSocket;
-  newsStartTime?: number;
-  likesStartTime?: number;
-} = {};
+  startTime?: number;
+  isRunning: boolean;
+} = {
+  isRunning: false,
+};
 
-export const getWS = () => WS;
+export const getWS = () => ({
+  startTime: WS.startTime,
+  isRunning: WS.isRunning,
+});
 
-export const StartNewsWebSocket = async () => {
+export const startWebSockets = async () => {
+  const resNews = await StartNewsWebSocket();
+  const resLikes = await StartLikesWebSocket();
+  const message = `${resNews.message} - ${resLikes.message}`;
+  WS.startTime = Date.now();
+  WS.isRunning = true;
+  return { message };
+};
+
+export const stopWebSockets = () => {
+  const resNews = StopNewsWebSocket();
+  const resLikes = StopLikesWebSocket();
+  const message = `${resNews.message} - ${resLikes.message}`;
+  WS.startTime = undefined;
+  WS.isRunning = false;
+  return { message };
+};
+
+export const getWsFeed = (): WsNTAFeed => FEED;
+
+const StartNewsWebSocket = async () => {
   if (WS.news) return { message: "WS News already connected" };
   const feed = await getFeed();
   feed.forEach((item) => {
@@ -79,11 +104,10 @@ export const StartNewsWebSocket = async () => {
     };
     console.log("[News]", data._id);
   });
-  WS.newsStartTime = Date.now();
   return { message: "WS News connected" };
 };
 
-export const StartLikesWebSocket = async () => {
+const StartLikesWebSocket = async () => {
   if (WS.likes) return { message: "WS Likes already connected" };
   const config = await DataBaseClient.Scheduler.getTradeConfig();
   if (!config) throw new Error("Trade config not found");
@@ -106,23 +130,20 @@ export const StartLikesWebSocket = async () => {
         analyzeFeedItem(FEED[data.newsId], config, bannedTokens);
     } else console.warn("News not found in FEED", data.newsId);
   });
-  WS.likesStartTime = Date.now();
   return { message: "WS Likes connected" };
 };
 
-export const StopNewsWebSocket = () => {
+const StopNewsWebSocket = () => {
   if (!WS.news) return { message: "WS News already disconnected" };
   WS.news.close();
   WS.news = undefined;
-  WS.newsStartTime = undefined;
   return { message: "WS News disconnected" };
 };
 
-export const StopLikesWebSocket = () => {
+const StopLikesWebSocket = () => {
   if (!WS.likes) return { message: "WS Likes already disconnected" };
   WS.likes.close();
   WS.likes = undefined;
-  WS.likesStartTime = undefined;
   return { message: "WS Likes disconnected" };
 };
 
@@ -378,7 +399,6 @@ const computeQuantity = (
   return quantity;
 };
 
-// https://binance-docs.github.io/apidocs/spot/en/#filters
 const computePrice = (
   avgPrice: number,
   orderPrice: number,
@@ -417,5 +437,3 @@ const computePrice = (
 
   return finalPrice;
 };
-
-export const getWsFeed = (): WsNTAFeed => FEED;

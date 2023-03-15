@@ -1,43 +1,20 @@
 <template>
   <div class="flex-center w100" style="align-items: baseline">
     <div class="m1">
-      <h3>Scheduler</h3>
-      <h4 v-if="info?.startTime">
-        Running since: {{ new Date(info?.startTime).toLocaleDateString() }}
-        {{ new Date(info?.startTime).toLocaleTimeString() }}
+      <h3>Bot 🤖</h3>
+      <h4 v-if="infoWS?.startTime">
+        Running since: {{ new Date(infoWS?.startTime).toLocaleDateString() }}
+        {{ new Date(infoWS?.startTime).toLocaleTimeString() }}
       </h4>
-      <a-button type="info" @click="startScheduler" :disabled="info?.running"
-        >Start Scheduler</a-button
+      <a-button type="info" @click="startWS" :disabled="infoWS?.isRunning"
+        >Start</a-button
       >
-      <a-button type="danger" @click="stopScheduler" :disabled="!info?.running"
-        >Stop Scheduler</a-button
-      >
-      <br />
-      <h4 v-if="infoWS?.newsStartTime">
-        [News] Running since:
-        {{ new Date(infoWS?.newsStartTime).toLocaleDateString() }}
-        {{ new Date(infoWS?.newsStartTime).toLocaleTimeString() }}
-      </h4>
-      <h4 v-if="infoWS?.likesStartTime">
-        [Likes] Running since:
-        {{ new Date(infoWS?.likesStartTime).toLocaleDateString() }}
-        {{ new Date(infoWS?.likesStartTime).toLocaleTimeString() }}
-      </h4>
-      <a-button
-        type="info"
-        @click="startWS"
-        :disabled="infoWS?.news || infoWS?.likes"
-        >Start WS</a-button
-      >
-      <a-button
-        type="danger"
-        @click="stopWS"
-        :disabled="!infoWS?.news && !infoWS?.likes"
-        >Stop WS</a-button
+      <a-button type="danger" @click="stopWS" :disabled="!infoWS?.isRunning"
+        >Stop</a-button
       >
     </div>
     <div class="m1">
-      <h3>Scheduler Trade Config</h3>
+      <h3>Trade Config</h3>
       <div class="flex-center column w100" style="align-items: baseline">
         <div>
           <span>N Likes</span>
@@ -181,55 +158,22 @@ const updateTradeConfig = async () => {
     });
 };
 
-const info = ref<{
-  running: boolean;
+const infoWS = ref<{
+  isRunning: boolean;
   startTime: number;
 }>();
 
-const infoWS = ref<{
-  news?: WebSocket | undefined;
-  likes?: WebSocket | undefined;
-  newsStartTime?: number | undefined;
-  likesStartTime?: number | undefined;
-}>();
-
-const getSchedulerInfo = () =>
-  Server.Scheduler.getScheduler()
-    .then((res) => (info.value = res))
-    .catch((err) => console.log(err));
-
-const startScheduler = async () => {
-  await Server.Scheduler.startScheduler()
-    .then(() => message.success("Scheduler started"))
-    .catch((err) => {
-      console.error(err);
-      message.error(err.message);
-    })
-    .finally(() => getSchedulerInfo());
-};
-
-const stopScheduler = async () => {
-  await Server.Scheduler.stopScheduler()
-    .then(() => message.success("Scheduler stopped"))
-    .catch((err) => {
-      console.error(err);
-      message.error(err.message);
-    })
-    .finally(() => getSchedulerInfo());
-};
-
 const getWSInfo = () =>
   Server.WebSocket.get()
-    .then((res) => (infoWS.value = res || undefined))
+    .then((res) => {
+      if (res) infoWS.value = res;
+    })
     .catch((err) => console.log(err));
 
 const startWS = async () => {
   await Server.WebSocket.start()
     .then((res) => {
-      if (res) {
-        message.success(res.news.message);
-        message.success(res.likes.message);
-      }
+      if (res) message.success(res.message);
     })
     .catch((err) => {
       console.error(err);
@@ -241,10 +185,7 @@ const startWS = async () => {
 const stopWS = async () => {
   await Server.WebSocket.stop()
     .then((res) => {
-      if (res) {
-        message.success(res.news.message);
-        message.success(res.likes.message);
-      }
+      if (res) message.success(res.message);
     })
     .catch((err) => {
       console.error(err);
@@ -254,6 +195,5 @@ const stopWS = async () => {
 };
 
 getTradeConfig();
-getSchedulerInfo();
 getWSInfo();
 </script>

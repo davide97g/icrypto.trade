@@ -6,10 +6,8 @@ import {
 import {
   getWS,
   getWsFeed,
-  StartLikesWebSocket,
-  StartNewsWebSocket,
-  StopLikesWebSocket,
-  StopNewsWebSocket,
+  startWebSockets,
+  stopWebSockets,
 } from "../services/websocket";
 import { getCircularReplacer } from "../utils/utils";
 
@@ -25,50 +23,10 @@ router.get("/info", checkIfAuthenticated, async (req, res) => {
   res.send(JSON.stringify(wsInfo, getCircularReplacer()));
 });
 
-router.post("/start/news", checkIfAdmin, async (req, res) => {
-  try {
-    const response = await StartNewsWebSocket();
-    res.status(200).send(response);
-  } catch (err) {
-    res.status(500).send(err);
-  }
-});
-
-router.post("/stop/news", checkIfAdmin, async (req, res) => {
-  try {
-    const response = StopNewsWebSocket();
-    res.status(200).send(response);
-  } catch (err) {
-    res.status(500).send(err);
-  }
-});
-
-router.post("/start/likes", checkIfAdmin, async (req, res) => {
-  try {
-    const response = await StartLikesWebSocket();
-    res.status(200).send(response);
-  } catch (err) {
-    res.status(500).send(err);
-  }
-});
-
-router.post("/stop/likes", checkIfAdmin, async (req, res) => {
-  try {
-    const response = StopLikesWebSocket();
-    res.status(200).send(response);
-  } catch (err) {
-    res.status(500).send(err);
-  }
-});
-
 router.post("/start", checkIfAdmin, async (req, res) => {
   try {
-    const responseNews = await StartNewsWebSocket();
-    const responseLikes = await StartLikesWebSocket();
-    res.status(200).send({
-      news: responseNews,
-      likes: responseLikes,
-    });
+    const resStart = await startWebSockets();
+    res.status(200).send(resStart);
   } catch (err) {
     res.status(500).send(err);
   }
@@ -76,12 +34,8 @@ router.post("/start", checkIfAdmin, async (req, res) => {
 
 router.post("/stop", checkIfAdmin, async (req, res) => {
   try {
-    const responseNews = StopNewsWebSocket();
-    const responseLikes = StopLikesWebSocket();
-    res.status(200).send({
-      news: responseNews,
-      likes: responseLikes,
-    });
+    const resStop = await stopWebSockets();
+    res.status(200).send(resStop);
   } catch (err) {
     res.status(500).send(err);
   }

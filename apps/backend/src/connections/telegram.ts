@@ -71,6 +71,6 @@ const executeCommand = async (command: string, chatId: string) => {
   }
 };
 
-setInterval(() => {
-  telegramApi.getUpdates();
-}, 1000);
+// setInterval(() => {
+//   telegramApi.getUpdates();
+// }, 1000);

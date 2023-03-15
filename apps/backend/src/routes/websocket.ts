@@ -11,17 +11,18 @@ import {
   StopLikesWebSocket,
   StopNewsWebSocket,
 } from "../services/websocket";
+import { getCircularReplacer } from "../utils/utils";
 
 const router = Router();
 
 router.get("/feed", checkIfAuthenticated, async (req, res) => {
   const wsFeed = getWsFeed();
-  res.send(wsFeed);
+  res.send(JSON.stringify(wsFeed, getCircularReplacer()));
 });
 
 router.get("/info", checkIfAuthenticated, async (req, res) => {
   const wsInfo = getWS();
-  res.send(wsInfo);
+  res.send(JSON.stringify(wsInfo, getCircularReplacer()));
 });
 
 router.post("/start/news", checkIfAdmin, async (req, res) => {

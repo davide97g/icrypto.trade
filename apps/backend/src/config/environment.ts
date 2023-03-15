@@ -11,5 +11,6 @@ export const env = {
   fixieUrl: process.env.FIXIE_URL,
   env: process.env.NODE_ENV,
   test: process.env.NODE_ENV !== "prod",
+  telegramToken: process.env.TELEGRAM_TOKEN,
   domain: process.env.DOMAIN,
 };

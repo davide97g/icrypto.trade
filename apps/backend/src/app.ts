@@ -11,7 +11,7 @@ import scheduler from "./routes/scheduler";
 import tokens from "./routes/tokens";
 import orders from "./routes/orders";
 import websocket from "./routes/websocket";
-
+import "./config/telegram";
 import { env } from "./config/environment";
 
 const packageJson = require("../package.json");

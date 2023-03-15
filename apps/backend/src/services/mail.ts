@@ -1,5 +1,6 @@
 import { defaultAddresses, MailClient } from "../config/email";
 import { env } from "../config/environment";
+import { telegramApi } from "../config/telegram";
 import { News } from "../models/feed";
 import { BinanceOrderResult } from "../models/orders";
 import {
@@ -57,6 +58,7 @@ export const sendNewOrderMail = async (
     ${OCOOrderContent}
     `;
   const subject = `New Order: [${marketBuy?.symbol}]`;
+  telegramApi.sendMessageToAdmins(subject + "\n" + content);
   await sendMail(subject, content);
 };
 
@@ -65,6 +67,7 @@ export const sendOrderMail = async (
   ocoOrder: BinanceOrderResult<BinanceOCOOrder>
 ) => {
   let OCOOrderContent = "<h3>OCO Order</h3>";
+  let telegramOCOOrderContent = "OCO Order";
   if (ocoOrder?.order) {
     const stopLossTakeProfit = ocoOrder.order;
     OCOOrderContent += `<h3>OCO Order Id: ${
@@ -76,8 +79,19 @@ export const sendOrderMail = async (
     <a href="${env.domain}/orders/${
       stopLossTakeProfit.symbol
     }/">See Open Orders</a>`;
+
+    telegramOCOOrderContent += `
+    OCO Order Id: ${stopLossTakeProfit.orderListId}<br/>
+    Order Time: ${new Date(
+      stopLossTakeProfit.transactionTime || 0
+    ).toUTCString()} <br/>
+     <a href=${env.domain}/orders/${
+      stopLossTakeProfit.symbol
+    }/>See Open Orders</a> <br/>
+    `;
   } else {
     OCOOrderContent += `<h3>${ocoOrder?.error}</h3>`;
+    telegramOCOOrderContent += ` ${ocoOrder?.error}`;
   }
 
   const content = `
@@ -97,6 +111,25 @@ export const sendOrderMail = async (
     ${OCOOrderContent}
     `;
   const subject = `New Order: [${marketBuyTransaction?.symbol}]`;
+
+  const telegramContent = `
+    New Market Buy Order
+    <br/>
+    Order Id: ${marketBuyTransaction?.orderId}<br/>
+    Symbol Executed: ${marketBuyTransaction?.symbol}<br/>
+    Quantity: ${marketBuyTransaction?.origQty}<br/>
+    Order Type: ${marketBuyTransaction?.type}<br/>
+    Status: ${marketBuyTransaction?.status}<br/>
+    Order Time: ${new Date(
+      marketBuyTransaction?.transactTime || 0
+    ).toUTCString()}<br/>
+    <a href="${env.domain}/order/${marketBuyTransaction?.symbol}/${
+    marketBuyTransaction?.orderId
+  }">Market Buy</a>
+    <br />
+    ${telegramOCOOrderContent}
+    `;
+  telegramApi.sendMessageToAdmins(subject + "\n" + telegramContent);
   await sendMail(subject, content);
 };
 
@@ -114,7 +147,21 @@ export const sendNewPotentialOrderMail = async (news: News) => {
     news._id
   }">See Potential Order</a>
     `;
+  const telegramContent = `
+    New Potential Order
+    <br/>
+    Id: ${news._id}<br/>
+    Likes: ${news.likes ?? 0}<br/>
+    Dislikes: ${news.dislikes ?? 0}<br/>       
+    Time: ${Math.round((Date.now() - news.time) / (1000 * 60))} minutes ago
+    <br/>
+    Status: ${news.status}<br/>
+    <a href="${env.domain}/orders/potentials/${
+    news._id
+  }">See Potential Order</a>
+    `;
   const subject = `New Potential Order`;
+  telegramApi.sendMessageToAdmins(subject + "\n" + telegramContent);
   await sendMail(subject, content);
 };
 
@@ -124,5 +171,6 @@ export const sendErrorMail = async (
   err: any
 ) => {
   const content = `🤯 Error: ${message}\n ${err}`;
+  telegramApi.sendMessageToAdmins(subject + "\n" + content);
   await sendMail(subject, content);
 };

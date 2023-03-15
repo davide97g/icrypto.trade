@@ -13,7 +13,7 @@ import orders from "./routes/orders";
 import websocket from "./routes/websocket";
 import "./config/telegram";
 import { env } from "./config/environment";
-import { telegramApi } from "./config/telegram";
+import { telegramApi } from "./connections/telegram";
 
 const packageJson = require("../package.json");
 

@@ -6,8 +6,13 @@ import { FeedItem, News } from "../models/feed";
 import { Order } from "../models/orders";
 import {
   ExchangeInfoSymbol,
+  ExchangeInfoSymbolFilter,
+  Fill,
   NewOCOOrderRequest,
   NewOrderRequest,
+  OrderSide,
+  OrderTimeInForce,
+  OrderType,
   TradeConfig,
 } from "../models/transactions";
 import { WsNTALikeMessage, WsNTANewsMessage } from "../models/websocket";
@@ -26,7 +31,7 @@ import {
   removeBannedSymbols,
 } from "./symbols";
 import { getTradesByOrderId, subscribeSymbolTrade } from "./transactions";
-import { telegramApi } from "../config/telegram";
+import { telegramApi } from "../connections/telegram";
 
 interface WsFeedItem {
   _id: string;
@@ -117,19 +122,22 @@ const StartLikesWebSocket = async () => {
   const WsNewsURL = "wss://news.treeofalpha.com/ws/likes";
   WS.likes = wsConnect<WsNTALikeMessage>(WsNewsURL, (data) => {
     if (FEED[data.newsId]) {
-      FEED[data.newsId].dislikes = data.dislikes;
-      FEED[data.newsId].likes = data.likes;
-      console.log(
-        "[Feedback]",
-        data.newsId,
-        "👍",
-        data.likes,
-        "👎",
-        data.dislikes
-      );
-      if (isGood(FEED[data.newsId], config))
-        analyzeFeedItem(FEED[data.newsId], config, bannedTokens);
-    } else console.warn("News not found in FEED", data.newsId);
+      const isAlreadyGood = isGood(FEED[data.newsId], config);
+      if (!isAlreadyGood) {
+        FEED[data.newsId].dislikes = data.dislikes;
+        FEED[data.newsId].likes = data.likes;
+        console.log(
+          "[Feedback]",
+          data.newsId,
+          "👍",
+          data.likes,
+          "👎",
+          data.dislikes
+        );
+        if (isGood(FEED[data.newsId], config))
+          analyzeFeedItem(FEED[data.newsId], config, bannedTokens);
+      }
+    }
   });
   return { message: "WS Likes connected" };
 };
@@ -175,46 +183,47 @@ const analyzeFeedItem = async (
     };
     await DataBaseClient.News.updateById(item._id, news); //  created for the first time with "potential" status
     await sendNewPotentialOrderMail(news);
-  }
-  const availableSymbols = await getAvailableSymbolsOnBinance(
-    feedWithGuess.symbolsGuess
-  );
-  if (!availableSymbols.length) {
-    const news: News = {
-      ...feedWithGuess,
-      status: "unavailable",
-    };
-    await DataBaseClient.News.updateById(item._id, news); //  created for the first time with "potential" status
-    await sendNewPotentialOrderMail(news);
   } else {
-    // * THERE ARE AVAILABLE SYMBOLS
-    const news: News = {
-      ...feedWithGuess,
-      status: "pending",
-    };
-    await DataBaseClient.News.updateById(item._id, news); //  created for the first time with "pending" status
-    try {
-      // ? get current price of the symbols
-      const tickersPrice = await getTickersPrice(
-        availableSymbols.map((s) => s.symbol)
-      );
-      // ? here I start to execute orders for each of the guessed symbols
-      // ? 1 MARKET BUY ORDER + 1 OCO (SL / TP) ORDER
-      const INTERVAL_MS = 1000;
-      let i = 0;
-      const interval = setInterval(() => {
-        const symbol = availableSymbols[i];
-        trade(item._id, symbol, tradeConfig, tickersPrice);
-        i++;
-        if (i === availableSymbols.length) clearInterval(interval);
-      }, INTERVAL_MS);
-    } catch (err) {
-      console.error(err);
-      sendErrorMail(
-        "[Error Analyzing Feed Item]",
-        "Error analyzing feed item",
-        err
-      );
+    const availableSymbols = await getAvailableSymbolsOnBinance(
+      feedWithGuess.symbolsGuess
+    );
+    if (!availableSymbols.length) {
+      const news: News = {
+        ...feedWithGuess,
+        status: "unavailable",
+      };
+      await DataBaseClient.News.updateById(item._id, news); //  created for the first time with "potential" status
+      await sendNewPotentialOrderMail(news);
+    } else {
+      // * THERE ARE AVAILABLE SYMBOLS
+      const news: News = {
+        ...feedWithGuess,
+        status: "pending",
+      };
+      await DataBaseClient.News.updateById(item._id, news); //  created for the first time with "pending" status
+      try {
+        // ? get current price of the symbols
+        const tickersPrice = await getTickersPrice(
+          availableSymbols.map((s) => s.symbol)
+        );
+        // ? here I start to execute orders for each of the guessed symbols
+        // ? 1 MARKET BUY ORDER + 1 OCO (SL / TP) ORDER
+        const INTERVAL_MS = 1000;
+        let i = 0;
+        const interval = setInterval(() => {
+          const symbol = availableSymbols[i];
+          trade(item._id, symbol, tradeConfig, tickersPrice);
+          i++;
+          if (i === availableSymbols.length) clearInterval(interval);
+        }, INTERVAL_MS);
+      } catch (err) {
+        console.error(err);
+        sendErrorMail(
+          "[Error Analyzing Feed Item]",
+          "Error analyzing feed item",
+          err
+        );
+      }
     }
   }
 };
@@ -247,7 +256,7 @@ const trade = async (
       tickersPrice
     );
     const trades = await getTradesByOrderId(
-      marketOrderTransaction.symbol,
+      exchangeInfoSymbol.symbol,
       String(marketOrderTransaction.orderId)
     );
     await DataBaseClient.Trade.insertMany(trades);
@@ -281,35 +290,102 @@ const trade = async (
   }
 };
 
+// Find ticker price for a given symbol
+const findTickerPrice = (symbol: string, tickerPrices: BinanceTicker[]) => {
+  return tickerPrices.find((tickerPrice) => tickerPrice?.symbol === symbol);
+};
+
+// Calculate order quantity
+const calculateOrderQuantity = (
+  tradeAmount: number,
+  tickerPrice: number,
+  precision: number
+) => {
+  return roundToNDigits(tradeAmount / tickerPrice, precision - 1);
+};
+
+// Create a new order request
+const createNewOrderRequest = (
+  symbol: string,
+  quantity: number,
+  precision: number,
+  side: OrderSide = "BUY",
+  type: OrderType = "MARKET",
+  timeInForce: OrderTimeInForce = "GTC"
+): NewOrderRequest => {
+  return {
+    symbol,
+    side,
+    type,
+    quantity,
+    precision,
+    timeInForce,
+  };
+};
+
 const newMarketOrder = async (
   exchangeInfoSymbol: ExchangeInfoSymbol,
   tradeConfig: TradeConfig,
   tickerPrices: BinanceTicker[]
 ) => {
-  console.info("New order", exchangeInfoSymbol.symbol);
-  const precision = exchangeInfoSymbol.baseAssetPrecision || 8;
-  const tickerPriceObj = tickerPrices.find(
-    (tickerPrice) => tickerPrice?.symbol === exchangeInfoSymbol.symbol
+  console.info("New Market Order", exchangeInfoSymbol.symbol);
+
+  const precision = exchangeInfoSymbol.quoteAssetPrecision || 8;
+  const tickerPriceObj = findTickerPrice(
+    exchangeInfoSymbol.symbol,
+    tickerPrices
   );
   const tickerPrice = roundToNDigits(
     parseFloat(tickerPriceObj?.price || "0"),
     precision - 1
   );
+
   console.info("📈", tickerPrice, exchangeInfoSymbol.symbol);
-  const orderQty = roundToNDigits(
-    tradeConfig.tradeAmount / tickerPrice,
-    precision - 1
+
+  const orderQty = calculateOrderQuantity(
+    tradeConfig.tradeAmount,
+    tickerPrice,
+    precision
   );
   const quantity = computeQuantity(exchangeInfoSymbol, orderQty, precision);
-  const newOrderRequest: NewOrderRequest = {
-    symbol: exchangeInfoSymbol.symbol,
-    side: "BUY",
-    type: "MARKET",
+
+  const newOrderRequest = createNewOrderRequest(
+    exchangeInfoSymbol.symbol,
     quantity,
-    precision,
-    timeInForce: "GTC",
-  };
+    precision
+  );
+
   return newOrder(newOrderRequest);
+};
+
+// Calculate average market buy price
+const calculateAvgMarketBuyPrice = (fills: Fill[]) => {
+  const totalQty = fills.reduce((acc, fill) => acc + parseFloat(fill.qty), 0);
+  const totalPrice = fills.reduce(
+    (acc, fill) => acc + parseFloat(fill.price) * parseFloat(fill.qty),
+    0
+  );
+
+  return totalPrice / totalQty;
+};
+
+// Create a new OCO order request
+const createNewOCOOrderRequest = (
+  symbol: string,
+  quantity: number,
+  stopLossPrice: number,
+  takeProfitPrice: number,
+  marketBuyOrderId: number,
+  timeInForce: OrderTimeInForce = "GTC"
+) => {
+  return {
+    symbol,
+    quantity,
+    timeInForce,
+    stopLossPrice,
+    takeProfitPrice,
+    marketBuyOrderId,
+  };
 };
 
 const newTPSLOrder = async (
@@ -318,6 +394,7 @@ const newTPSLOrder = async (
   marketOrderTransaction: Order
 ) => {
   console.info("New OCO order", exchangeInfoSymbol.symbol);
+
   const precision = exchangeInfoSymbol.baseAssetPrecision || 8;
   const quantityWithCommission = marketOrderTransaction.fills.reduce(
     (acc, fill) => acc + parseFloat(fill.qty) - parseFloat(fill.commission),
@@ -328,16 +405,12 @@ const newTPSLOrder = async (
     quantityWithCommission,
     precision
   );
+
   console.info("📈 market buy executed quantity", quantity);
-  const totQty = marketOrderTransaction.fills.reduce(
-    (acc, fill) => acc + parseFloat(fill.qty),
-    0
+
+  const avgMarketBuyPrice = calculateAvgMarketBuyPrice(
+    marketOrderTransaction.fills
   );
-  const avgMarketBuyPrice =
-    marketOrderTransaction.fills.reduce(
-      (acc, fill) => acc + parseFloat(fill.price) * parseFloat(fill.qty),
-      0
-    ) / totQty;
 
   const slOriginalPrice =
     (avgMarketBuyPrice * (100 - tradeConfig.stopLossPercentage)) / 100;
@@ -357,16 +430,31 @@ const newTPSLOrder = async (
     precision
   );
 
-  const newOCOOrderRequest: NewOCOOrderRequest = {
-    symbol: exchangeInfoSymbol.symbol,
+  const newOCOOrderRequest = createNewOCOOrderRequest(
+    exchangeInfoSymbol.symbol,
     quantity,
-    timeInForce: "GTC",
-    stopLossPrice: stopLossStopPrice,
-    takeProfitPrice: takeProfitStopPrice,
-    marketBuyOrderId: marketOrderTransaction.orderId,
-  };
+    stopLossStopPrice,
+    takeProfitStopPrice,
+    marketOrderTransaction.orderId
+  );
+
   console.info("📈 stop loss take profit request", newOCOOrderRequest);
+
   return newOCOOrder(newOCOOrderRequest);
+};
+
+// Find the filter by filterType
+const findFilterByType = (
+  filters: ExchangeInfoSymbolFilter[],
+  filterType: string
+) => {
+  return filters.find((f) => f.filterType === filterType)!;
+};
+
+const getPrecision = (value: string, precision: number) => {
+  const valueParts = value.split(".");
+  const valuePrecision = valueParts.length > 1 ? valueParts[1].length : 0;
+  return valuePrecision > precision ? precision : valuePrecision;
 };
 
 const computeQuantity = (
@@ -374,32 +462,33 @@ const computeQuantity = (
   orderQty: number,
   precision: number
 ) => {
-  const filterLotSize = exchangeInfoSymbol.filters.find(
-    (f) => f.filterType === "LOT_SIZE"
+  const filterLotSize = findFilterByType(
+    exchangeInfoSymbol.filters,
+    "LOT_SIZE"
   );
   if (!filterLotSize) throw new Error("Lot size filter not found");
-  const maxLotSizeQty = parseFloat(filterLotSize?.maxQty || "0");
-  const minLotSizeQty = parseFloat(filterLotSize?.minQty || "0");
-  const stepSizeValue = parseFloat(filterLotSize?.stepSize || "0.10000000");
-  const stepSize = (filterLotSize?.stepSize || "0.10000000").replace(".", "");
-  const stepSizePrecision =
-    stepSize.indexOf("1") > -1 ? stepSize.indexOf("1") : precision;
 
-  const filterMinNotional = exchangeInfoSymbol.filters.find(
-    (f) => f.filterType === "MIN_NOTIONAL"
+  const { maxQty, minQty, stepSize } = filterLotSize;
+  const maxLotSizeQty = parseFloat(maxQty || "0");
+  const minLotSizeQty = parseFloat(minQty || "0");
+  const stepSizeValue = parseFloat(stepSize || "0.10000000");
+  const stepSizePrecision = getPrecision(stepSize || "0.10000000", precision);
+
+  const filterMinNotional = findFilterByType(
+    exchangeInfoSymbol.filters,
+    "MIN_NOTIONAL"
   );
   const minNotional = parseFloat(
     filterMinNotional?.minNotional || "10.00000000"
   );
 
   const safeQty = orderQty - stepSizeValue;
-
   const minimumQuantity = Math.max(safeQty, minNotional, minLotSizeQty);
-
   const quantity = roundToNDigits(
     Math.min(minimumQuantity, maxLotSizeQty),
     stepSizePrecision
   );
+
   return quantity;
 };
 
@@ -409,34 +498,31 @@ const computePrice = (
   exchangeInfoSymbol: ExchangeInfoSymbol,
   precision: number
 ) => {
-  const filterPercentPriceBySide = exchangeInfoSymbol?.filters.find(
-    (f) => f.filterType === "PERCENT_PRICE_BY_SIDE"
+  const filterPercentPriceBySide = findFilterByType(
+    exchangeInfoSymbol.filters,
+    "PERCENT_PRICE_BY_SIDE"
   );
-  const multiplierUp = parseFloat(
-    filterPercentPriceBySide?.askMultiplierUp || "5"
-  );
-  const multiplierDown = parseFloat(
-    filterPercentPriceBySide?.askMultiplierDown || "0.2"
-  );
+  const { askMultiplierUp, askMultiplierDown } = filterPercentPriceBySide;
+  const multiplierUp = parseFloat(askMultiplierUp || "5");
+  const multiplierDown = parseFloat(askMultiplierDown || "0.2");
 
   const downLimitPrice = avgPrice * multiplierDown;
   const upLimitPrice = avgPrice * multiplierUp;
   const price = Math.max(Math.min(orderPrice, upLimitPrice), downLimitPrice);
 
-  const filterPriceFilter = exchangeInfoSymbol?.filters.find(
-    (f) => f.filterType === "PRICE_FILTER"
+  const filterPriceFilter = findFilterByType(
+    exchangeInfoSymbol.filters,
+    "PRICE_FILTER"
   );
+  const { maxPrice, minPrice, tickSize } = filterPriceFilter;
+  const maxPriceValue = parseFloat(maxPrice || "0");
+  const minPriceValue = parseFloat(minPrice || "0");
+  const tickSizePrecision = getPrecision(tickSize || "0.00010000", precision);
 
-  const maxPrice = parseFloat(filterPriceFilter?.maxPrice || "0");
-  const minPrice = parseFloat(filterPriceFilter?.minPrice || "0");
-  const tickSize = (filterPriceFilter?.tickSize || "0.00010000").replace(
-    ".",
-    ""
+  const notRoundedPrice = Math.min(
+    Math.max(price, minPriceValue),
+    maxPriceValue
   );
-  const tickSizePrecision =
-    tickSize.indexOf("1") > -1 ? tickSize.indexOf("1") : precision;
-
-  const notRoundedPrice = Math.min(Math.max(price, minPrice), maxPrice);
   const finalPrice = roundToNDigits(notRoundedPrice, tickSizePrecision);
 
   return finalPrice;

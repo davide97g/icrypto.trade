@@ -102,9 +102,12 @@ export const getTradesByOrderId = async (
   symbol: string,
   orderId: string
 ): Promise<MyTrade[]> => {
-  return BinanceClient.myTrades(symbol, { orderId }).then(
-    (response: any) => response.data
-  );
+  return BinanceClient.myTrades(symbol, { orderId })
+    .then((response: any) => response.data)
+    .catch((err: BinanceError) => {
+      console.error(err.response.data);
+      return err.response.data;
+    });
 };
 
 export const getTransactions = async (time?: number) => {

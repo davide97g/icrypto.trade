@@ -334,9 +334,11 @@ const findFilterByType = (
 };
 
 const getPrecision = (sizeString: string, precision: number) => {
-  return sizeString.indexOf("1") > -1
-    ? sizeString.replace(".", "").indexOf("1")
-    : precision;
+  return (
+    (sizeString.indexOf("1") > -1
+      ? sizeString.replace(".", "").indexOf("1")
+      : precision) - 1
+  );
 };
 
 const runQuantityCheck = (

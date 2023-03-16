@@ -152,6 +152,9 @@ export const subscribeSymbolTrade = (symbol: string, orderIds: number[]) => {
     return;
   }
   WS_TRADES.set(symbol, wsRef);
+  setTimeout(() => {
+    unsubscribeSymbolTrade(symbol);
+  }, 1000 * 60 * 5); // 5 minutes
 };
 
 export const unsubscribeSymbolTrade = (symbol: string) => {

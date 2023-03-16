@@ -207,6 +207,7 @@ const newMarketOrder = async (
   );
 
   return newOrder(newOrderRequest);
+  // https://api.binance.com/api/v3/order?quantity=33.5700337&newOrderRespType=FULL&symbol=BNXUSDT&side=BUY&type=MARKET&timestamp=1678962737197&signature=a7918952b033a11fea038ec722128fe15a82aed5a8a3828b3bc0cdd4361f338a
 };
 
 const newTPSLOrder = async (
@@ -333,10 +334,21 @@ const findFilterByType = (
   return filters.find((f) => f.filterType === filterType)!;
 };
 
-const getPrecision = (value: string, precision: number) => {
-  const valueParts = value.split(".");
-  const valuePrecision = valueParts.length > 1 ? valueParts[1].length : 0;
-  return valuePrecision > precision ? precision : valuePrecision;
+const getPrecision = (sizeString: string, precision: number) => {
+  return sizeString.indexOf("1") > -1 ? sizeString.indexOf("1") : precision;
+};
+
+const runQuantityCheck = (
+  quantity: number,
+  minLotSizeQty: number,
+  maxLotSizeQty: number,
+  stepSizeValue: number
+): boolean => {
+  return (
+    quantity >= minLotSizeQty &&
+    quantity <= maxLotSizeQty &&
+    quantity % stepSizeValue == 0
+  );
 };
 
 const computeQuantity = (
@@ -370,6 +382,18 @@ const computeQuantity = (
     Math.min(minimumQuantity, maxLotSizeQty),
     stepSizePrecision
   );
+
+  const isQuantityOk = runQuantityCheck(
+    quantity,
+    minLotSizeQty,
+    maxLotSizeQty,
+    stepSizeValue
+  );
+  if (!isQuantityOk) {
+    throw new Error(
+      JSON.stringify({ message: "Quantity is not ok", quantity, filterLotSize })
+    );
+  }
 
   return quantity;
 };

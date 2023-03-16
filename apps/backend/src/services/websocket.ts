@@ -1,36 +1,17 @@
 import { DataBaseClient } from "../connections/database";
 import WebSocket from "ws";
 import { wsConnect } from "../connections/websocket";
-import { BinanceTicker } from "../models/binance";
 import { FeedItem, News } from "../models/feed";
-import { Order } from "../models/orders";
-import {
-  ExchangeInfoSymbol,
-  ExchangeInfoSymbolFilter,
-  Fill,
-  NewOrderRequest,
-  OrderSide,
-  OrderTimeInForce,
-  OrderType,
-  TradeConfig,
-} from "../models/transactions";
+import { TradeConfig } from "../models/transactions";
 import { WsNTALikeMessage, WsNTANewsMessage } from "../models/websocket";
-import { roundToNDigits } from "../utils/utils";
 import { getFeed, getFeedItem } from "./feed";
-import {
-  sendErrorMail,
-  sendNewPotentialOrderMail,
-  sendOrderMail,
-} from "./mail";
-import { newOrder, newOCOOrder } from "./orders";
+import { sendErrorMail, sendNewPotentialOrderMail } from "./mail";
 import {
   extractSymbolsFromTitle,
   getAvailableSymbolsOnBinance,
   getTickersPrice,
   removeBannedSymbols,
 } from "./symbols";
-import { getTradesByOrderId, subscribeSymbolTrade } from "./transactions";
-import { telegramApi } from "../connections/telegram";
 import { trade } from "./trade";
 
 interface WsFeedItem {

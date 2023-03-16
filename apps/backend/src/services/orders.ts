@@ -106,8 +106,9 @@ export const newOrder = async ({
   })
     .then((response: any) => ({ order: response.data }))
     .catch((error: BinanceError) => {
-      console.error(error.response.data);
-      throw { error };
+      const { code, msg } = error.response.data;
+      console.error(code, msg);
+      throw { code, msg };
     });
 };
 
@@ -134,7 +135,8 @@ export const newOCOOrder = async ({
   )
     .then((response: any) => ({ order: response.data }))
     .catch((error: BinanceError) => {
-      console.error(error.response.data);
-      throw { error };
+      const { code, msg } = error.response.data;
+      console.error(code, msg);
+      throw { code, msg };
     });
 };

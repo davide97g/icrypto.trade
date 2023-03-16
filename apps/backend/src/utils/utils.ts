@@ -12,6 +12,7 @@ export const getCircularReplacer = () => {
 };
 
 export const roundToNDigits = (n: number, digits: number) => {
+  if (digits <= 0) return Math.round(n);
   const multiplier = Math.pow(10, digits);
   return Math.round(n * multiplier) / multiplier;
 };

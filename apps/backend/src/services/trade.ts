@@ -334,11 +334,9 @@ const findFilterByType = (
 };
 
 const getPrecision = (sizeString: string, precision: number) => {
-  return (
-    (sizeString.indexOf("1") > -1
-      ? sizeString.replace(".", "").indexOf("1")
-      : precision) - 1
-  );
+  return sizeString.indexOf("1") > -1
+    ? sizeString.replace(".", "").indexOf("1")
+    : precision;
 };
 
 const runQuantityCheck = (
@@ -371,6 +369,8 @@ const computeQuantity = (
   const stepSizeValue = parseFloat(stepSize || "0.10000000");
   const stepSizePrecision = getPrecision(stepSize || "0.10000000", precision);
 
+  console.info("stepSizePrecision", stepSizePrecision);
+
   const filterMinNotional = findFilterByType(
     exchangeInfoSymbol.filters,
     "MIN_NOTIONAL"
@@ -385,6 +385,8 @@ const computeQuantity = (
     Math.min(minimumQuantity, maxLotSizeQty),
     stepSizePrecision
   );
+
+  console.info("📈 quantity", quantity);
 
   const isQuantityOk = runQuantityCheck(
     quantity,

@@ -15,7 +15,8 @@ interface TelegramUpdate {
   message: TelegramMessage;
 }
 
-const ids: string[] = ["444270183", "33016687"];
+const ids: string[] =
+  process.env.NODE_ENV === "local" ? ["444270183"] : ["444270183", "33016687"];
 
 let offset: number | null = null;
 export const telegramApi = {

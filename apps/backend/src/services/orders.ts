@@ -2,15 +2,10 @@ import { BinanceClient } from "../config/binance";
 import { DataBaseClient } from "../connections/database";
 import { BinanceError, MyTrade } from "../models/binance";
 import { FeedItem } from "../models/feed";
-import {
-  BinanceOrderDetails,
-  BinanceOrderResult,
-  Order,
-} from "../models/orders";
+import { BinanceOrderDetails, Order } from "../models/orders";
 import {
   BinanceOCOOrder,
   BinanceOrder,
-  BinanceTransaction,
   NewOCOOrderRequest,
   NewOrderRequest,
 } from "../models/transactions";

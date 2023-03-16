@@ -100,7 +100,7 @@ export const getTrades = async (symbol: string): Promise<MyTrade[]> => {
 
 export const getTradesByOrderId = async (
   symbol: string,
-  orderId: string
+  orderId: number
 ): Promise<MyTrade[]> => {
   return BinanceClient.myTrades(symbol, { orderId })
     .then((response: any) => response.data)
@@ -130,13 +130,13 @@ export const getTransactionById = async (
 
 const WS_TRADES = new Map<string, any>(); // LOCAL MAP TO STORE WS REFERENCES
 
-export const subscribeSymbolTrade = (symbol: string, orderIds: string[]) => {
+export const subscribeSymbolTrade = (symbol: string, orderIds: number[]) => {
   const callbacks = {
     open: () => console.info(`listening to ${symbol}@trade`),
     close: () => console.info(`closing ${symbol}@trade`),
     message: async (data: string) => {
       const res: BinanceTradeStream = JSON.parse(data);
-      const orderId = res.b;
+      const orderId = parseInt(res.b);
       if (orderIds.includes(orderId)) {
         console.info(`${symbol}@trade`, orderId, res);
         const trades = await getTradesByOrderId(symbol, orderId);

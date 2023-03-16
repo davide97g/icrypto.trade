@@ -139,10 +139,16 @@ export const trade = async (
       tradeConfig,
       tickersPrice
     );
+    console.info("Market Order", marketOrderTransaction);
     const trades = await getTradesByOrderId(
       exchangeInfoSymbol.symbol,
-      String(marketOrderTransaction.orderId)
+      marketOrderTransaction.orderId
     );
+    if (trades.length === 0) {
+      throw new Error(
+        "No trades found for market order: " + marketOrderTransaction.orderId
+      );
+    }
     await DataBaseClient.Trade.insertMany(trades);
     try {
       const ocoOrder = await newTPSLOrder(
@@ -150,7 +156,7 @@ export const trade = async (
         tradeConfig,
         marketOrderTransaction
       );
-      const orderIds = ocoOrder.orders.map((o) => String(o.orderId));
+      const orderIds = ocoOrder.orders.map((o) => o.orderId);
       subscribeSymbolTrade(exchangeInfoSymbol.symbol, orderIds);
       await DataBaseClient.News.updateStatus(newsId, "success");
       await sendOrderMail(marketOrderTransaction, {

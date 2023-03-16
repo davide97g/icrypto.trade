@@ -123,7 +123,7 @@ export const sendNewPotentialOrderMail = async (news: News) => {
     `;
   const subject = `New Potential Order`;
   telegramApi.sendMessageToAdmins(
-    `New Potential Order: [${news._id}] <a href="${env.domain}/order/potential/${news._id}">See Potential Order</a>`
+    `New Potential Order: [${news._id}] <a href="${env.domain}/news/prospect/${news._id}">See Potential Order</a>`
   );
   await sendMail(subject, content);
 };

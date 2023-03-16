@@ -163,13 +163,13 @@ export const trade = async (
         error: e,
       });
     }
-  } catch (e: any) {
-    console.error("[Error MARKET Order]", e);
+  } catch (error) {
+    console.error("[Error MARKET Order]", error);
     await DataBaseClient.News.updateStatus(newsId, "market-error");
     await sendErrorMail(
       `[Error MARKET Order] [${exchangeInfoSymbol.symbol}]`,
       `There was an error with MARKET ORDER for the news ${newsId}`,
-      e
+      error
     );
   }
 };
@@ -207,7 +207,6 @@ const newMarketOrder = async (
   );
 
   return newOrder(newOrderRequest);
-  // https://api.binance.com/api/v3/order?quantity=33.5700337&newOrderRespType=FULL&symbol=BNXUSDT&side=BUY&type=MARKET&timestamp=1678962737197&signature=a7918952b033a11fea038ec722128fe15a82aed5a8a3828b3bc0cdd4361f338a
 };
 
 const newTPSLOrder = async (
@@ -335,7 +334,9 @@ const findFilterByType = (
 };
 
 const getPrecision = (sizeString: string, precision: number) => {
-  return sizeString.indexOf("1") > -1 ? sizeString.indexOf("1") : precision;
+  return sizeString.indexOf("1") > -1
+    ? sizeString.replace(".", "").indexOf("1")
+    : precision;
 };
 
 const runQuantityCheck = (
@@ -390,9 +391,11 @@ const computeQuantity = (
     stepSizeValue
   );
   if (!isQuantityOk) {
-    throw new Error(
-      JSON.stringify({ message: "Quantity is not ok", quantity, filterLotSize })
-    );
+    throw {
+      message: "Quantity is not ok",
+      quantity,
+      filterLotSize,
+    };
   }
 
   return quantity;

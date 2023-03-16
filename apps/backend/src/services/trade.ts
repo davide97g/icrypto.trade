@@ -388,19 +388,19 @@ const computeQuantity = (
 
   console.info("📈 quantity", quantity);
 
-  const isQuantityOk = runQuantityCheck(
-    quantity,
-    minLotSizeQty,
-    maxLotSizeQty,
-    stepSizeValue
-  );
-  if (!isQuantityOk) {
-    throw {
-      message: "Quantity is not ok",
-      quantity,
-      filterLotSize,
-    };
-  }
+  // const isQuantityOk = runQuantityCheck(
+  //   quantity,
+  //   minLotSizeQty,
+  //   maxLotSizeQty,
+  //   stepSizeValue
+  // );
+  // if (!isQuantityOk) {
+  //   throw {
+  //     message: "Quantity is not ok",
+  //     quantity,
+  //     filterLotSize,
+  //   };
+  // }
 
   return quantity;
 };

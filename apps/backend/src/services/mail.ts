@@ -2,7 +2,7 @@ import { defaultAddresses, MailClient } from "../config/email";
 import { env } from "../config/environment";
 import { telegramApi } from "../connections/telegram";
 import { News } from "../models/feed";
-import { BinanceOrderResult } from "../models/orders";
+import { BinanceOrderResult, Order } from "../models/orders";
 import {
   BinanceOCOOrder,
   BinanceTransaction,
@@ -66,7 +66,7 @@ export const sendNewOrderMail = async (
 };
 
 export const sendOrderMail = async (
-  marketBuyTransaction: Transaction,
+  marketBuyTransaction: Order,
   ocoOrder: BinanceOrderResult<BinanceOCOOrder>
 ) => {
   let OCOOrderContent = "<h3>OCO Order</h3>";

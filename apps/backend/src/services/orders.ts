@@ -104,7 +104,7 @@ export const newOrder = async ({
     quantity,
     newOrderRespType: "FULL",
   })
-    .then((response: any) => ({ order: response.data }))
+    .then((response: any) => response.data as Order)
     .catch((error: BinanceError) => {
       const { code, msg } = error.response.data;
       console.error(code, msg);
@@ -133,7 +133,7 @@ export const newOCOOrder = async ({
       newOrderRespType: "FULL",
     }
   )
-    .then((response: any) => ({ order: response.data }))
+    .then((response: any) => response.data as BinanceOCOOrder)
     .catch((error: BinanceError) => {
       const { code, msg } = error.response.data;
       console.error(code, msg);

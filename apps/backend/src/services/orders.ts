@@ -24,6 +24,18 @@ export const getTrades = async (symbol: string) => {
     .catch((error: BinanceError) => error.response.data);
 };
 
+export const getOrderById = async (
+  symbol: string,
+  orderId: string
+): Promise<BinanceOrderDetails> => {
+  return BinanceClient.getOrder(symbol, { orderId })
+    .then((response: any) => response.data)
+    .catch((err: BinanceError) => {
+      console.error(err.response.data);
+      return err.response.data;
+    });
+};
+
 export const createOrder = async (symbol: string, newsId: string) => {
   const tradeConfig = await DataBaseClient.Scheduler.getTradeConfig();
   if (!tradeConfig) throw new Error("Trade config not found");

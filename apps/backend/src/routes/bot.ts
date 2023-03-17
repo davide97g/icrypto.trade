@@ -1,26 +1,18 @@
 import { Router } from "express";
+import { DataBaseClient } from "../connections/database";
 import {
   checkIfAdmin,
   checkIfAuthenticated,
 } from "../middlewares/auth-middleware";
-import { trackTickerWS } from "../services/trade";
-import {
-  getWS,
-  getWsFeed,
-  startWebSockets,
-  stopWebSockets,
-} from "../services/websocket";
+import { TradeConfig } from "../models/transactions";
+import { getWS, startWebSockets, stopWebSockets } from "../services/bot";
 import { getCircularReplacer } from "../utils/utils";
 
 const router = Router();
 
-router.get("/feed", checkIfAuthenticated, async (req, res) => {
-  const wsFeed = getWsFeed();
-  res.send(JSON.stringify(wsFeed, getCircularReplacer()));
-});
-
 router.get("/info", checkIfAuthenticated, async (req, res) => {
   const wsInfo = getWS();
+
   res.send(JSON.stringify(wsInfo, getCircularReplacer()));
 });
 
@@ -42,14 +34,20 @@ router.post("/stop", checkIfAdmin, async (req, res) => {
   }
 });
 
-router.post("/ticker", checkIfAdmin, async (req, res) => {
-  const symbol = (req.body.symbol as string) || "";
-  if (!symbol) return res.status(400).send("Symbol is required");
-  try {
-    res.status(200).send(await trackTickerWS(symbol));
-  } catch (err) {
-    res.status(500).send(err);
-  }
+router.get("/config", checkIfAdmin, async (req, res) => {
+  const config = await DataBaseClient.Scheduler.getTradeConfig();
+  if (!config) res.status(404).send("No config found");
+  res.send(config);
+});
+
+router.post("/config", checkIfAdmin, async (req, res) => {
+  const config: TradeConfig = req.body.config;
+  await DataBaseClient.Scheduler.updateTradeConfig(config)
+    .then((response: any) => res.send(response))
+    .catch((error: any) => {
+      const response = JSON.stringify(error.response, getCircularReplacer());
+      res.status(500).send(response);
+    });
 });
 
 export default router;

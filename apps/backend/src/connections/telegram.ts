@@ -1,5 +1,5 @@
 import { telegram } from "../config/telegram";
-import { startWebSockets, stopWebSockets } from "../services/websocket";
+import { startWebSockets, stopWebSockets } from "../services/bot";
 
 interface TelegramMessage {
   message_id: number;

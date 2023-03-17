@@ -154,7 +154,7 @@ export const subscribeSymbolTrade = (symbol: string, orderIds: number[]) => {
   WS_TRADES.set(symbol, wsRef);
   setTimeout(() => {
     unsubscribeSymbolTrade(symbol);
-  }, 1000 * 60 * 5); // 5 minutes
+  }, 1000 * 60 * 60); // 5 minutes
 };
 
 export const unsubscribeSymbolTrade = (symbol: string) => {
@@ -164,12 +164,7 @@ export const unsubscribeSymbolTrade = (symbol: string) => {
     console.info("Availables WS@trades", WS_TRADES.keys);
     return;
   }
-  BinanceClient.unsubscribe(wsRef)
-    .then(() => {
-      console.info(`Unsubscribed from ${symbol}@trade`);
-      WS_TRADES.delete(symbol);
-    })
-    .catch((err: any) =>
-      console.error(`Error unsubscribing from ${symbol}@trade`, err)
-    );
+  BinanceClient.unsubscribe(wsRef);
+  console.info(`Unsubscribed from ${symbol}@trade`);
+  WS_TRADES.delete(symbol);
 };

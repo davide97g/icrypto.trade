@@ -8,8 +8,6 @@ import {
   getTransactionById,
   getTransactions,
   newTransaction,
-  subscribeSymbolTrade,
-  unsubscribeSymbolTrade,
 } from "../services/transactions";
 import { getCircularReplacer } from "../utils/utils";
 

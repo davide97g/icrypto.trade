@@ -61,12 +61,4 @@ export const checkIfAuthenticated = (
   });
 };
 
-export const makeAdmin = async (uid: string) => {
-  return await admin
-    .auth()
-    .setCustomUserClaims(uid, { admin: true })
-    .then(() => {
-      console.log("Admin role added to user");
-    })
-    .catch((err) => console.error(err));
-};
+export { admin };

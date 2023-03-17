@@ -13,6 +13,7 @@ import {
   removeBannedSymbols,
 } from "./symbols";
 import { trade } from "./trade";
+import { trackKlines } from "./trading/strategy";
 
 interface WsFeedItem {
   _id: string;
@@ -39,6 +40,7 @@ const WS: {
   startTime?: number;
   interval?: any;
   isRunning: boolean;
+  tradeConfig?: TradeConfig;
 } = {
   isRunning: false,
 };
@@ -46,7 +48,10 @@ const WS: {
 export const getWS = () => ({
   startTime: WS.startTime,
   isRunning: WS.isRunning,
+  tradeConfig: WS.tradeConfig,
 });
+
+trackKlines("BTCUSDT", "1m");
 
 export const startWebSockets = async () => {
   const resNews = await StartNewsWebSocket();
@@ -55,6 +60,7 @@ export const startWebSockets = async () => {
   WS.startTime = Date.now();
   WS.isRunning = true;
   WS.interval = pingWS();
+
   return { message };
 };
 
@@ -67,8 +73,6 @@ export const stopWebSockets = () => {
   clearInterval(WS.interval);
   return { message };
 };
-
-export const getWsFeed = (): WsNTAFeed => FEED;
 
 const pingWS = () => {
   const interval = setInterval(() => {
@@ -110,6 +114,7 @@ const StartLikesWebSocket = async () => {
   if (WS.likes) return { message: "WS Likes already connected" };
   const config = await DataBaseClient.Scheduler.getTradeConfig();
   if (!config) throw new Error("Trade config not found");
+  WS.tradeConfig = config;
   if (!bannedTokens.length)
     bannedTokens = await DataBaseClient.Token.getBannedTokens();
   const WsNewsURL = "wss://news.treeofalpha.com/ws/likes";

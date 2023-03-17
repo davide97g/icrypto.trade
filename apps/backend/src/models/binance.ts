@@ -1,3 +1,7 @@
+export interface BinanceResponse<D, E = BinanceErrorData> {
+  data?: D;
+  error?: E;
+}
 export interface BinanceErrorData {
   code: number;
   msg: string;

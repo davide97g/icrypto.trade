@@ -2,15 +2,13 @@ import cors from "cors";
 import dotenv from "dotenv";
 import express, { Express, NextFunction, Request, Response } from "express";
 
-import roles from "./routes/roles";
+import account from "./routes/account";
 import feed from "./routes/feed";
-import transaction from "./routes/transactions";
+import trades from "./routes/trades";
 import symbols from "./routes/symbols";
 import news from "./routes/news";
-import scheduler from "./routes/scheduler";
-import tokens from "./routes/tokens";
 import orders from "./routes/orders";
-import websocket from "./routes/websocket";
+import bot from "./routes/bot";
 import "./config/telegram";
 import { env } from "./config/environment";
 import { telegramApi } from "./connections/telegram";
@@ -61,23 +59,19 @@ app.get("/info", (req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-app.use("/roles", roles);
+app.use("/account", account);
 
 app.use("/feed", feed);
 
+app.use("/news", news);
+
 app.use("/symbols", symbols);
 
-app.use("/transactions", transaction);
+app.use("/trades", trades);
 
 app.use("/orders", orders);
 
-app.use("/news", news);
-
-app.use("/scheduler", scheduler);
-
-app.use("/tokens", tokens);
-
-app.use("/websocket", websocket);
+app.use("/bot", bot);
 
 // *** SERVER LISTEN ***)
 

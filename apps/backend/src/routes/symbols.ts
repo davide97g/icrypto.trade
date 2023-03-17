@@ -5,6 +5,7 @@ import { KlineInterval } from "../models/transactions";
 import {
   extractSymbolsFromTitle,
   getAverageMove24h,
+  getCleanTokens,
   getKlines,
   removeBannedSymbols,
 } from "../services/symbols";
@@ -56,5 +57,10 @@ router.get(
     res.send({ averageMove24h });
   }
 );
+
+router.get("/banned", checkIfAuthenticated, async (req, res) => {
+  const tokens = getCleanTokens();
+  res.send(tokens);
+});
 
 export default router;

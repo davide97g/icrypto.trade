@@ -4,7 +4,8 @@ import {
   checkIfAuthenticated,
   getUserId,
 } from "../middlewares/auth-middleware";
-import { createAdmin, getAccount, setNotifications } from "../services/account";
+import { createAdmin, setNotifications } from "../services/account";
+import { getAccount } from "../services/binance/market";
 
 const router = Router();
 

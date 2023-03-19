@@ -1,6 +1,6 @@
 import WebSocket from "ws";
 import { WsNTALikeMessage, WsNTANewsMessage } from "../models/websocket";
-import { getWS } from "../services/bot";
+import { getWS } from "../services/bot/bot";
 
 const MAX_RETRIES = 10;
 

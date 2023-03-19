@@ -6,7 +6,6 @@ import {
   cancelOrder,
   createOrder,
   getOpenOrders,
-  getTrades,
   sellAll,
 } from "../services/orders";
 
@@ -16,14 +15,6 @@ router.get("/:symbol", checkIfAdmin, async (req, res) => {
   const symbol = req.params.symbol;
   if (!symbol) return res.status(400).send("Symbol is required");
   await getOpenOrders(symbol)
-    .then((response: any) => res.send(response))
-    .catch((error: BinanceErrorData) => res.status(500).send(error));
-});
-
-router.get("/:symbol/trades", checkIfAdmin, async (req, res) => {
-  const symbol = req.params.symbol;
-  if (!symbol) return res.status(400).send("Symbol is required");
-  await getTrades(symbol)
     .then((response: any) => res.send(response))
     .catch((error: BinanceErrorData) => res.status(500).send(error));
 });

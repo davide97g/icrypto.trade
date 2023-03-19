@@ -4,8 +4,8 @@ import {
   checkIfAdmin,
   checkIfAuthenticated,
 } from "../middlewares/auth-middleware";
-import { TradeConfig } from "../models/transactions";
-import { getWS, startWebSockets, stopWebSockets } from "../services/bot";
+import { TradeConfig } from "../models/bot";
+import { getWS, startWebSockets, stopWebSockets } from "../services/bot/bot";
 import { getCircularReplacer } from "../utils/utils";
 
 const router = Router();
@@ -35,14 +35,14 @@ router.post("/stop", checkIfAdmin, async (req, res) => {
 });
 
 router.get("/config", checkIfAdmin, async (req, res) => {
-  const config = await DataBaseClient.Scheduler.getTradeConfig();
+  const config = await DataBaseClient.Bot.getTradeConfig();
   if (!config) res.status(404).send("No config found");
   res.send(config);
 });
 
 router.post("/config", checkIfAdmin, async (req, res) => {
   const config: TradeConfig = req.body.config;
-  await DataBaseClient.Scheduler.updateTradeConfig(config)
+  await DataBaseClient.Bot.updateTradeConfig(config)
     .then((response: any) => res.send(response))
     .catch((error: any) => {
       const response = JSON.stringify(error.response, getCircularReplacer());

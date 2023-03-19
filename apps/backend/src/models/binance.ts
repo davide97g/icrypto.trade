@@ -19,25 +19,6 @@ export interface BinanceError {
     data: BinanceErrorData;
   };
 }
-export interface BinanceAccount {
-  makerCommission: number;
-  takerCommission: number;
-  buyerCommission: number;
-  sellerCommission: number;
-  canTrade: boolean;
-  canWithdraw: boolean;
-  canDeposit: boolean;
-  brokered: boolean;
-  updateTime: number;
-  accountType: string;
-  balances: BinanceBalance[];
-  permissions: string[];
-}
-export interface BinanceBalance {
-  asset: string;
-  free: string;
-  locked: string;
-}
 
 export interface BinanceTicker {
   symbol: string;

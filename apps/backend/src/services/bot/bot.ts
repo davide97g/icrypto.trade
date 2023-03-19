@@ -1,19 +1,19 @@
-import { DataBaseClient } from "../connections/database";
+import { DataBaseClient } from "../../connections/database";
 import WebSocket from "ws";
-import { wsConnect } from "../connections/websocket";
-import { FeedItem, News } from "../models/feed";
-import { TradeConfig } from "../models/transactions";
-import { WsNTALikeMessage, WsNTANewsMessage } from "../models/websocket";
-import { getFeed, getFeedItem } from "./feed";
-import { sendErrorMail, sendNewPotentialOrderMail } from "./mail";
+import { wsConnect } from "../../connections/websocket";
+import { WsNTALikeMessage, WsNTANewsMessage } from "../../models/websocket";
+import { getFeed, getFeedItem } from "../feed";
+import { sendErrorMail, sendNewPotentialOrderMail } from "../mail";
 import {
   extractSymbolsFromTitle,
   getAvailableSymbolsOnBinance,
   getTickersPrice,
   removeBannedSymbols,
-} from "./symbols";
+} from "../symbols";
 import { trade } from "./trade";
-import { trackKlines } from "./trading/strategy";
+import { TradeConfig } from "../../models/bot";
+import { GoodFeedItem } from "../../models/database";
+import { FeedItem } from "../../models/feed";
 
 interface WsFeedItem {
   _id: string;
@@ -32,7 +32,7 @@ interface BannedToken {
 
 const FEED: WsNTAFeed = {};
 
-let bannedTokens: { symbol: string }[] = [];
+let bannedSymbols: { symbol: string }[] = [];
 
 const WS: {
   news?: WebSocket;
@@ -84,7 +84,7 @@ const pingWS = () => {
 };
 
 const StartNewsWebSocket = async () => {
-  if (WS.news) return { message: "WS News already connected" };
+  if (WS.news) return { message: "WSGoodFeedItemalready connected" };
   const feed = await getFeed();
   feed.forEach((item) => {
     FEED[item._id] = {
@@ -107,20 +107,20 @@ const StartNewsWebSocket = async () => {
         dislikes: 0,
         time: data.time,
       };
-      console.log("[News]", data._id);
+      console.log("[GoodFeedItem]", data._id);
     },
     StartNewsWebSocket
   );
-  return { message: "WS News connected" };
+  return { message: "WSGoodFeedItemconnected" };
 };
 
 const StartLikesWebSocket = async () => {
   if (WS.likes) return { message: "WS Likes already connected" };
-  const config = await DataBaseClient.Scheduler.getTradeConfig();
+  const config = await DataBaseClient.Bot.getTradeConfig();
   if (!config) throw new Error("Trade config not found");
   WS.tradeConfig = config;
-  if (!bannedTokens.length)
-    bannedTokens = await DataBaseClient.Token.getBannedTokens();
+  if (!bannedSymbols.length)
+    bannedSymbols = await DataBaseClient.Symbols.getBanned();
   const WsNewsURL = "wss://news.treeofalpha.com/ws/likes";
   WS.likes = wsConnect<WsNTALikeMessage>(
     WsNewsURL,
@@ -139,7 +139,7 @@ const StartLikesWebSocket = async () => {
             data.dislikes
           );
           if (isGood(FEED[data.newsId], config))
-            analyzeFeedItem(FEED[data.newsId], config, bannedTokens);
+            analyzeFeedItem(FEED[data.newsId], config, bannedSymbols);
         }
       }
     },
@@ -149,10 +149,10 @@ const StartLikesWebSocket = async () => {
 };
 
 const StopNewsWebSocket = () => {
-  if (!WS.news) return { message: "WS News already disconnected" };
+  if (!WS.news) return { message: "WSGoodFeedItemalready disconnected" };
   WS.news.close();
   WS.news = undefined;
-  return { message: "WS News disconnected" };
+  return { message: "WSGoodFeedItemdisconnected" };
 };
 
 const StopLikesWebSocket = () => {
@@ -173,40 +173,43 @@ const isGood = (item: WsFeedItem, tradeConfig: TradeConfig): boolean => {
 const analyzeFeedItem = async (
   item: WsFeedItem,
   tradeConfig: TradeConfig,
-  bannedTokens: BannedToken[]
+  bannedSymbols: BannedToken[]
 ) => {
-  const news = await DataBaseClient.News.getById(item._id);
+  const news = await DataBaseClient.GoodFeedItem.getById(item._id);
   if (news) {
-    console.log("News already analyzed", item._id);
+    console.log("GoodFeedItem already analyzed", item._id);
     return;
   }
   const feedItem = await getFeedItem(item._id);
-  const feedWithGuess = await addSymbolsGuessToFeedItem(feedItem, bannedTokens);
+  const feedWithGuess = await addSymbolsGuessToFeedItem(
+    feedItem,
+    bannedSymbols
+  );
   if (!feedWithGuess.symbolsGuess.length) {
-    const news: News = {
+    const news: GoodFeedItem = {
       ...feedWithGuess,
       status: "missing",
     };
-    await DataBaseClient.News.updateById(item._id, news); //  created for the first time with "potential" status
+    await DataBaseClient.GoodFeedItem.updateById(item._id, news); //  created for the first time with "potential" status
     await sendNewPotentialOrderMail(news);
   } else {
     const availableSymbols = await getAvailableSymbolsOnBinance(
       feedWithGuess.symbolsGuess
     );
     if (!availableSymbols.length) {
-      const news: News = {
+      const news: GoodFeedItem = {
         ...feedWithGuess,
         status: "unavailable",
       };
-      await DataBaseClient.News.updateById(item._id, news); //  created for the first time with "potential" status
+      await DataBaseClient.GoodFeedItem.updateById(item._id, news); //  created for the first time with "potential" status
       await sendNewPotentialOrderMail(news);
     } else {
       // * THERE ARE AVAILABLE SYMBOLS
-      const news: News = {
+      const news: GoodFeedItem = {
         ...feedWithGuess,
         status: "pending",
       };
-      await DataBaseClient.News.updateById(item._id, news); //  created for the first time with "pending" status
+      await DataBaseClient.GoodFeedItem.updateById(item._id, news); //  created for the first time with "pending" status
       try {
         // ? get current price of the symbols
         const tickersPrice = await getTickersPrice(
@@ -236,10 +239,10 @@ const analyzeFeedItem = async (
 
 const addSymbolsGuessToFeedItem = async (
   item: FeedItem,
-  bannedTokens: BannedToken[]
+  bannedSymbols: BannedToken[]
 ): Promise<FeedItem> => {
   const symbolsGuess = extractSymbolsFromTitle(item.title);
-  item.symbolsGuess = removeBannedSymbols(symbolsGuess, bannedTokens);
+  item.symbolsGuess = removeBannedSymbols(symbolsGuess, bannedSymbols);
   if (item.symbols && item.symbols.length)
     item.symbols = [...new Set(item.symbols)];
   return item;

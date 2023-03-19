@@ -1,14 +1,13 @@
 import { Router } from "express";
-import { DataBaseClient } from "../connections/database";
 import { checkIfAdmin } from "../middlewares/auth-middleware";
-import { NewOrderRequest } from "../models/transactions";
+import { NewOrderRequest } from "../models/orders";
+import { getExchangeInfo } from "../services/binance/market";
 import {
-  getAccount,
-  getExchangeInfo,
-  getTransactionById,
-  getTransactions,
-  newTransaction,
-} from "../services/transactions";
+  getBinanceTrades,
+  getBinanceTradesByOrderId,
+} from "../services/binance/trade";
+import { newOrder } from "../services/orders";
+import { getTradeById, getTrades } from "../services/trades";
 import { getCircularReplacer } from "../utils/utils";
 
 const router = Router();
@@ -27,34 +26,49 @@ router.post("/new-order", checkIfAdmin, async (req, res) => {
   if (!orderRequest) return res.status(400).send("Empty order");
   if (!orderRequest.symbol) return res.status(400).send("symbol is required");
   if (!orderRequest.side) return res.status(400).send("side is required");
-  setTimeout(async () => {
-    const order = await newTransaction(orderRequest).catch((error: any) => {
-      const status = (error.response as any).status;
-      const response = JSON.stringify(error.response, getCircularReplacer());
-      res.status(status).send(response);
+  await newOrder(orderRequest)
+    .then((order) => {
+      // TODO: save trade in database
+      res.send(order);
+    })
+    .catch((error: any) => {
+      const response = JSON.stringify(error, getCircularReplacer());
+      res.status(500).send(response);
     });
-    if (order && order.transaction) {
-      const responseAddTransaction = await DataBaseClient.Transaction.add(
-        order.transaction
-      );
-      res.send({ order, savedDB: responseAddTransaction });
-    }
-  }, 1000);
 });
 
-router.get("/", checkIfAdmin, async (req, res) => {
+router.get("/:symbol", checkIfAdmin, async (req, res) => {
+  const symbol = (req.params.symbol as string) || "";
   const time = parseInt(req.query.time as string) || 0;
-  await getTransactions(time)
+  if (!symbol) return res.status(400).send("symbol is required");
+  await getTrades({ symbol, time })
     .then((response: any) => res.send(response))
     .catch((error: any) => res.status(500).send(error));
 });
 
-router.get("/:symbol/:orderId", checkIfAdmin, async (req, res) => {
+router.get("/:orderId", checkIfAdmin, async (req, res) => {
   const orderId = (req.params.orderId as string) || "";
   const symbol = (req.params.symbol as string) || "";
   if (!orderId) return res.status(400).send("orderId is required");
+  await getTradeById(orderId)
+    .then((response) => res.send(response))
+    .catch((error: any) => res.status(500).send(error));
+});
+
+router.get("/:symbol/binance", checkIfAdmin, async (req, res) => {
+  const symbol = (req.params.symbol as string) || "";
   if (!symbol) return res.status(400).send("symbol is required");
-  await getTransactionById(symbol, orderId)
+  await getBinanceTrades(symbol)
+    .then((response: any) => res.send(response))
+    .catch((error: any) => res.status(500).send(error));
+});
+
+router.get("/:symbol/:orderId/binance", checkIfAdmin, async (req, res) => {
+  const orderId = parseInt(req.params.orderId as string) || 0;
+  const symbol = (req.params.symbol as string) || "";
+  if (!orderId) return res.status(400).send("orderId is required");
+  if (!symbol) return res.status(400).send("symbol is required");
+  await getBinanceTradesByOrderId(symbol, orderId)
     .then((response) => res.send(response))
     .catch((error: any) => res.status(500).send(error));
 });

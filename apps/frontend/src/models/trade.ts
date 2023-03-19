@@ -142,7 +142,7 @@ export interface Kline {
   ignore: string;
 }
 
-export interface BinanceOrder {
+export interface BinanceOrderResponse {
   symbol: string;
   origClientOrderId: string;
   orderId: number;

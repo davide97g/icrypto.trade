@@ -1,23 +1,28 @@
 import { WebSocket } from "ws";
-import { BinanceClient } from "../config/binance";
-import { BinanceTicker } from "../models/binance";
-import { Order } from "../models/orders";
+import { BinanceClient } from "../../config/binance";
+import { BinanceTicker } from "../../models/binance";
 import {
-  ExchangeInfoSymbol,
-  ExchangeInfoSymbolFilter,
   Fill,
+  NewOCOOrderRequest,
   NewOrderRequest,
-  OrderSide,
-  OrderTimeInForce,
-  OrderType,
-  TradeConfig,
-} from "../models/transactions";
-import { roundToNDigits } from "../utils/utils";
-import { sendErrorMail, sendOrderMail } from "./mail";
-import { newOrder, newOCOOrder } from "./orders";
-import { getTradesByOrderId, subscribeSymbolTrade } from "./transactions";
-import { telegramApi } from "../connections/telegram";
-import { DataBaseClient } from "../connections/database";
+  Order,
+} from "../../models/orders";
+import { roundToNDigits } from "../../utils/utils";
+import { sendErrorMail, sendOrderMail } from "../mail";
+import { newOrder, newOCOOrder } from "../orders";
+import { subscribeSymbolTrade } from "../trades";
+import { telegramApi } from "../../connections/telegram";
+import { DataBaseClient } from "../../connections/database";
+import { ExchangeInfoSymbol } from "../../models/account";
+import { TradeConfig } from "../../models/bot";
+import { getBinanceTradesByOrderId } from "../binance/trade";
+import {
+  findTickerPrice,
+  calculateOrderQuantity,
+  computeQuantity,
+  calculateAvgMarketBuyPrice,
+  computePrice,
+} from "../trading/utils";
 
 interface TickerWS {
   e: string; // Event type
@@ -140,7 +145,7 @@ export const trade = async (
       tickersPrice
     );
     console.info("Market Order", marketOrderTransaction);
-    const trades = await getTradesByOrderId(
+    const trades = await getBinanceTradesByOrderId(
       exchangeInfoSymbol.symbol,
       marketOrderTransaction.orderId
     );
@@ -158,20 +163,20 @@ export const trade = async (
       );
       const orderIds = ocoOrder.orders.map((o) => o.orderId);
       subscribeSymbolTrade(exchangeInfoSymbol.symbol, orderIds);
-      await DataBaseClient.News.updateStatus(newsId, "success");
+      await DataBaseClient.GoodFeedItem.updateStatus(newsId, "success");
       await sendOrderMail(marketOrderTransaction, {
         order: ocoOrder,
       });
     } catch (e: any) {
       console.error("[Error OCO Order]", e);
-      await DataBaseClient.News.updateStatus(newsId, "oco-error");
+      await DataBaseClient.GoodFeedItem.updateStatus(newsId, "oco-error");
       await sendOrderMail(marketOrderTransaction, {
         error: e,
       });
     }
   } catch (error) {
     console.error("[Error MARKET Order]", error);
-    await DataBaseClient.News.updateStatus(newsId, "market-error");
+    await DataBaseClient.GoodFeedItem.updateStatus(newsId, "market-error");
     await sendErrorMail(
       `[Error MARKET Order] [${exchangeInfoSymbol.symbol}]`,
       `There was an error with MARKET ORDER for the news ${newsId}`,
@@ -206,11 +211,14 @@ const newMarketOrder = async (
   );
   const quantity = computeQuantity(exchangeInfoSymbol, orderQty, precision);
 
-  const newOrderRequest = createNewOrderRequest(
-    exchangeInfoSymbol.symbol,
+  const newOrderRequest: NewOrderRequest = {
+    symbol: exchangeInfoSymbol.symbol,
     quantity,
-    precision
-  );
+    precision,
+    side: "BUY",
+    type: "MARKET",
+    timeInForce: "GTC",
+  };
 
   return newOrder(newOrderRequest);
 };
@@ -257,192 +265,16 @@ const newTPSLOrder = async (
     precision
   );
 
-  const newOCOOrderRequest = createNewOCOOrderRequest(
-    exchangeInfoSymbol.symbol,
+  const newOCOOrderRequest: NewOCOOrderRequest = {
+    symbol: exchangeInfoSymbol.symbol,
     quantity,
-    stopLossStopPrice,
-    takeProfitStopPrice,
-    marketOrderTransaction.orderId
-  );
+    takeProfitPrice: takeProfitStopPrice,
+    stopLossPrice: stopLossStopPrice,
+    marketBuyOrderId: marketOrderTransaction.orderId,
+    timeInForce: "GTC",
+  };
 
   console.info("📈 stop loss take profit request", newOCOOrderRequest);
 
   return newOCOOrder(newOCOOrderRequest);
-};
-
-// *** CREATE ORDER REQUESTS ***
-
-const createNewOrderRequest = (
-  symbol: string,
-  quantity: number,
-  precision: number,
-  side: OrderSide = "BUY",
-  type: OrderType = "MARKET",
-  timeInForce: OrderTimeInForce = "GTC"
-): NewOrderRequest => {
-  return {
-    symbol,
-    side,
-    type,
-    quantity,
-    precision,
-    timeInForce,
-  } as NewOrderRequest;
-};
-
-const createNewOCOOrderRequest = (
-  symbol: string,
-  quantity: number,
-  stopLossPrice: number,
-  takeProfitPrice: number,
-  marketBuyOrderId: number,
-  timeInForce: OrderTimeInForce = "GTC"
-) => {
-  return {
-    symbol,
-    quantity,
-    timeInForce,
-    stopLossPrice,
-    takeProfitPrice,
-    marketBuyOrderId,
-  };
-};
-
-// *** UTILITY FUNCTIONS ***
-
-const findTickerPrice = (symbol: string, tickerPrices: BinanceTicker[]) => {
-  return tickerPrices.find((tickerPrice) => tickerPrice?.symbol === symbol);
-};
-
-const calculateOrderQuantity = (
-  tradeAmount: number,
-  tickerPrice: number,
-  precision: number
-) => {
-  return roundToNDigits(tradeAmount / tickerPrice, precision - 1);
-};
-
-const calculateAvgMarketBuyPrice = (fills: Fill[]) => {
-  const totalQty = fills.reduce((acc, fill) => acc + parseFloat(fill.qty), 0);
-  const totalPrice = fills.reduce(
-    (acc, fill) => acc + parseFloat(fill.price) * parseFloat(fill.qty),
-    0
-  );
-
-  return totalPrice / totalQty;
-};
-
-const findFilterByType = (
-  filters: ExchangeInfoSymbolFilter[],
-  filterType: string
-) => {
-  return filters.find((f) => f.filterType === filterType)!;
-};
-
-const getPrecision = (sizeString: string, precision: number) => {
-  return sizeString.indexOf("1") > -1
-    ? sizeString.replace(".", "").indexOf("1")
-    : precision;
-};
-
-const runQuantityCheck = (
-  quantity: number,
-  minLotSizeQty: number,
-  maxLotSizeQty: number,
-  stepSizeValue: number
-): boolean => {
-  return (
-    quantity >= minLotSizeQty &&
-    quantity <= maxLotSizeQty &&
-    quantity % stepSizeValue == 0
-  );
-};
-
-const computeQuantity = (
-  exchangeInfoSymbol: ExchangeInfoSymbol,
-  orderQty: number,
-  precision: number
-) => {
-  const filterLotSize = findFilterByType(
-    exchangeInfoSymbol.filters,
-    "LOT_SIZE"
-  );
-  if (!filterLotSize) throw new Error("Lot size filter not found");
-
-  const { maxQty, minQty, stepSize } = filterLotSize;
-  const maxLotSizeQty = parseFloat(maxQty || "0");
-  const minLotSizeQty = parseFloat(minQty || "0");
-  const stepSizeValue = parseFloat(stepSize || "0.10000000");
-  const stepSizePrecision = getPrecision(stepSize || "0.10000000", precision);
-
-  console.info("stepSizePrecision", stepSizePrecision);
-
-  const filterMinNotional = findFilterByType(
-    exchangeInfoSymbol.filters,
-    "MIN_NOTIONAL"
-  );
-  const minNotional = parseFloat(
-    filterMinNotional?.minNotional || "10.00000000"
-  );
-
-  const safeQty = orderQty - stepSizeValue;
-  const minimumQuantity = Math.max(safeQty, minNotional, minLotSizeQty);
-  const quantity = roundToNDigits(
-    Math.min(minimumQuantity, maxLotSizeQty),
-    stepSizePrecision
-  );
-
-  console.info("📈 quantity", quantity);
-
-  // const isQuantityOk = runQuantityCheck(
-  //   quantity,
-  //   minLotSizeQty,
-  //   maxLotSizeQty,
-  //   stepSizeValue
-  // );
-  // if (!isQuantityOk) {
-  //   throw {
-  //     message: "Quantity is not ok",
-  //     quantity,
-  //     filterLotSize,
-  //   };
-  // }
-
-  return quantity;
-};
-
-const computePrice = (
-  avgPrice: number,
-  orderPrice: number,
-  exchangeInfoSymbol: ExchangeInfoSymbol,
-  precision: number
-) => {
-  const filterPercentPriceBySide = findFilterByType(
-    exchangeInfoSymbol.filters,
-    "PERCENT_PRICE_BY_SIDE"
-  );
-  const { askMultiplierUp, askMultiplierDown } = filterPercentPriceBySide;
-  const multiplierUp = parseFloat(askMultiplierUp || "5");
-  const multiplierDown = parseFloat(askMultiplierDown || "0.2");
-
-  const downLimitPrice = avgPrice * multiplierDown;
-  const upLimitPrice = avgPrice * multiplierUp;
-  const price = Math.max(Math.min(orderPrice, upLimitPrice), downLimitPrice);
-
-  const filterPriceFilter = findFilterByType(
-    exchangeInfoSymbol.filters,
-    "PRICE_FILTER"
-  );
-  const { maxPrice, minPrice, tickSize } = filterPriceFilter;
-  const maxPriceValue = parseFloat(maxPrice || "0");
-  const minPriceValue = parseFloat(minPrice || "0");
-  const tickSizePrecision = getPrecision(tickSize || "0.00010000", precision);
-
-  const notRoundedPrice = Math.min(
-    Math.max(price, minPriceValue),
-    maxPriceValue
-  );
-  const finalPrice = roundToNDigits(notRoundedPrice, tickSizePrecision);
-
-  return finalPrice;
 };

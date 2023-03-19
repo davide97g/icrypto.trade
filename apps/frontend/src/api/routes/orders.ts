@@ -1,6 +1,6 @@
 import { BinanceError } from "../../models/binance";
 import { BinanceOrderDetails, MyTrade } from "../../models/orders";
-import { BinanceOrder, NewOrderRequest } from "../../models/trade";
+import { BinanceOrderResponse, NewOrderRequest } from "../../models/trade";
 import { setIsLoading } from "../../services/utils";
 import { getIdToken } from "../auth";
 import { API, apiHost } from "../server";
@@ -32,14 +32,14 @@ export const OrdersRoutes = {
     return await API.delete(`${apiHost}/orders/${symbol}/${orderId}`, {
       headers: { authorization: `Bearer ${await getIdToken()}` },
     })
-      .then((res) => res.data as BinanceOrder)
+      .then((res) => res.data as BinanceOrderResponse)
       .catch((err: BinanceError) => {
         console.error(err);
         throw err;
       })
       .finally(() => setIsLoading(false));
   },
-  cancelAll: async (symbol: string): Promise<BinanceOrder[] | null> => {
+  cancelAll: async (symbol: string): Promise<BinanceOrderResponse[] | null> => {
     setIsLoading(true);
     return await API.delete(`${apiHost}/orders/${symbol}/all`, {
       headers: { authorization: `Bearer ${await getIdToken()}` },
@@ -51,7 +51,7 @@ export const OrdersRoutes = {
       })
       .finally(() => setIsLoading(false));
   },
-  sellAll: async (symbol: string): Promise<BinanceOrder | null> => {
+  sellAll: async (symbol: string): Promise<BinanceOrderResponse | null> => {
     setIsLoading(true);
     return await API.post(
       `${apiHost}/orders/${symbol}/sell-all`,
@@ -76,7 +76,7 @@ export const OrdersRoutes = {
         headers: { authorization: `Bearer ${await getIdToken()}` },
       }
     )
-      .then((res) => res.data as BinanceOrder)
+      .then((res) => res.data as BinanceOrderResponse)
       .catch((err: BinanceError) => {
         console.error(err);
         throw err;

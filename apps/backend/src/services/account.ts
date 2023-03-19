@@ -1,12 +1,5 @@
-import { BinanceClient } from "../config/binance";
 import { DataBaseClient } from "../connections/database";
 import { admin } from "../middlewares/auth-middleware";
-import {
-  BinanceAccount,
-  BinanceError,
-  BinanceErrorData,
-  BinanceResponse,
-} from "../models/binance";
 
 export const createAdmin = async (uid: string) => {
   return await admin
@@ -20,16 +13,6 @@ export const createAdmin = async (uid: string) => {
       console.error(err);
       return false;
     });
-};
-
-export const getAccount = async (): Promise<
-  BinanceResponse<BinanceAccount>
-> => {
-  return BinanceClient.account()
-    .then((response: any) => ({ data: response.data as BinanceAccount }))
-    .catch((error: BinanceError) => ({
-      error: error.response.data as BinanceErrorData,
-    }));
 };
 
 export const getUser = async (uid: string) => {

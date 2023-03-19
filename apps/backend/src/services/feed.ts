@@ -2,7 +2,7 @@ import axios from "axios";
 import { extractSymbolsFromTitle, removeBannedSymbols } from "./symbols";
 import { FeedItem } from "../models/feed";
 import { DataBaseClient } from "../connections/database";
-import { TradeConfig } from "../models/transactions";
+import { TradeConfig } from "../models/bot";
 
 let bannedTokens: { symbol: string }[] = [];
 
@@ -48,7 +48,7 @@ export const addSymbolsGuessToFeed = async (
   feed: FeedItem[]
 ): Promise<FeedItem[]> => {
   if (!bannedTokens.length)
-    bannedTokens = await DataBaseClient.Token.getBannedTokens();
+    bannedTokens = await DataBaseClient.Symbols.getBanned();
   return feed.map((item) => {
     const symbolsGuess = extractSymbolsFromTitle(item.title);
     item.symbolsGuess = removeBannedSymbols(symbolsGuess, bannedTokens);

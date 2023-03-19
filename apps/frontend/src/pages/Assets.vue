@@ -22,14 +22,14 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { Server } from "../api/server";
+import { ApiClient } from "../api/server";
 import { Account } from "../models/trade";
 import { OrdersPageName, router } from "../router";
 
 const account = ref<Account>();
 
 const getAssets = () => {
-  Server.Transaction.getAccount().then((res) => {
+  ApiClient.Account.get().then((res) => {
     if (res) account.value = res;
   });
 };

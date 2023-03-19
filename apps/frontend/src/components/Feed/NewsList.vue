@@ -54,7 +54,7 @@
 <script setup lang="ts">
 import { message } from "ant-design-vue";
 import { ref } from "vue";
-import { Server } from "../../api/server";
+import { ApiClient } from "../../api/server";
 import { News } from "../../models/feed";
 import { setIsLoading } from "../../services/utils";
 
@@ -127,7 +127,7 @@ const defaultLast24Hours = () => {
 const getNews = async (all?: boolean) => {
   setIsLoading(true);
   const time = all ? undefined : defaultLast24Hours();
-  await Server.News.get({ time })
+  await ApiClient.News.get({ time })
     .then((res) => {
       news.value = res;
     })

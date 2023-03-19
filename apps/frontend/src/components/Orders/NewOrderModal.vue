@@ -89,7 +89,7 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
 import { ExchangeInfoSymbol, NewOrderRequest } from "../../models/trade";
-import { Server } from "../../api/server";
+import { ApiClient } from "../../api/server";
 import { message } from "ant-design-vue";
 
 const props = defineProps<{
@@ -114,7 +114,7 @@ watch(
 const handleOk = () => {
   confirmLoading.value = true;
   newOrderRequest.value.symbol = newOrderRequest.value.symbol;
-  Server.Transaction.newOrder(newOrderRequest.value)
+  ApiClient.Orders.newOrder(newOrderRequest.value)
     .then((res) => {
       if (res) {
         emits("close");

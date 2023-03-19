@@ -13,11 +13,6 @@ import { getCircularReplacer } from "../utils/utils";
 
 const router = Router();
 
-router.get("/account", checkIfAdmin, async (req, res) => {
-  const account = await getAccount();
-  res.send(account);
-});
-
 router.get("/exchange-info", checkIfAdmin, async (req, res) => {
   const exchangeInfo = await getExchangeInfo().catch((error: any) => {
     const status = (error.response as any)?.status || 500;

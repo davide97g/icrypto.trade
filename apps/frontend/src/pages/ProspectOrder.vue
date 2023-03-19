@@ -97,7 +97,7 @@
 import { LinkOutlined } from "@ant-design/icons-vue";
 import { message } from "ant-design-vue";
 import { ref } from "vue";
-import { Server } from "../api/server";
+import { ApiClient } from "../api/server";
 import SymbolSelectionModal from "../components/Orders/SymbolSelectionModal.vue";
 import { BinanceError } from "../models/binance";
 import { News, ProspectOrderStatus } from "../models/feed";
@@ -113,7 +113,7 @@ const props = defineProps<{
 
 const getNews = async () => {
   setIsLoading(true);
-  await Server.News.getById(props.id)
+  await ApiClient.News.getById(props.id)
     .then((res) => (news.value = res))
     .catch((err) => {
       console.log(err);
@@ -129,7 +129,7 @@ const showFullNews = ref(false);
 const binanceStore = useBinanceStore();
 
 const getExchangeInfo = () =>
-  Server.Transaction.getExchangeInfo()
+  ApiClient.Trades.getExchangeInfo()
     .then((res) => {
       if (res) binanceStore.setExchangeInfo(res);
       else message.warning(`Error getting exchange info`);
@@ -149,7 +149,7 @@ const addSymbolToNews = (symbol: string) => {
     message.error(`News id not found`);
     return;
   }
-  Server.Orders.createOrder(symbol, newsId)
+  ApiClient.Orders.addSymbolToNews(symbol, newsId)
     .then(() => {
       message.success(`Order created`);
       getNews();
@@ -190,7 +190,7 @@ const markAsIgnore = () => {
     ...news?.value,
     orderStatus: "ignore",
   };
-  Server.News.updateById(newsToUpdate)
+  ApiClient.News.updateById(newsToUpdate)
     .then(() => {
       message.success(`News marked as ignore`);
       getNews();

@@ -1,7 +1,7 @@
 <template>
   <h1>Settings</h1>
   <a-tabs v-model:activeKey="activeKey" style="margin-top: 50px">
-    <a-tab-pane key="server-config" tab="Server Configuration">
+    <a-tab-pane key="server-config" tab="ApiClient Configuration">
       <ServerConfig />
     </a-tab-pane>
     <a-tab-pane key="banned-tokens" tab="Banned Tokens">
@@ -16,7 +16,7 @@
 <script setup lang="ts">
 import { message } from "ant-design-vue";
 import { ref } from "vue";
-import { Server } from "../api/server";
+import { ApiClient } from "../api/server";
 import BannedTokens from "../components/Settings/BannedTokens.vue";
 import ServerConfig from "../components/Settings/ServerConfig.vue";
 import Symbols from "../components/Settings/Symbols.vue";
@@ -27,7 +27,7 @@ const activeKey = ref("server-config");
 const exchangeInfo = ref<ExchangeInfo>();
 
 const getExchangeInfo = () =>
-  Server.Transaction.getExchangeInfo()
+  ApiClient.Trades.getExchangeInfo()
     .then((res) => {
       if (res) {
         exchangeInfo.value = res;

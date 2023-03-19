@@ -17,7 +17,11 @@
   >
     <template #bodyCell="{ column, record }">
       <template v-if="column.title === 'Title'">
-        <CopyOutlined style="cursor:pointer; margin-right:10px" @click="copyToClipboard(record.title)"/> {{ record.title }} 
+        <CopyOutlined
+          style="cursor: pointer; margin-right: 10px"
+          @click="copyToClipboard(record.title)"
+        />
+        {{ record.title }}
       </template>
       <template v-if="column.title === 'Symbols'">
         <a-tag v-for="symbol in record.symbols">{{ symbol }}</a-tag>
@@ -41,7 +45,6 @@ import { ref, watch } from "vue";
 import { FeedItem } from "../../models/feed";
 import { CopyOutlined } from "@ant-design/icons-vue";
 import { message } from "ant-design-vue";
-
 
 const props = defineProps<{
   feed: FeedItem[];
@@ -103,8 +106,8 @@ const onSearch = (searchValue: string) => {
   );
 };
 
-const copyToClipboard = (title:string) => {
+const copyToClipboard = (title: string) => {
   navigator.clipboard.writeText(title);
   message.success("Title copied!");
-}
+};
 </script>

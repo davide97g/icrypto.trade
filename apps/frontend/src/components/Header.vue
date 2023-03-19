@@ -49,7 +49,7 @@ import {
 } from "../router";
 import { isLoggedIn, isAdmin } from "../services/utils";
 import Avatar from "../components/Avatar.vue";
-import { Server } from "../api/server";
+import { ApiClient } from "../api/server";
 import { ref } from "vue";
 import { message } from "ant-design-vue";
 
@@ -58,8 +58,8 @@ const serverInfo = ref<{
   env: "test" | "production";
 }>();
 
-const getServerInfo = async () => {
-  Server.getServerInfo()
+const ServerGetInfo = async () => {
+  ApiClient.Server.getInfo()
     .then((res) => (serverInfo.value = res))
     .catch((err) => {
       console.error(err);
@@ -67,7 +67,7 @@ const getServerInfo = async () => {
     });
 };
 
-getServerInfo();
+ServerGetInfo();
 </script>
 
 <style lang="scss" scoped>

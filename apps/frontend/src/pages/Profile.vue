@@ -31,7 +31,7 @@
 <script lang="ts" setup>
 import { ref } from "vue";
 import { FirebaseAuth } from "../api/auth";
-import { Server } from "../api/server";
+import { ApiClient } from "../api/server";
 import Avatar from "../components/Avatar.vue";
 import { NewsPageName } from "../router";
 import { useUserStore } from "../stores/user";
@@ -40,7 +40,7 @@ const userId = ref("");
 
 const createAdmin = async (uid: string | undefined) => {
   if (!uid) return;
-  await Server.Roles.createAdminUser(uid);
+  await ApiClient.Account.createAdminUser(uid);
 };
 </script>
 

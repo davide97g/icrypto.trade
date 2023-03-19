@@ -68,7 +68,7 @@
 <script setup lang="ts">
 import { message } from "ant-design-vue";
 import { ref } from "vue";
-import { Server } from "../api/server";
+import { ApiClient } from "../api/server";
 import { BinanceError } from "../models/binance";
 import { BinanceOrderDetails } from "../models/orders";
 
@@ -85,7 +85,7 @@ const getTransaction = () => {
   const orderId = props.orderId;
   const symbol = props.symbol;
   if (orderId && symbol)
-    Server.Transaction.getById(symbol, String(orderId))
+    ApiClient.Trades.getById(symbol, String(orderId))
       .then((res) => {
         if (res) transaction.value = res;
         else message.warning(`Error getting transaction`);
@@ -102,7 +102,7 @@ const formatJSON = (json: any) => {
 
 const cancelOrder = () => {
   if (transaction.value?.orderId)
-    Server.Orders.cancel(
+    ApiClient.Orders.cancel(
       transaction.value.symbol,
       String(transaction.value.orderId)
     )

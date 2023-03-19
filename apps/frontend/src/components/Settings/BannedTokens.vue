@@ -19,7 +19,7 @@
 <script setup lang="ts">
 import { DeleteFilled } from "@ant-design/icons-vue";
 import { ref } from "vue";
-// import { Server } from "../api/server";
+// import { ApiClient } from "../api/server";
 // import { Token } from "../models/token";
 
 import {
@@ -86,7 +86,7 @@ const deleteBannedToken = async (token: string) => {
 getBannedTokens();
 
 // const tokens = ref<Token[]>([]);
-// Server.Token.get().then((res) => {
+// ApiClient.Token.get().then((res) => {
 //   console.info(res);
 //   tokens.value = res.data.tokens;
 // });

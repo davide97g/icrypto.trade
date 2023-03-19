@@ -42,7 +42,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { FeedItem } from "../models/feed";
-import { Server } from "../api/server";
+import { ApiClient } from "../api/server";
 import FeedList from "../components/Feed/FeedList.vue";
 import NewsList from "../components/Feed/NewsList.vue";
 import { message } from "ant-design-vue";
@@ -59,14 +59,17 @@ const withGuess = ref(false);
 
 const getFeed = async () => {
   setIsLoading(true);
-  await Server.Feed.getFeed({ limit: feedSize.value, guess: withGuess.value })
+  await ApiClient.Feed.get({
+    limit: feedSize.value,
+    guess: withGuess.value,
+  })
     .then((res) => (feed.value = res))
     .catch((err) => console.log(err))
     .finally(() => setIsLoading(false));
 };
 
 const extractSymbolsFromText = async () => {
-  await Server.Symbols.extract(text.value)
+  await ApiClient.Symbols.extract(text.value)
     .then((res) => (symbols.value = res))
     .catch((err) => {
       console.error(err);

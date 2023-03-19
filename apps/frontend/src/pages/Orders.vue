@@ -190,7 +190,7 @@
 import { loading } from "../services/utils";
 import { message } from "ant-design-vue";
 import { computed, ref, watch } from "vue";
-import { Server } from "../api/server";
+import { ApiClient } from "../api/server";
 import { setIsLoading } from "../services/utils";
 import { CopyOutlined, WalletOutlined } from "@ant-design/icons-vue";
 import { BinanceOrderDetails, MyTrade } from "../models/orders";
@@ -371,7 +371,7 @@ const openOrderDetails = (symbol: string, orderId: string) => {
 const getOpenOrders = async () => {
   if (!symbol.value) return;
   setIsLoading(true);
-  await Server.Orders.get(symbol.value)
+  await ApiClient.Orders.get(symbol.value)
     .then((res) => {
       if (res) orders.value = res;
       else message.warning("No orders found");
@@ -388,7 +388,7 @@ const getOpenOrders = async () => {
 const getMyTrades = async () => {
   if (!symbol.value) return;
   setIsLoading(true);
-  await Server.Orders.getTrades(symbol.value)
+  await ApiClient.Orders.getTrades(symbol.value)
     .then((res) => (myTrades.value = res))
     .catch((err) => {
       console.error(err);
@@ -400,7 +400,7 @@ const getMyTrades = async () => {
 const cancelAllOpenOrders = () => {
   if (!symbol.value) return;
   setIsLoading(true);
-  Server.Orders.cancelAll(symbol.value)
+  ApiClient.Orders.cancelAll(symbol.value)
     .then((res) => {
       if (res) {
         getOpenOrders();
@@ -422,7 +422,7 @@ const cancelAllOpenOrders = () => {
 const sellAll = () => {
   if (!symbol.value) return;
   setIsLoading(true);
-  Server.Orders.sellAll(symbol.value)
+  ApiClient.Orders.sellAll(symbol.value)
     .then((res) => {
       if (res) {
         getAccount();
@@ -440,13 +440,13 @@ const sellAll = () => {
 };
 
 const getAccount = () => {
-  Server.Transaction.getAccount().then((res) => {
+  ApiClient.Account.get().then((res) => {
     if (res) account.value = res;
   });
 };
 
 const getExchangeInfo = () =>
-  Server.Transaction.getExchangeInfo()
+  ApiClient.Trades.getExchangeInfo()
     .then((res) => {
       if (res) exchangeInfo.value = res;
       else message.warning(`Error getting exchange info`);

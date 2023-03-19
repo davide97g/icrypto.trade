@@ -109,7 +109,7 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
 import { TradeConfig } from "../../models/trade";
-import { Server } from "../../api/server";
+import { ApiClient } from "../../api/server";
 import { message } from "ant-design-vue";
 
 const originalTradeConfig = ref<TradeConfig>({
@@ -134,7 +134,7 @@ watch(
 );
 
 const getTradeConfig = async () => {
-  await Server.Scheduler.getTradeConfig()
+  await ApiClient.Bot.getTradeConfig()
     .then((res) => {
       if (res) originalTradeConfig.value = res;
     })
@@ -145,7 +145,7 @@ const getTradeConfig = async () => {
 };
 
 const updateTradeConfig = async () => {
-  await Server.Scheduler.updateTradeConfig(tradeConfig.value)
+  await ApiClient.Bot.updateTradeConfig(tradeConfig.value)
     .then((res) => {
       if (res) {
         message.success("Trade config updated");
@@ -164,14 +164,14 @@ const infoWS = ref<{
 }>();
 
 const getWSInfo = () =>
-  Server.WebSocket.get()
+  ApiClient.Bot.get()
     .then((res) => {
       if (res) infoWS.value = res;
     })
     .catch((err) => console.log(err));
 
 const startWS = async () => {
-  await Server.WebSocket.start()
+  await ApiClient.Bot.start()
     .then((res) => {
       if (res) message.success(res.message);
     })
@@ -183,7 +183,7 @@ const startWS = async () => {
 };
 
 const stopWS = async () => {
-  await Server.WebSocket.stop()
+  await ApiClient.Bot.stop()
     .then((res) => {
       if (res) message.success(res.message);
     })

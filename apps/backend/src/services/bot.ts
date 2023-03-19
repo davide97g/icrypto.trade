@@ -51,7 +51,7 @@ export const getWS = () => ({
   tradeConfig: WS.tradeConfig,
 });
 
-trackKlines("BTCUSDT", "1m");
+// trackKlines("BTCUSDT", "1m");
 
 export const startWebSockets = async () => {
   const resNews = await StartNewsWebSocket();
@@ -97,16 +97,20 @@ const StartNewsWebSocket = async () => {
   });
 
   const WsNewsURL = "wss://news.treeofalpha.com/ws";
-  WS.news = wsConnect<WsNTANewsMessage>(WsNewsURL, (data) => {
-    FEED[data._id] = {
-      _id: data._id,
-      title: data.title,
-      likes: 0,
-      dislikes: 0,
-      time: data.time,
-    };
-    console.log("[News]", data._id);
-  });
+  WS.news = wsConnect<WsNTANewsMessage>(
+    WsNewsURL,
+    (data) => {
+      FEED[data._id] = {
+        _id: data._id,
+        title: data.title,
+        likes: 0,
+        dislikes: 0,
+        time: data.time,
+      };
+      console.log("[News]", data._id);
+    },
+    StartNewsWebSocket
+  );
   return { message: "WS News connected" };
 };
 
@@ -118,25 +122,29 @@ const StartLikesWebSocket = async () => {
   if (!bannedTokens.length)
     bannedTokens = await DataBaseClient.Token.getBannedTokens();
   const WsNewsURL = "wss://news.treeofalpha.com/ws/likes";
-  WS.likes = wsConnect<WsNTALikeMessage>(WsNewsURL, (data) => {
-    if (FEED[data.newsId]) {
-      const isAlreadyGood = isGood(FEED[data.newsId], config);
-      if (!isAlreadyGood) {
-        FEED[data.newsId].dislikes = data.dislikes;
-        FEED[data.newsId].likes = data.likes;
-        console.log(
-          "[Feedback]",
-          data.newsId,
-          "👍",
-          data.likes,
-          "👎",
-          data.dislikes
-        );
-        if (isGood(FEED[data.newsId], config))
-          analyzeFeedItem(FEED[data.newsId], config, bannedTokens);
+  WS.likes = wsConnect<WsNTALikeMessage>(
+    WsNewsURL,
+    (data) => {
+      if (FEED[data.newsId]) {
+        const isAlreadyGood = isGood(FEED[data.newsId], config);
+        if (!isAlreadyGood) {
+          FEED[data.newsId].dislikes = data.dislikes;
+          FEED[data.newsId].likes = data.likes;
+          console.log(
+            "[Feedback]",
+            data.newsId,
+            "👍",
+            data.likes,
+            "👎",
+            data.dislikes
+          );
+          if (isGood(FEED[data.newsId], config))
+            analyzeFeedItem(FEED[data.newsId], config, bannedTokens);
+        }
       }
-    }
-  });
+    },
+    StartLikesWebSocket
+  );
   return { message: "WS Likes connected" };
 };
 

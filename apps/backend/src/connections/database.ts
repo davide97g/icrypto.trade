@@ -14,8 +14,18 @@ import { News, NewsStatus } from "../models/feed";
 import { TradeConfig, Transaction } from "../models/transactions";
 import { db, rtdb } from "../config/firebase";
 import { MyTrade } from "../models/binance";
+import { ICryptoTradeUser } from "../models/database";
 
 export const DataBaseClient = {
+  Account: {
+    get: async (userId: string) => {
+      const querySnapshot = await getDoc(doc(db, `users/${userId}`));
+      return querySnapshot.data() as ICryptoTradeUser;
+    },
+    update(userId: string, data: any) {
+      return setDoc(doc(db, `users/${userId}`), data, { merge: true });
+    },
+  },
   News: {
     get: async (time?: number) => {
       const q = query(collection(db, "news"), where("time", ">", time || 0));

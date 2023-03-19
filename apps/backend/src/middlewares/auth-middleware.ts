@@ -19,6 +19,20 @@ const getAuthToken = (req: Request, res: Response, next: NextFunction) => {
   next();
 };
 
+export const getUserId = (req: Request, res: Response): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    getAuthToken(req, res, async () => {
+      try {
+        const { authToken } = req as any;
+        const userInfo = await admin.auth().verifyIdToken(authToken);
+        return resolve(userInfo.uid);
+      } catch (e) {
+        return reject(e);
+      }
+    });
+  });
+};
+
 export const checkIfAdmin = (
   req: Request,
   res: Response,

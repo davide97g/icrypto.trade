@@ -1,4 +1,5 @@
 import { BinanceClient } from "../config/binance";
+import { DataBaseClient } from "../connections/database";
 import { admin } from "../middlewares/auth-middleware";
 import {
   BinanceAccount,
@@ -29,4 +30,24 @@ export const getAccount = async (): Promise<
     .catch((error: BinanceError) => ({
       error: error.response.data as BinanceErrorData,
     }));
+};
+
+export const getUser = async (uid: string) => {
+  return await DataBaseClient.Account.get(uid);
+};
+
+export const setNotifications = async (
+  userId: string,
+  notifications: {
+    email: boolean;
+    telegram: boolean;
+  }
+) => {
+  try {
+    await DataBaseClient.Account.update(userId, { notifications });
+    return true;
+  } catch (err) {
+    console.error(err);
+    return false;
+  }
 };

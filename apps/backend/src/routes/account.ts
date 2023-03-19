@@ -2,8 +2,9 @@ import { Router } from "express";
 import {
   checkIfAdmin,
   checkIfAuthenticated,
+  getUserId,
 } from "../middlewares/auth-middleware";
-import { createAdmin, getAccount } from "../services/account";
+import { createAdmin, getAccount, setNotifications } from "../services/account";
 
 const router = Router();
 
@@ -29,7 +30,16 @@ router.post("/set-notifications", checkIfAdmin, async (req, res) => {
     }) || "";
   if (!notifications.email || !notifications.telegram)
     return res.status(400).send(`email and telegram are required`);
-  res.status(500).send("Not implemented yet");
+  const uid = await getUserId(req, res).catch((err) => {
+    console.error(err);
+    return null;
+  });
+  if (!uid) return res.status(500).send("Error getting user id");
+  else {
+    const result = await setNotifications(uid, notifications);
+    if (!result) return res.status(500).send("Error setting notifications");
+    else res.send("Notifications set");
+  }
 });
 
 export default router;

@@ -1,4 +1,4 @@
-import { defaultAddresses, MailClient } from "../config/email";
+import { ADDRESSES, MailClient, SENDER } from "../config/email";
 import { env } from "../config/environment";
 import { telegramApi } from "../connections/telegram";
 import { News } from "../models/feed";
@@ -14,8 +14,8 @@ import { getCircularReplacer } from "../utils/utils";
 const sendMail = async (subject: string, content: string) => {
   try {
     await MailClient.sendMail({
-      from: "dghiotto.dev@gmail.com",
-      to: defaultAddresses,
+      from: SENDER,
+      to: ADDRESSES,
       subject: `[iCrypto Trade] ${subject}`,
       html: content,
     });

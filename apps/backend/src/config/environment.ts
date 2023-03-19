@@ -13,4 +13,5 @@ export const env = {
   test: process.env.NODE_ENV !== "prod",
   telegramToken: process.env.TELEGRAM_TOKEN,
   domain: process.env.DOMAIN,
+  emailPassword: process.env.EMAIL_PASSWORD,
 };

@@ -12,7 +12,6 @@ const router = Router();
 
 router.get("/info", checkIfAuthenticated, async (req, res) => {
   const wsInfo = getWS();
-
   res.send(JSON.stringify(wsInfo, getCircularReplacer()));
 });
 

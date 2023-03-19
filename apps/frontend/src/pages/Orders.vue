@@ -165,6 +165,63 @@
           </template>
         </a-table>
       </a-tab-pane>
+      <a-tab-pane key="binance-trades" tab="Binance Trades" class="left">
+        <a-button
+          type="primary"
+          title="Refresh my trades (Binance)"
+          class="m1"
+          @click="getMyTradesBinance"
+          >Refresh Binance</a-button
+        >
+        <a-table
+          class="ant-table-custom"
+          :columns="columnsMyTrades"
+          :rowKey="(record:MyTrade) => record.id"
+          :data-source="myTradesBinance"
+          :pagination="{ pageSize: 10 }"
+        >
+          <template #bodyCell="{ column, record }">
+            <template v-if="column.title === 'Order Id'">
+              <CopyOutlined
+                style="cursor: pointer; margin-right: 10px"
+                @click="copyToClipboard(record.orderId)"
+              />
+              {{ record.orderId }}
+              <WalletOutlined
+                style="cursor: pointer; margin-right: 10px"
+                @click="openOrderDetails(record.symbol, record.orderId)"
+              />
+            </template>
+            <template v-if="column.title === 'Symbol'">
+              <a-tag>{{ record.symbol }}</a-tag>
+            </template>
+            <template v-if="column.title === 'Side'">
+              <a-tag :color="record.isBuyer ? 'green' : 'red'">{{
+                record.isBuyer ? "BUY" : "SELL"
+              }}</a-tag>
+            </template>
+            <template v-if="column.title === 'Price'">
+              <a-tag class="strong">{{ record.price }}</a-tag>
+            </template>
+            <template v-if="column.title === 'Quantity'">
+              <a-tag class="strong">{{ record.qty }}</a-tag>
+            </template>
+            <template v-if="column.title === 'Date'">
+              {{ new Date(record.time).toLocaleString() }}
+            </template>
+          </template>
+          <template #expandedRowRender="{ record }">
+            <div>
+              <p>
+                Commission:
+                <a-tag
+                  >{{ record.commission }} {{ record.commissionAsset }}
+                </a-tag>
+              </p>
+            </div>
+          </template>
+        </a-table>
+      </a-tab-pane>
     </a-tabs>
   </div>
   <div v-else>
@@ -218,6 +275,7 @@ watch(
 
 const orders = ref<BinanceOrderDetails[]>([]);
 const myTrades = ref<MyTrade[]>([]);
+const myTradesBinance = ref<MyTrade[]>([]);
 const account = ref<Account>();
 const exchangeInfo = ref<ExchangeInfo>();
 
@@ -388,8 +446,24 @@ const getOpenOrders = async () => {
 const getMyTrades = async () => {
   if (!symbol.value) return;
   setIsLoading(true);
-  await ApiClient.Orders.getTrades(symbol.value)
-    .then((res) => (myTrades.value = res))
+  await ApiClient.Trades.get(symbol.value)
+    .then((res) => {
+      if (res) myTrades.value = res;
+    })
+    .catch((err) => {
+      console.error(err);
+      message.error(err);
+    })
+    .finally(() => setIsLoading(false));
+};
+
+const getMyTradesBinance = async () => {
+  if (!symbol.value) return;
+  setIsLoading(true);
+  await ApiClient.Trades.getBinance(symbol.value)
+    .then((res) => {
+      if (res) myTradesBinance.value = res;
+    })
     .catch((err) => {
       console.error(err);
       message.error(err);
@@ -461,7 +535,6 @@ const newOrderModalVisible = ref(false);
 getExchangeInfo();
 getAccount();
 getOpenOrders();
-getMyTrades();
 </script>
 
 <style lang="scss" scoped>

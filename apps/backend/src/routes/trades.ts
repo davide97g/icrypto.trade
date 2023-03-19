@@ -48,7 +48,6 @@ router.get("/:symbol", checkIfAdmin, async (req, res) => {
 
 router.get("/:orderId", checkIfAdmin, async (req, res) => {
   const orderId = (req.params.orderId as string) || "";
-  const symbol = (req.params.symbol as string) || "";
   if (!orderId) return res.status(400).send("orderId is required");
   await getTradeById(orderId)
     .then((response) => res.send(response))

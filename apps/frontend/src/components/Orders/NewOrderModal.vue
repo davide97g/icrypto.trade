@@ -113,7 +113,6 @@ watch(
 
 const handleOk = () => {
   confirmLoading.value = true;
-  newOrderRequest.value.symbol = newOrderRequest.value.symbol;
   ApiClient.Orders.newOrder(newOrderRequest.value)
     .then((res) => {
       if (res) {

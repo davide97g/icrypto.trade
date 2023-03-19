@@ -5,31 +5,20 @@ import { setIsLoading } from "../../services/utils";
 import { getIdToken } from "../auth";
 import { API, apiHost } from "../server";
 
+const routeName = "orders";
 export const OrdersRoutes = {
   get: async (symbol: string): Promise<BinanceOrderDetails[] | null> => {
     setIsLoading(true);
-    return await API.get(`${apiHost}/orders/${symbol}`, {
+    return await API.get(`${apiHost}/${routeName}/${symbol}`, {
       headers: { authorization: `Bearer ${await getIdToken()}` },
     })
       .then((res) => res.data)
       .catch((err) => console.error(err))
       .finally(() => setIsLoading(false));
   },
-  getTrades: async (symbol: string): Promise<MyTrade[]> => {
-    setIsLoading(true);
-    return await API.get(`${apiHost}/orders/${symbol}/trades`, {
-      headers: { authorization: `Bearer ${await getIdToken()}` },
-    })
-      .then((res) => res.data)
-      .catch((err) => {
-        console.error(err);
-        throw err;
-      })
-      .finally(() => setIsLoading(false));
-  },
   cancel: async (symbol: string, orderId: string) => {
     setIsLoading(true);
-    return await API.delete(`${apiHost}/orders/${symbol}/${orderId}`, {
+    return await API.delete(`${apiHost}/${routeName}/${symbol}/${orderId}`, {
       headers: { authorization: `Bearer ${await getIdToken()}` },
     })
       .then((res) => res.data as BinanceOrderResponse)
@@ -41,7 +30,7 @@ export const OrdersRoutes = {
   },
   cancelAll: async (symbol: string): Promise<BinanceOrderResponse[] | null> => {
     setIsLoading(true);
-    return await API.delete(`${apiHost}/orders/${symbol}/all`, {
+    return await API.delete(`${apiHost}/${routeName}/${symbol}/all`, {
       headers: { authorization: `Bearer ${await getIdToken()}` },
     })
       .then((res) => res.data)
@@ -54,7 +43,7 @@ export const OrdersRoutes = {
   sellAll: async (symbol: string): Promise<BinanceOrderResponse | null> => {
     setIsLoading(true);
     return await API.post(
-      `${apiHost}/orders/${symbol}/sell-all`,
+      `${apiHost}/${routeName}/${symbol}/sell-all`,
       {},
       {
         headers: { authorization: `Bearer ${await getIdToken()}` },
@@ -67,7 +56,7 @@ export const OrdersRoutes = {
   addSymbolToNews: async (symbol: string, newsId: string) => {
     setIsLoading(true);
     return await API.post(
-      `${apiHost}/orders/create`,
+      `${apiHost}/${routeName}/add-symbol`,
       {
         symbol,
         newsId,
@@ -86,7 +75,7 @@ export const OrdersRoutes = {
   newOrder: async (order: NewOrderRequest) => {
     setIsLoading(true);
     return await API.post(
-      `${apiHost}/transactions/new-order`,
+      `${apiHost}/${routeName}/${order.symbol}/new`,
       { order },
       {
         headers: { authorization: `Bearer ${await getIdToken()}` },

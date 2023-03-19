@@ -11,6 +11,7 @@ import {
   Order,
 } from "../models/orders";
 import { getAccount, getExchangeInfo } from "./binance/market";
+import { getBinanceTradesByOrderId } from "./binance/trade";
 
 export const getOpenOrders = async (symbol: string) => {
   return BinanceClient.openOrders(symbol)
@@ -99,17 +100,25 @@ export const sellAll = async (symbol: string) => {
   return newOrder(marketSellRequest);
 };
 
-export const newOrder = async ({
-  symbol,
-  side,
-  type,
-  quantity,
-}: NewOrderRequest): Promise<Order> => {
+export const newOrder = async (
+  { symbol, side, type, quantity }: NewOrderRequest,
+  options?: { saveTransaction?: boolean }
+): Promise<Order> => {
   return BinanceClient.newOrder(symbol, side, type, {
     quantity,
     newOrderRespType: "FULL",
   })
-    .then((response: any) => response.data as Order)
+    .then(async (response: any) => {
+      const order = response.data as Order;
+      if (options?.saveTransaction) {
+        const trades = await getBinanceTradesByOrderId(
+          order.symbol,
+          order.orderId
+        );
+        await DataBaseClient.Trade.insertMany(trades);
+      }
+      return order;
+    })
     .catch((error: BinanceError) => {
       const { code, msg } = error.response.data;
       console.error(code, msg);

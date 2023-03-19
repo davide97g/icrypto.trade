@@ -3,10 +3,11 @@ import { setIsLoading } from "../../services/utils";
 import { getIdToken } from "../auth";
 import { API, apiHost } from "../server";
 
+const routeName = "account";
 export const AccountRoutes = {
   get: async (): Promise<Account> => {
     setIsLoading(true);
-    return await API.get(`${apiHost}/account`, {
+    return await API.get(`${apiHost}/${routeName}`, {
       headers: { authorization: `Bearer ${await getIdToken()}` },
     })
       .then((res) => res.data)
@@ -16,10 +17,10 @@ export const AccountRoutes = {
       })
       .finally(() => setIsLoading(false));
   },
-  createAdminUser: async (uid: string) => {
+  createAdmin: async (uid: string) => {
     setIsLoading(true);
     return await API.post(
-      `${apiHost}/account/create-admin`,
+      `${apiHost}/${routeName}/create-admin`,
       { uid },
       {
         headers: { authorization: `Bearer ${await getIdToken()}` },
@@ -35,7 +36,7 @@ export const AccountRoutes = {
   }) => {
     setIsLoading(true);
     return await API.post(
-      `${apiHost}/account/set-notifications`,
+      `${apiHost}/${routeName}/set-notifications`,
       { notifications },
       {
         headers: { authorization: `Bearer ${await getIdToken()}` },

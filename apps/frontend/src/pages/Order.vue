@@ -85,7 +85,7 @@ const getTransaction = () => {
   const orderId = props.orderId;
   const symbol = props.symbol;
   if (orderId && symbol)
-    ApiClient.Trades.getById(symbol, String(orderId))
+    ApiClient.Trades.getById(String(orderId))
       .then((res) => {
         if (res) transaction.value = res;
         else message.warning(`Error getting transaction`);

@@ -16,26 +16,6 @@
       <a-switch v-model:checked="withGuess" style="margin: 10px" />
       <FeedList :feed="feed" />
     </a-tab-pane>
-    <a-tab-pane key="3" tab="Symbols">
-      <p>Test Symbols Extraction</p>
-      <a-textarea
-        v-model:value="text"
-        placeholder="Insert your text here"
-        :rows="6"
-        style="width: calc(100vw - 200px)"
-      />
-      <a-button
-        type="primary"
-        @click="extractSymbolsFromText"
-        :disabled="!text"
-        class="m1"
-        >Extract</a-button
-      >
-      <br />
-      <div class="m1">
-        <a-tag v-for="symbol in symbols">{{ symbol.toUpperCase() }}</a-tag>
-      </div>
-    </a-tab-pane>
   </a-tabs>
 </template>
 
@@ -45,14 +25,10 @@ import { FeedItem } from "../models/feed";
 import { ApiClient } from "../api/server";
 import FeedList from "../components/Feed/FeedList.vue";
 import NewsList from "../components/Feed/NewsList.vue";
-import { message } from "ant-design-vue";
 import { setIsLoading } from "../services/utils";
 
 const feed = ref<FeedItem[]>([]);
 const activeKey = ref("1");
-
-const text = ref("");
-const symbols = ref<String[]>([]);
 
 const feedSize = ref(100);
 const withGuess = ref(false);
@@ -66,15 +42,6 @@ const getFeed = async () => {
     .then((res) => (feed.value = res))
     .catch((err) => console.log(err))
     .finally(() => setIsLoading(false));
-};
-
-const extractSymbolsFromText = async () => {
-  await ApiClient.Symbols.extract(text.value)
-    .then((res) => (symbols.value = res))
-    .catch((err) => {
-      console.error(err);
-      message.error(`Error extracting symbols from text`);
-    });
 };
 </script>
 

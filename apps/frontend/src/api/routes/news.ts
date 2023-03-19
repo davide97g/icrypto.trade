@@ -3,10 +3,11 @@ import { setIsLoading } from "../../services/utils";
 import { getIdToken } from "../auth";
 import { API, apiHost } from "../server";
 
+const routeName = "news";
 export const NewsRoutes = {
   get: async (options?: { time?: number }): Promise<News[]> => {
     setIsLoading(true);
-    return await API.get(`${apiHost}/news`, {
+    return await API.get(`${apiHost}/${routeName}`, {
       headers: { authorization: `Bearer ${await getIdToken()}` },
       params: {
         time: options?.time,
@@ -25,7 +26,7 @@ export const NewsRoutes = {
   },
   getById: async (id: string): Promise<News> => {
     setIsLoading(true);
-    return await API.get(`${apiHost}/news/${id}`, {
+    return await API.get(`${apiHost}/${routeName}/${id}`, {
       headers: { authorization: `Bearer ${await getIdToken()}` },
     })
       .then((res) => res.data as News)
@@ -38,7 +39,7 @@ export const NewsRoutes = {
   updateById: async (news: News): Promise<boolean> => {
     setIsLoading(true);
     return await API.post(
-      `${apiHost}/news/${news._id}`,
+      `${apiHost}/${routeName}/${news._id}`,
       { news },
       {
         headers: { authorization: `Bearer ${await getIdToken()}` },

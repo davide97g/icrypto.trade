@@ -3,10 +3,11 @@ import { setIsLoading } from "../../services/utils";
 import { getIdToken } from "../auth";
 import { API, apiHost } from "../server";
 
+const routeName = "bot";
 export const BotRoutes = {
   getTradeConfig: async (): Promise<TradeConfig | null> => {
     setIsLoading(true);
-    return await API.get(`${apiHost}/bot/config`, {
+    return await API.get(`${apiHost}/${routeName}/config`, {
       headers: { authorization: `Bearer ${await getIdToken()}` },
     })
       .then((res) => res.data)
@@ -16,7 +17,7 @@ export const BotRoutes = {
   updateTradeConfig: async (config: TradeConfig) => {
     setIsLoading(true);
     return await API.post(
-      `${apiHost}/scheduler/config`,
+      `${apiHost}/${routeName}/config`,
       { config },
       {
         headers: { authorization: `Bearer ${await getIdToken()}` },
@@ -29,7 +30,7 @@ export const BotRoutes = {
   start: async () => {
     setIsLoading(true);
     return await API.post(
-      `${apiHost}/websocket/start`,
+      `${apiHost}/${routeName}/start`,
       {},
       {
         headers: { authorization: `Bearer ${await getIdToken()}` },
@@ -47,7 +48,7 @@ export const BotRoutes = {
   stop: async () => {
     setIsLoading(true);
     return await API.post(
-      `${apiHost}/websocket/stop`,
+      `${apiHost}/${routeName}/stop`,
       {},
       {
         headers: { authorization: `Bearer ${await getIdToken()}` },
@@ -59,7 +60,7 @@ export const BotRoutes = {
   },
   get: async () => {
     setIsLoading(true);
-    return await API.get(`${apiHost}/websocket/info`, {
+    return await API.get(`${apiHost}/${routeName}/info`, {
       headers: { authorization: `Bearer ${await getIdToken()}` },
     })
       .then(

@@ -40,7 +40,7 @@ const userId = ref("");
 
 const createAdmin = async (uid: string | undefined) => {
   if (!uid) return;
-  await ApiClient.Account.createAdminUser(uid);
+  await ApiClient.Account.createAdmin(uid);
 };
 </script>
 

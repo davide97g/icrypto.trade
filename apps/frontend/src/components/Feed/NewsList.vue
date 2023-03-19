@@ -16,18 +16,17 @@
     >
   </div>
   <a-table
-    class="ant-table-custom"
-    :columns="columns"
+    :columns="cols"
     :rowKey="(record:News) => record._id"
     :data-source="news"
     :pagination="{ pageSize: 10 }"
     :row-class-name="(record:News) => (record.matchFound ? 'row-match-found' : null)"
   >
-    <template #bodyCell="{ column, record }">
+    <template #bodyCell="{ column, record }" @click="onRowClick(record)">
       <template v-if="column.title === 'Symbols'">
         <a-tag v-for="symbol in record.symbols">{{ symbol }}</a-tag>
       </template>
-      <template v-if="column.title === 'Symbols Guess'">
+      <template v-if="column.title === 'Guess'">
         <a-tag
           v-for="symbol in record.symbolsGuess"
           v-if="record.symbolsGuess.length"
@@ -53,10 +52,10 @@
 
 <script setup lang="ts">
 import { message } from "ant-design-vue";
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { ApiClient } from "../../api/server";
 import { News } from "../../models/feed";
-import { setIsLoading } from "../../services/utils";
+import { isMobile, setIsLoading } from "../../services/utils";
 
 const columns = [
   {
@@ -66,13 +65,13 @@ const columns = [
     ellipsis: true,
   },
   {
-    title: "Likes",
+    title: "👍🏻",
     dataIndex: "likes",
     width: 2,
     sorter: (a: News, b: News) => a.likes - b.likes,
   },
   {
-    title: "Dislikes",
+    title: "👎🏻",
     dataIndex: "dislikes",
     width: 2,
     sorter: (a: News, b: News) => a.dislikes - b.dislikes,
@@ -83,7 +82,7 @@ const columns = [
     width: 3,
   },
   {
-    title: "Symbols Guess",
+    title: "Guess",
     dataIndex: "symbolsGuess",
     width: 3,
   },
@@ -103,6 +102,36 @@ const columns = [
     width: 3,
   },
 ];
+
+const columnsMobile = [
+  {
+    title: "👍🏻",
+    dataIndex: "likes",
+    width: 2,
+    sorter: (a: News, b: News) => a.likes - b.likes,
+  },
+  {
+    title: "👎🏻",
+    dataIndex: "dislikes",
+    width: 2,
+    sorter: (a: News, b: News) => a.dislikes - b.dislikes,
+  },
+  {
+    title: "Guess",
+    dataIndex: "symbolsGuess",
+    width: 3,
+  },
+  {
+    title: "Date",
+    dataIndex: "time",
+    width: 3,
+    sorter: (a: News, b: News) => a.time - b.time,
+  },
+];
+
+const cols = computed(() => {
+  return isMobile.value ? columnsMobile : columns;
+});
 
 const news = ref<News[]>([]);
 const originalNews = ref<News[]>([]);
@@ -136,6 +165,10 @@ const getNews = async (all?: boolean) => {
       message.error("Error getting news");
     })
     .finally(() => setIsLoading(false));
+};
+
+const onRowClick = (record: News) => {
+  console.info(record);
 };
 getNews();
 </script>

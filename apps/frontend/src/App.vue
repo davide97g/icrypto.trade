@@ -15,7 +15,7 @@ setIsLoading(false);
   <Footer />
 </template>
 
-<style scoped lang="scss">
+<style lang="scss">
 #router-view {
   height: calc(100vh - 90px);
   padding: 10px;
@@ -24,6 +24,14 @@ setIsLoading(false);
     height: calc(100vh - 90px);
     padding: 10px;
     overflow: auto;
+    .text {
+      &.small {
+        font-size: 10px;
+      }
+      &.very-small {
+        font-size: 8px;
+      }
+    }
   }
 }
 </style>

@@ -10,19 +10,30 @@
   >
     <div class="vertical-menu">
       <router-link class="m1" :to="{ name: LoginPageName }" v-if="!isLoggedIn">
-        <a-button type="danger">Login</a-button>
+        <a-button type="danger" @click="visible = false">Login</a-button>
       </router-link>
       <router-link class="m1" :to="{ name: NewsPageName }" v-if="isLoggedIn">
-        <a-button type="primary" ghost>News</a-button>
+        <a-button type="primary" ghost @click="visible = false">News</a-button>
+      </router-link>
+      <router-link class="m1" :to="{ name: TradesPageName }" v-if="isAdmin">
+        <a-button type="primary" disabled ghost @click="visible = false"
+          >Trades</a-button
+        >
       </router-link>
       <router-link class="m1" :to="{ name: OrdersPageName }" v-if="isAdmin">
-        <a-button type="primary" ghost>Orders</a-button>
+        <a-button type="primary" ghost @click="visible = false"
+          >Orders</a-button
+        >
       </router-link>
       <router-link class="m1" :to="{ name: AssetsPageName }" v-if="isAdmin">
-        <a-button type="primary" ghost>Assets</a-button>
+        <a-button type="primary" ghost @click="visible = false"
+          >Assets</a-button
+        >
       </router-link>
       <router-link class="m1" :to="{ name: SettingsPageName }" v-if="isAdmin">
-        <a-button type="primary" ghost>Settings</a-button>
+        <a-button type="primary" ghost @click="visible = false"
+          >Settings</a-button
+        >
       </router-link>
     </div>
     <Footer />
@@ -37,6 +48,7 @@ import {
   SettingsPageName,
   AssetsPageName,
   OrdersPageName,
+  TradesPageName,
 } from "../../router";
 import { isLoggedIn, isAdmin } from "../../services/utils";
 import Footer from "../Footer.vue";

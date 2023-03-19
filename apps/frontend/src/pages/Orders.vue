@@ -132,7 +132,7 @@
               {{ record.orderId }}
               <WalletOutlined
                 style="cursor: pointer; margin-right: 10px"
-                @click="openOrderDetails(record.symbol, record.orderId)"
+                @click="openTradeDetails(record.symbol, record.orderId)"
               />
             </template>
             <template v-if="column.title === 'Symbol'">
@@ -189,7 +189,7 @@
               {{ record.orderId }}
               <WalletOutlined
                 style="cursor: pointer; margin-right: 10px"
-                @click="openOrderDetails(record.symbol, record.orderId)"
+                @click="openTradeDetails(record.symbol, record.orderId)"
               />
             </template>
             <template v-if="column.title === 'Symbol'">
@@ -251,7 +251,7 @@ import { ApiClient } from "../api/server";
 import { setIsLoading } from "../services/utils";
 import { CopyOutlined, WalletOutlined } from "@ant-design/icons-vue";
 import { BinanceOrderDetails, MyTrade } from "../models/orders";
-import { router } from "../router";
+import { router, TradePageName } from "../router";
 import { Account, ExchangeInfo } from "../models/trade";
 import { BinanceError } from "../models/binance";
 import NewOrderModal from "../components/Orders/NewOrderModal.vue";
@@ -422,6 +422,13 @@ const openOnBinance = () => {
 const openOrderDetails = (symbol: string, orderId: string) => {
   router.push({
     name: "Order",
+    params: { symbol, orderId },
+  });
+};
+
+const openTradeDetails = (symbol: string, orderId: string) => {
+  router.push({
+    name: TradePageName,
     params: { symbol, orderId },
   });
 };

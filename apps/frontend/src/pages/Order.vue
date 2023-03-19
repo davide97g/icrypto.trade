@@ -1,53 +1,51 @@
 <template>
-  <div v-if="transaction">
-    <h2>Transaction Id: {{ transaction?.orderId }}</h2>
+  <div v-if="order && !loading">
+    <h2>Order Id: {{ order?.orderId }}</h2>
     <a-row class="w100">
       <a-col :span="12">
         <p>
-          Symbol <a-tag>{{ transaction.symbol }}</a-tag>
+          Symbol <a-tag>{{ order.symbol }}</a-tag>
         </p>
         <p>
           Transact Time
-          {{ new Date(transaction.time).toLocaleString() }}
+          {{ new Date(order.time).toLocaleString() }}
         </p>
         <p>
-          Status <a-tag>{{ transaction.status }}</a-tag>
+          Status <a-tag>{{ order.status }}</a-tag>
         </p>
         <p>
-          Executed Quantity <a-tag>{{ transaction.executedQty }}</a-tag>
+          Executed Quantity <a-tag>{{ order.executedQty }}</a-tag>
         </p>
         <p>
-          Original Quantity <a-tag>{{ transaction.origQty }}</a-tag>
+          Original Quantity <a-tag>{{ order.origQty }}</a-tag>
         </p>
         <p>
-          Price <a-tag>{{ transaction.price }}</a-tag>
+          Price <a-tag>{{ order.price }}</a-tag>
         </p>
       </a-col>
       <a-col :span="12">
         <p>
-          Type <a-tag>{{ transaction.type }}</a-tag>
+          Type <a-tag>{{ order.type }}</a-tag>
         </p>
         <p>
-          Side <a-tag>{{ transaction.side }}</a-tag>
+          Side <a-tag>{{ order.side }}</a-tag>
         </p>
         <p>
-          Time In Force <a-tag>{{ transaction.timeInForce }}</a-tag>
+          Time In Force <a-tag>{{ order.timeInForce }}</a-tag>
         </p>
         <p>
-          Stop Price <a-tag>{{ transaction.stopPrice }}</a-tag>
+          Stop Price <a-tag>{{ order.stopPrice }}</a-tag>
         </p>
-        <a-button
-          type="primary"
-          @click="showFullTransaction = !showFullTransaction"
-          >Show Full Transaction</a-button
+        <a-button type="primary" @click="showFullOrder = !showFullOrder"
+          >Show Full Order</a-button
         >
       </a-col>
     </a-row>
     <a-divider />
     <a-row>
       <a-col :span="12">
-        <code v-if="showFullTransaction">
-          {{ formatJSON(transaction) }}
+        <code v-if="showFullOrder">
+          {{ formatJSON(order) }}
         </code>
       </a-col>
       <a-col :span="12">
@@ -56,7 +54,7 @@
           type="danger"
           class="m1"
           @click="cancelOrder"
-          :disabled="transaction.status == 'FILLED'"
+          :disabled="order.status == 'FILLED'"
         >
           Cancel
         </a-button>
@@ -71,29 +69,30 @@ import { ref } from "vue";
 import { ApiClient } from "../api/server";
 import { BinanceError } from "../models/binance";
 import { BinanceOrderDetails } from "../models/orders";
+import { loading } from "../services/utils";
 
-const transaction = ref<BinanceOrderDetails>();
+const order = ref<BinanceOrderDetails>();
 
 const props = defineProps<{
   orderId: string;
   symbol: string;
 }>();
 
-const showFullTransaction = ref(false);
+const showFullOrder = ref(false);
 
-const getTransaction = () => {
+const getOrder = () => {
   const orderId = props.orderId;
   const symbol = props.symbol;
   if (orderId && symbol)
-    ApiClient.Trades.getById(String(orderId))
+    ApiClient.Orders.getById(symbol, orderId)
       .then((res) => {
-        if (res) transaction.value = res;
-        else message.warning(`Error getting transaction`);
+        if (res) order.value = res;
+        else message.warning(`Error getting order`);
       })
       .catch((err: BinanceError) =>
-        message.error(err.response?.data?.msg || `Error getting transaction`)
+        message.error(err.response?.data?.msg || `Error getting order`)
       );
-  else message.warning(`Error getting transaction`);
+  else message.warning(`Error getting order`);
 };
 
 const formatJSON = (json: any) => {
@@ -101,15 +100,12 @@ const formatJSON = (json: any) => {
 };
 
 const cancelOrder = () => {
-  if (transaction.value?.orderId)
-    ApiClient.Orders.cancel(
-      transaction.value.symbol,
-      String(transaction.value.orderId)
-    )
+  if (order.value?.orderId)
+    ApiClient.Orders.cancel(order.value.symbol, String(order.value.orderId))
       .then((res) => {
         if (res) {
           message.success(`Order cancelled`);
-          getTransaction();
+          getOrder();
         } else message.warning(`Error cancelling order`);
       })
       .catch((err: BinanceError) =>
@@ -117,7 +113,7 @@ const cancelOrder = () => {
       );
 };
 
-getTransaction();
+getOrder();
 </script>
 
 <style lang="scss" scoped>

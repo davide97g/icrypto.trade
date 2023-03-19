@@ -46,19 +46,21 @@ router.get("/:symbol", checkIfAdmin, async (req, res) => {
     .catch((error: any) => res.status(500).send(error));
 });
 
-router.get("/:orderId", checkIfAdmin, async (req, res) => {
-  const orderId = (req.params.orderId as string) || "";
-  if (!orderId) return res.status(400).send("orderId is required");
-  await getTradeById(orderId)
-    .then((response) => res.send(response))
-    .catch((error: any) => res.status(500).send(error));
-});
-
 router.get("/:symbol/binance", checkIfAdmin, async (req, res) => {
   const symbol = (req.params.symbol as string) || "";
   if (!symbol) return res.status(400).send("symbol is required");
   await getBinanceTrades(symbol)
     .then((response: any) => res.send(response))
+    .catch((error: any) => res.status(500).send(error));
+});
+
+router.get("/:symbol/:orderId", checkIfAdmin, async (req, res) => {
+  const orderId = (req.params.orderId as string) || "";
+  if (!orderId) return res.status(400).send("orderId is required");
+  await getTradeById(orderId)
+    .then((response) => {
+      res.send(response);
+    })
     .catch((error: any) => res.status(500).send(error));
 });
 

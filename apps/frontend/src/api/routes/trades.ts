@@ -19,7 +19,7 @@ export const TradesRoutes = {
       })
       .finally(() => setIsLoading(false));
   },
-  get: async (symbol: string, time?: number): Promise<MyTrade[] | null> => {
+  get: async (symbol: string, time?: number): Promise<MyTrade[]> => {
     setIsLoading(true);
     return await API.get(`${apiHost}/${routeName}/${symbol}/`, {
       headers: { authorization: `Bearer ${await getIdToken()}` },
@@ -28,22 +28,25 @@ export const TradesRoutes = {
       },
     })
       .then((res) => res.data)
-      .catch((err) => console.error(err))
+      .catch((err) => {
+        console.error(err);
+        throw err;
+      })
       .finally(() => setIsLoading(false));
   },
-  getById: async (orderId: string): Promise<BinanceOrderDetails | null> => {
+  getById: async (symbol: string, orderId: string): Promise<MyTrade[]> => {
     setIsLoading(true);
-    return await API.get(`${apiHost}/${routeName}/${orderId}/`, {
+    return await API.get(`${apiHost}/${routeName}/${symbol}/${orderId}/`, {
       headers: { authorization: `Bearer ${await getIdToken()}` },
     })
       .then((res) => res.data)
-      .catch((err) => console.error(err))
+      .catch((err) => {
+        console.error(err);
+        throw err;
+      })
       .finally(() => setIsLoading(false));
   },
-  getBinance: async (
-    symbol: string,
-    time?: number
-  ): Promise<MyTrade[] | null> => {
+  getBinance: async (symbol: string, time?: number): Promise<MyTrade[]> => {
     setIsLoading(true);
     return await API.get(`${apiHost}/${routeName}/${symbol}/binance`, {
       headers: { authorization: `Bearer ${await getIdToken()}` },
@@ -52,13 +55,16 @@ export const TradesRoutes = {
       },
     })
       .then((res) => res.data)
-      .catch((err) => console.error(err))
+      .catch((err) => {
+        console.error(err);
+        throw err;
+      })
       .finally(() => setIsLoading(false));
   },
   getBinanceById: async (
     symbol: string,
     orderId: string
-  ): Promise<BinanceOrderDetails | null> => {
+  ): Promise<MyTrade[]> => {
     setIsLoading(true);
     return await API.get(
       `${apiHost}/${routeName}/${symbol}/${orderId}/binance`,
@@ -67,7 +73,10 @@ export const TradesRoutes = {
       }
     )
       .then((res) => res.data)
-      .catch((err) => console.error(err))
+      .catch((err) => {
+        console.error(err);
+        throw err;
+      })
       .finally(() => setIsLoading(false));
   },
 };

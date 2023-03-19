@@ -1,5 +1,5 @@
 import { BinanceError } from "../../models/binance";
-import { BinanceOrderDetails, MyTrade } from "../../models/orders";
+import { BinanceOrderDetails } from "../../models/orders";
 import { BinanceOrderResponse, NewOrderRequest } from "../../models/trade";
 import { setIsLoading } from "../../services/utils";
 import { getIdToken } from "../auth";
@@ -7,13 +7,31 @@ import { API, apiHost } from "../server";
 
 const routeName = "orders";
 export const OrdersRoutes = {
-  get: async (symbol: string): Promise<BinanceOrderDetails[] | null> => {
+  get: async (symbol: string): Promise<BinanceOrderDetails[]> => {
     setIsLoading(true);
     return await API.get(`${apiHost}/${routeName}/${symbol}`, {
       headers: { authorization: `Bearer ${await getIdToken()}` },
     })
       .then((res) => res.data)
-      .catch((err) => console.error(err))
+      .catch((err) => {
+        console.error(err);
+        throw err;
+      })
+      .finally(() => setIsLoading(false));
+  },
+  getById: async (
+    symbol: string,
+    orderId: string
+  ): Promise<BinanceOrderDetails> => {
+    setIsLoading(true);
+    return await API.get(`${apiHost}/${routeName}/${symbol}/${orderId}`, {
+      headers: { authorization: `Bearer ${await getIdToken()}` },
+    })
+      .then((res) => res.data)
+      .catch((err) => {
+        console.error(err);
+        throw err;
+      })
       .finally(() => setIsLoading(false));
   },
   cancel: async (symbol: string, orderId: string) => {

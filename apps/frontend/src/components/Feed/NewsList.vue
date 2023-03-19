@@ -21,8 +21,9 @@
     :data-source="news"
     :pagination="{ pageSize: 10 }"
     :row-class-name="(record:News) => (record.matchFound ? 'row-match-found' : null)"
+    :custom-row="customRow"
   >
-    <template #bodyCell="{ column, record }" @click="onRowClick(record)">
+    <template #bodyCell="{ column, record }">
       <template v-if="column.title === 'Symbols'">
         <a-tag v-for="symbol in record.symbols">{{ symbol }}</a-tag>
       </template>
@@ -40,9 +41,7 @@
         {{ new Date(record.time).toLocaleTimeString() }}
       </template>
       <template v-if="column.title === 'Details'">
-        <a-button
-          type="primary"
-          @click="() => $router.push(`/news/prospect/${record._id}`)"
+        <a-button type="primary" @click="() => openProspect(record._id)"
           >Details</a-button
         >
       </template>
@@ -55,6 +54,7 @@ import { message } from "ant-design-vue";
 import { computed, ref } from "vue";
 import { ApiClient } from "../../api/server";
 import { News } from "../../models/feed";
+import { router } from "../../router";
 import { isMobile, setIsLoading } from "../../services/utils";
 
 const columns = [
@@ -167,8 +167,14 @@ const getNews = async (all?: boolean) => {
     .finally(() => setIsLoading(false));
 };
 
-const onRowClick = (record: News) => {
-  console.info(record);
+const openProspect = (id: string) => {
+  router.push(`/news/prospect/${id}`);
+};
+
+const customRow = (record: News) => {
+  return {
+    onClick: () => openProspect(record._id),
+  };
 };
 getNews();
 </script>

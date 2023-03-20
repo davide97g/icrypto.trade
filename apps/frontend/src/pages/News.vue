@@ -31,7 +31,7 @@ const feed = ref<FeedItem[]>([]);
 const activeKey = ref("1");
 
 const feedSize = ref(100);
-const withGuess = ref(false);
+const withGuess = ref(true);
 
 const getFeed = async () => {
   setIsLoading(true);

@@ -1,18 +1,19 @@
 {
   "name": "icrypto-trade-frontend",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.2.0",
   "type": "module",
   "author": "Davide Ghiotto",
   "scripts": {
     "dev": "vite --port 8080",
     "build": "vue-tsc && vite build",
     "lint": "vue-tsc",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "pwa:generate:icons": "npx vue-pwa-asset-generator -a ./src/assets/logo.png -o public/img/icons --no-manifest"
   },
   "dependencies": {
-    "ant-design-vue": "^3.2.15",
     "@ant-design/icons-vue": "6.1.0",
+    "ant-design-vue": "^3.2.15",
     "axios": "^1.3.3",
     "firebase": "^9.17.1",
     "pinia": "^2.0.31",
@@ -24,6 +25,9 @@
     "@vitejs/plugin-vue": "^4.0.0",
     "typescript": "^4.9.3",
     "vite": "^4.1.0",
-    "vue-tsc": "^1.0.24"
+    "vite-plugin-pwa": "^0.14.4",
+    "vue-pwa-asset-generator": "^1.7.3",
+    "vue-tsc": "^1.0.24",
+    "workbox-precaching": "^6.5.4"
   }
 }

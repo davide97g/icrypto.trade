@@ -21,7 +21,7 @@
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
 
-  --background-color: #eaefea;
+  --background-color: #efeaef;
 
   background-color: var(--background-color);
 }

@@ -71,7 +71,7 @@ import { computed, ref, watch } from "vue";
 import { FeedItem } from "../../models/feed";
 import { CopyOutlined } from "@ant-design/icons-vue";
 import { message } from "ant-design-vue";
-import { isMobile } from "../../services/utils";
+import { copyToClipboard, isMobile } from "../../services/utils";
 
 const props = defineProps<{
   feed: FeedItem[];
@@ -161,11 +161,6 @@ const onSearch = (searchValue: string) => {
       item.symbolsGuess?.includes(searchValue.toLowerCase()) ||
       item.symbols?.includes(searchValue.toLowerCase())
   );
-};
-
-const copyToClipboard = (title: string) => {
-  navigator.clipboard.writeText(title);
-  message.success("Title copied!");
 };
 </script>
 

@@ -39,75 +39,6 @@
     />
     <a-divider />
     <a-tabs v-model:activeKey="activeKey">
-      <a-tab-pane key="open" tab="Open Orders">
-        <a-row class="my1">
-          <a-popconfirm
-            title="Are you sure cancel all open orders?"
-            ok-text="Yes"
-            cancel-text="No"
-            :disabled="!orders.length"
-            @confirm="cancelAllOpenOrders"
-          >
-            <a-button type="danger" :disabled="!orders.length">
-              Cancel All Open Orders
-            </a-button>
-          </a-popconfirm>
-        </a-row>
-        <a-table
-          class="ant-table-custom"
-          :columns="columnsOpenOrders"
-          :rowKey="(record:BinanceOrderDetails) => record.orderId"
-          :data-source="orders"
-          :pagination="{ pageSize: 10 }"
-        >
-          <template #bodyCell="{ column, record }">
-            <template v-if="column.title === 'Order Id'">
-              <CopyOutlined
-                style="cursor: pointer; margin-right: 10px"
-                @click="copyToClipboard(record.orderId)"
-              />
-              {{ record.orderId }}
-              <WalletOutlined
-                style="cursor: pointer; margin-right: 10px"
-                @click="openOrderDetails(record.symbol, record.orderId)"
-              />
-            </template>
-            <template v-if="column.title === 'Symbol'">
-              <a-tag>{{ record.symbol }}</a-tag>
-            </template>
-            <template v-if="column.title === 'Side'">
-              <a-tag
-                :color="record.side === 'BUY' ? 'green' : 'red'"
-                class="strong"
-              >
-                {{ record.side }}
-              </a-tag>
-            </template>
-            <template v-if="column.title === 'Type'">
-              <a-tag>
-                {{ record.type }}
-              </a-tag>
-            </template>
-            <template v-if="column.title === 'Price'">
-              <a-tag class="strong">{{ record.price }}</a-tag>
-            </template>
-            <template v-if="column.title === 'Stop Price'">
-              <a-tag class="strong">{{ record.stopPrice }}</a-tag>
-            </template>
-            <template v-if="column.title === 'Quantity'">
-              <a-tag class="strong">{{ record.origQty }}</a-tag>
-            </template>
-            <template v-if="column.title === 'Status'">
-              <a-tag class="strong">
-                {{ record.status }}
-              </a-tag>
-            </template>
-            <template v-if="column.title === 'Date'">
-              {{ new Date(record.time).toLocaleString() }}
-            </template>
-          </template>
-        </a-table>
-      </a-tab-pane>
       <a-tab-pane key="trades" tab="Trades" class="left">
         <a-button
           type="primary"
@@ -244,16 +175,16 @@
 </template>
 
 <script setup lang="ts">
-import { loading } from "../services/utils";
+import { copyToClipboard, loading } from "../services/utils";
 import { message } from "ant-design-vue";
 import { computed, ref, watch } from "vue";
 import { ApiClient } from "../api/server";
 import { setIsLoading } from "../services/utils";
 import { CopyOutlined, WalletOutlined } from "@ant-design/icons-vue";
-import { BinanceOrderDetails, MyTrade } from "../models/orders";
+import { BinanceOrderDetails } from "../models/orders";
 import { router, TradePageName } from "../router";
 import { Account, ExchangeInfo } from "../models/trade";
-import { BinanceError } from "../models/binance";
+import { BinanceError, MyTrade } from "../models/binance";
 import NewOrderModal from "../components/Orders/NewOrderModal.vue";
 
 const props = defineProps<{
@@ -262,18 +193,16 @@ const props = defineProps<{
 
 const symbol = ref(props.symbol);
 
-const activeKey = ref("open");
+const activeKey = ref("trades");
 
 watch(
   () => props.symbol,
   (newSymbol) => {
     symbol.value = newSymbol?.includes("USDT") ? newSymbol : newSymbol + "USDT";
-    getOpenOrders();
     getMyTrades();
   }
 );
 
-const orders = ref<BinanceOrderDetails[]>([]);
 const myTrades = ref<MyTrade[]>([]);
 const myTradesBinance = ref<MyTrade[]>([]);
 const account = ref<Account>();
@@ -310,7 +239,6 @@ const onSearch = (searchText: string) => {
 const selectSymbol = () => {
   symbol.value = selectedSymbol.value;
   router.push({ name: "Orders", params: { symbol: symbol.value } });
-  getOpenOrders();
   getMyTrades();
 };
 
@@ -410,20 +338,8 @@ const columnsMyTrades = [
   },
 ];
 
-const copyToClipboard = (id: string) => {
-  navigator.clipboard.writeText(id);
-  message.success("Order Id copied!");
-};
-
 const openOnBinance = () => {
   window.open(`https://www.binance.com/en/trade/${symbol.value}`, "_blank");
-};
-
-const openOrderDetails = (symbol: string, orderId: string) => {
-  router.push({
-    name: "Order",
-    params: { symbol, orderId },
-  });
 };
 
 const openTradeDetails = (symbol: string, orderId: string) => {
@@ -431,23 +347,6 @@ const openTradeDetails = (symbol: string, orderId: string) => {
     name: TradePageName,
     params: { symbol, orderId },
   });
-};
-
-const getOpenOrders = async () => {
-  if (!symbol.value) return;
-  setIsLoading(true);
-  await ApiClient.Orders.get(symbol.value)
-    .then((res) => {
-      if (res) orders.value = res;
-      else message.warning("No orders found");
-    })
-    .catch((err) => {
-      console.error(err);
-      message.error(err);
-    })
-    .finally(() => {
-      setIsLoading(false);
-    });
 };
 
 const getMyTrades = async () => {
@@ -476,28 +375,6 @@ const getMyTradesBinance = async () => {
       message.error(err);
     })
     .finally(() => setIsLoading(false));
-};
-
-const cancelAllOpenOrders = () => {
-  if (!symbol.value) return;
-  setIsLoading(true);
-  ApiClient.Orders.cancelAll(symbol.value)
-    .then((res) => {
-      if (res) {
-        getOpenOrders();
-        message.success("All open orders cancelled");
-      } else
-        message.warning(
-          "Something went wrong while cancelling all open orders"
-        );
-    })
-    .catch((err) => {
-      console.error(err);
-      message.error(err);
-    })
-    .finally(() => {
-      setIsLoading(false);
-    });
 };
 
 const sellAll = () => {
@@ -541,7 +418,6 @@ const newOrderModalVisible = ref(false);
 
 getExchangeInfo();
 getAccount();
-getOpenOrders();
 </script>
 
 <style lang="scss" scoped>

@@ -16,7 +16,7 @@
         <a-button type="primary" ghost @click="visible = false">News</a-button>
       </router-link>
       <router-link class="m1" :to="{ name: TradesPageName }" v-if="isAdmin">
-        <a-button type="primary" disabled ghost @click="visible = false"
+        <a-button type="primary" ghost @click="visible = false"
           >Trades</a-button
         >
       </router-link>

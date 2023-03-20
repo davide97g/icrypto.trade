@@ -265,7 +265,6 @@ const newTPSLOrder = async (
     quantity,
     takeProfitPrice: takeProfitStopPrice,
     stopLossPrice: stopLossStopPrice,
-    marketBuyOrderId: marketOrderTransaction.orderId,
     timeInForce: "GTC",
   };
 

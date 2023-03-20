@@ -6,6 +6,8 @@ import {
   RouteRecordRaw,
 } from "vue-router";
 import { checkUserIsLoggedIn } from "../api/auth";
+import { ApiClient } from "../api/server";
+import { useBinanceStore } from "../stores/binance";
 import { useUserStore } from "../stores/user";
 
 export const LoginPageName = "Login";
@@ -14,6 +16,7 @@ export const NewsPageName = "News";
 export const PotentialOrderPageName = "PotentialOrder";
 export const OrdersPageName = "Orders";
 export const OrderPageName = "Order";
+export const OCOOrderPageName = "OCOOrder";
 export const TradePageName = "Trade";
 export const TradesPageName = "Trades";
 export const SettingsPageName = "Settings";
@@ -26,8 +29,19 @@ const loggedInGuard = async (
 ) => {
   try {
     const userStore = useUserStore();
+    const binance = useBinanceStore();
     await checkUserIsLoggedIn();
-    if (to.name != LoginPageName && !userStore.isLoggedIn)
+
+    // check binance.exchangeInfo is !== {} or fetch it
+    const exchangeInfo =
+      Object.keys(binance.exchangeInfo).length > 0
+        ? binance.exchangeInfo
+        : await ApiClient.Trades.getExchangeInfo();
+    binance.setExchangeInfo(exchangeInfo);
+    if (
+      to.name != LoginPageName &&
+      (!userStore.isLoggedIn || !binance.exchangeInfo)
+    )
       next({ name: LoginPageName });
     else next();
   } catch (err) {
@@ -76,6 +90,13 @@ const routes: Readonly<RouteRecordRaw[]> = [
     path: "/order/:symbol/:orderId",
     name: OrderPageName,
     component: () => import("../pages/Order.vue"),
+    beforeEnter: loggedInGuard,
+    props: true,
+  },
+  {
+    path: "/order/oco/:symbol/:orderId",
+    name: OCOOrderPageName,
+    component: () => import("../pages/OCOOrder.vue"),
     beforeEnter: loggedInGuard,
     props: true,
   },

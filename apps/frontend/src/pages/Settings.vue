@@ -1,7 +1,7 @@
 <template>
   <h1>Settings</h1>
   <a-tabs v-model:activeKey="activeKey" style="margin-top: 50px">
-    <a-tab-pane key="server-config" tab="ApiClient Configuration">
+    <a-tab-pane key="server-config" tab="Bot Configuration">
       <ServerConfig />
     </a-tab-pane>
     <a-tab-pane key="banned-tokens" tab="Banned Tokens">

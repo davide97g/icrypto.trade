@@ -8,10 +8,7 @@
     @change="() => onSearch(searchElement)"
   />
   <div class="flex-center">
-    <p style="margin-bottom: 0">
-      News since: {{ new Date(defaultLast24Hours()).toLocaleString() }}
-    </p>
-    <a-button @click="getNews(true)" type="danger" class="m1"
+    <a-button @click="getNews()" type="danger" class="m1"
       >Get All News</a-button
     >
   </div>
@@ -146,17 +143,9 @@ const onSearch = (searchValue: string) => {
   );
 };
 
-const defaultLast24Hours = () => {
-  // last 24 hours
-  const date = new Date();
-  date.setDate(date.getDate() - 1);
-  return date.getTime();
-};
-
-const getNews = async (all?: boolean) => {
+const getNews = async () => {
   setIsLoading(true);
-  const time = all ? undefined : defaultLast24Hours();
-  await ApiClient.News.get({ time })
+  await ApiClient.News.get()
     .then((res) => {
       news.value = res;
     })
@@ -176,5 +165,4 @@ const customRow = (record: News) => {
     onClick: () => openProspect(record._id),
   };
 };
-getNews();
 </script>

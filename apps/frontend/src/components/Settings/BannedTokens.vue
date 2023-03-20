@@ -2,7 +2,10 @@
   <a-button @click="addNewBannedToken" :disabled="loading">Ban Token</a-button>
   <a-list
     v-if="bannedTokens.length"
-    style="padding: 100px; max-height: 500px; overflow-y: auto"
+    id="banned-tokens-list"
+    :class="{
+      mobile: isMobile,
+    }"
   >
     <a-list-item v-for="token in bannedTokens" :key="token.symbol">
       <div class="flex-center w100 space-between">
@@ -31,7 +34,7 @@ import {
   setDoc,
 } from "firebase/firestore";
 import { message } from "ant-design-vue";
-import { setIsLoading, loading } from "../../services/utils";
+import { setIsLoading, loading, isMobile } from "../../services/utils";
 
 const db = getFirestore();
 
@@ -84,10 +87,17 @@ const deleteBannedToken = async (token: string) => {
 };
 
 getBannedTokens();
-
-// const tokens = ref<Token[]>([]);
-// ApiClient.Token.get().then((res) => {
-//   console.info(res);
-//   tokens.value = res.data.tokens;
-// });
 </script>
+
+<style lang="scss" scoped>
+#banned-tokens-list {
+  padding: 40px;
+  max-height: 500px;
+  overflow-y: auto;
+  margin-top: 20px;
+  &.mobile {
+    padding: 10px;
+    max-height: calc(100vh - 300px);
+  }
+}
+</style>

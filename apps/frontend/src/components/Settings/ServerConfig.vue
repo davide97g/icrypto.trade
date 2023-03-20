@@ -1,6 +1,6 @@
 <template>
-  <div class="flex-center w100" style="align-items: baseline">
-    <div class="m1">
+  <div id="server-config-layout" :class="{ mobile: isMobile }">
+    <div class="m1 left">
       <h3>Bot 🤖</h3>
       <h4 v-if="infoWS?.startTime">
         Running since: {{ new Date(infoWS?.startTime).toLocaleDateString() }}
@@ -13,16 +13,16 @@
         >Stop</a-button
       >
     </div>
-    <div class="m1">
+    <div class="m1 left">
       <h3>Trade Config</h3>
-      <div class="flex-center column w100" style="align-items: baseline">
+      <div class="flex-center column w100 left" style="align-items: baseline">
         <div>
           <span>N Likes</span>
           <a-input-number
             id="nLikes"
             v-model:value="tradeConfig.nLikes"
             placeholder="N Likes"
-            style="width: 250px; margin: 10px"
+            style="width: 50px; margin: 10px"
           />
         </div>
         <div>
@@ -30,7 +30,7 @@
           <a-input-number
             v-model:value="tradeConfig.nMinutes"
             placeholder="N Minutes"
-            style="width: 250px; margin: 10px"
+            style="width: 50px; margin: 10px"
           />
         </div>
         <div>
@@ -38,7 +38,7 @@
           <a-input-number
             v-model:value="tradeConfig.takeProfitPercentage"
             placeholder="Take Profit"
-            style="width: 250px; margin: 10px"
+            style="width: 50px; margin: 10px"
           />
         </div>
         <div>
@@ -46,48 +46,15 @@
           <a-input-number
             v-model:value="tradeConfig.stopLossPercentage"
             placeholder="Stop Loss"
-            style="width: 250px; margin: 10px"
+            style="width: 50px; margin: 10px"
           />
         </div>
-      </div>
-      <div class="flex-center column w100" style="align-items: baseline">
         <div>
           <span>Feed Limit</span>
           <a-input-number
             v-model:value="tradeConfig.feedLimit"
             placeholder="Feed Limit"
-            style="width: 250px; margin: 10px"
-          />
-        </div>
-        <div>
-          <span>Feed Update Interval</span>
-          <a-input-number
-            v-model:value="tradeConfig.feedUpdateInterval"
-            placeholder="Feed Update Interval"
-            style="width: 250px; margin: 10px"
-          />
-        </div>
-        <div>
-          <span>Good News Update Interval</span>
-          <a-input-number
-            v-model:value="tradeConfig.goodNewsUpdateInterval"
-            placeholder="Good News Update Interval"
-            style="width: 250px; margin: 10px"
-          />
-        </div>
-        <div>
-          <span>TTL (Old news)</span>
-          <a-input-number
-            v-model:value="tradeConfig.TTL"
-            placeholder="TTL"
-            style="width: 250px; margin: 10px"
-          />
-        </div>
-        <div>
-          <span>Mock Symbol</span>
-          <a-switch
-            v-model:checked="tradeConfig.mockSymbol"
-            style="margin: 10px"
+            style="width: 50px; margin: 10px"
           />
         </div>
         <div>
@@ -95,7 +62,7 @@
           <a-input-number
             v-model:value="tradeConfig.tradeAmount"
             placeholder="Trade Amount"
-            style="width: 250px; margin: 10px"
+            style="width: 50px; margin: 10px"
           />
         </div>
       </div>
@@ -111,6 +78,7 @@ import { ref, watch } from "vue";
 import { TradeConfig } from "../../models/trade";
 import { ApiClient } from "../../api/server";
 import { message } from "ant-design-vue";
+import { isMobile } from "../../services/utils";
 
 const originalTradeConfig = ref<TradeConfig>({
   feedLimit: 0,
@@ -197,3 +165,16 @@ const stopWS = async () => {
 getTradeConfig();
 getWSInfo();
 </script>
+
+<style lang="scss" scoped>
+#server-config-layout {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: space-around;
+  &.mobile {
+    flex-direction: column;
+    padding: 0;
+  }
+}
+</style>

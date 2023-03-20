@@ -12,7 +12,7 @@ setIsLoading(false);
   <div id="router-view" :class="{ mobile: isMobile }">
     <router-view />
   </div>
-  <Footer />
+  <Footer v-if="!isMobile" />
 </template>
 
 <style lang="scss">
@@ -21,7 +21,7 @@ setIsLoading(false);
   padding: 10px;
   overflow: auto;
   &.mobile {
-    height: calc(100vh - 90px);
+    height: calc(100vh - 70px);
     padding: 10px;
     overflow: auto;
     .text {

@@ -1,5 +1,5 @@
 <template>
-  <a-tabs v-model:activeKey="activeKey" style="margin-top: 50px">
+  <a-tabs v-model:activeKey="activeKey">
     <a-tab-pane key="1" tab="News">
       <NewsList />
     </a-tab-pane>
@@ -12,8 +12,6 @@
       <a-button type="primary" @click="getFeed" style="margin: 10px"
         >Get All Feed</a-button
       >
-      <span>With Guess</span>
-      <a-switch v-model:checked="withGuess" style="margin: 10px" />
       <FeedList :feed="feed" />
     </a-tab-pane>
   </a-tabs>
@@ -31,13 +29,12 @@ const feed = ref<FeedItem[]>([]);
 const activeKey = ref("1");
 
 const feedSize = ref(100);
-const withGuess = ref(true);
 
 const getFeed = async () => {
   setIsLoading(true);
   await ApiClient.Feed.get({
     limit: feedSize.value,
-    guess: withGuess.value,
+    guess: true,
   })
     .then((res) => (feed.value = res))
     .catch((err) => console.log(err))

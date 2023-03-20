@@ -71,6 +71,9 @@ input {
   display: flex;
   flex-direction: column;
 }
+.grow {
+  flex-grow: 1;
+}
 .flex-gap {
   display: inline-flex;
   flex-wrap: wrap;
@@ -78,6 +81,9 @@ input {
 }
 .space-between {
   justify-content: space-between;
+}
+.flex-start {
+  justify-content: flex-start;
 }
 
 .left {

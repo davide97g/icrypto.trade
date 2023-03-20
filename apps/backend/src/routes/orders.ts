@@ -1,12 +1,13 @@
 import { Router } from "express";
 import { checkIfAdmin } from "../middlewares/auth-middleware";
 import { BinanceErrorData } from "../models/binance";
+import { NewOrderRequest } from "../models/orders";
 import {
   cancelAllOpenOrders,
   cancelOrder,
   createOrder,
   getOpenOrders,
-  getTrades,
+  newOrder,
   sellAll,
 } from "../services/orders";
 
@@ -20,14 +21,6 @@ router.get("/:symbol", checkIfAdmin, async (req, res) => {
     .catch((error: BinanceErrorData) => res.status(500).send(error));
 });
 
-router.get("/:symbol/trades", checkIfAdmin, async (req, res) => {
-  const symbol = req.params.symbol;
-  if (!symbol) return res.status(400).send("Symbol is required");
-  await getTrades(symbol)
-    .then((response: any) => res.send(response))
-    .catch((error: BinanceErrorData) => res.status(500).send(error));
-});
-
 router.delete("/:symbol/all", checkIfAdmin, async (req, res) => {
   const symbol = (req.params.symbol as string) || "";
   if (!symbol) return res.status(400).send("Symbol is required");
@@ -36,12 +29,21 @@ router.delete("/:symbol/all", checkIfAdmin, async (req, res) => {
     .catch((error: BinanceErrorData) => res.status(500).send(error));
 });
 
-router.post("/create/", checkIfAdmin, async (req, res) => {
+router.post("/add-symbol/", checkIfAdmin, async (req, res) => {
   const symbol = (req.body.symbol as string) || "";
   if (!symbol) return res.status(400).send("Symbol is required");
   const newsId = (req.body.newsId as string) || "";
   if (!newsId) return res.status(400).send("News Id is required");
   await createOrder(symbol, newsId)
+    .then((response) => res.send(response))
+    .catch((error: BinanceErrorData) => res.status(500).send(error));
+});
+
+router.post("/:symbol/new/", checkIfAdmin, async (req, res) => {
+  const symbol = (req.body.symbol as string) || "";
+  if (!symbol) return res.status(400).send("Symbol is required");
+  const orderRequest = req.body.orderRequest as NewOrderRequest;
+  await newOrder(orderRequest)
     .then((response) => res.send(response))
     .catch((error: BinanceErrorData) => res.status(500).send(error));
 });

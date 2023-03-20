@@ -9,39 +9,69 @@
   />
   <a-table
     class="ant-table-custom"
-    :columns="columns"
+    :columns="cols"
     :rowKey="(record:FeedItem) => record._id"
     :data-source="feed"
     :pagination="{ pageSize: 10 }"
     :row-class-name="(record:FeedItem) => (record.matchFound ? 'row-match-found' : null)"
   >
     <template #bodyCell="{ column, record }">
-      <template v-if="column.title === 'Title'">
-        <CopyOutlined style="cursor:pointer; margin-right:10px" @click="copyToClipboard(record.title)"/> {{ record.title }} 
+      <template v-if="column.title === 'Title' && !isMobile">
+        <CopyOutlined
+          style="cursor: pointer; margin-right: 10px"
+          @click="copyToClipboard(record.title)"
+        />
+        {{ record.title }}
       </template>
       <template v-if="column.title === 'Symbols'">
         <a-tag v-for="symbol in record.symbols">{{ symbol }}</a-tag>
       </template>
-      <template v-if="column.title === 'Symbols Guess'">
-        <a-tag v-for="symbol in record.symbolsGuess">{{
-          symbol.toUpperCase()
-        }}</a-tag>
+      <template v-if="column.title === '👍🏻'">
+        <p :class="{ mobile: isMobile }">
+          {{ record.dislikes }}
+        </p>
+      </template>
+      <template v-if="column.title === '👎🏻'">
+        <p :class="{ mobile: isMobile }">
+          {{ record.dislikes }}
+        </p>
+      </template>
+      <template v-if="column.title === 'Guess'">
+        <a-tag
+          v-for="symbol in record.symbolsGuess"
+          :class="{ mobile: isMobile }"
+          >{{ symbol.toUpperCase() }}</a-tag
+        >
       </template>
       <template v-if="column.title === 'Date'">
-        {{ new Date(record.time).toLocaleDateString() }}
-        <br />
-        {{ new Date(record.time).toLocaleTimeString() }}
+        <p :class="{ mobile: isMobile }">
+          {{ new Date(record.time).toLocaleDateString() }}
+        </p>
+        <p :class="{ mobile: isMobile }">
+          {{ new Date(record.time).toLocaleTimeString() }}
+        </p>
       </template>
+    </template>
+    <template #expandedRowRender="{ record }" v-if="isMobile">
+      <div style="width: calc(100vw - 45px)">
+        <CopyOutlined
+          style="cursor: pointer; margin-right: 10px"
+          @click="copyToClipboard(record.title)"
+        />
+        <p :class="{ mobile: isMobile }">
+          {{ record.title }}
+        </p>
+      </div>
     </template>
   </a-table>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { FeedItem } from "../../models/feed";
 import { CopyOutlined } from "@ant-design/icons-vue";
 import { message } from "ant-design-vue";
-
+import { isMobile } from "../../services/utils";
 
 const props = defineProps<{
   feed: FeedItem[];
@@ -72,7 +102,7 @@ const columns = [
     width: 3,
   },
   {
-    title: "Symbols Guess",
+    title: "Guess",
     dataIndex: "symbolsGuess",
     width: 3,
   },
@@ -83,6 +113,36 @@ const columns = [
     sorter: (a: FeedItem, b: FeedItem) => a.time - b.time,
   },
 ];
+
+const columnsMobile = [
+  {
+    title: "Date",
+    dataIndex: "time",
+    width: 4,
+    sorter: (a: FeedItem, b: FeedItem) => a.time - b.time,
+  },
+  {
+    title: "👍🏻",
+    dataIndex: "likes",
+    width: 1,
+    sorter: (a: FeedItem, b: FeedItem) => a.likes - b.likes,
+  },
+  {
+    title: "👎🏻",
+    dataIndex: "dislikes",
+    width: 1,
+    sorter: (a: FeedItem, b: FeedItem) => a.dislikes - b.dislikes,
+  },
+  {
+    title: "Guess",
+    dataIndex: "symbolsGuess",
+    width: 1,
+  },
+];
+
+const cols = computed(() => {
+  return isMobile.value ? columnsMobile : columns;
+});
 
 watch(
   () => props.feed,
@@ -103,8 +163,19 @@ const onSearch = (searchValue: string) => {
   );
 };
 
-const copyToClipboard = (title:string) => {
+const copyToClipboard = (title: string) => {
   navigator.clipboard.writeText(title);
   message.success("Title copied!");
-}
+};
 </script>
+
+<style lang="scss" scoped>
+.mobile {
+  p {
+    font-size: 10px;
+  }
+  &.ant-tag {
+    font-size: 10px;
+  }
+}
+</style>

@@ -30,6 +30,10 @@ getAnalytics(app);
 const provider = new GoogleAuthProvider();
 export const auth = getAuth();
 
+export const getIdToken = async () => {
+  return await auth.currentUser?.getIdToken();
+};
+
 export const checkUserIsLoggedIn = () => {
   return new Promise((resolve, reject) => {
     setIsLoading(true);

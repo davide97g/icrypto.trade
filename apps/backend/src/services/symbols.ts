@@ -1,17 +1,13 @@
 import { BinanceClient } from "../config/binance";
+import { ExchangeInfoSymbol } from "../models/account";
 import { BinanceError, BinanceTicker } from "../models/binance";
-import {
-  ExchangeInfoSymbol,
-  Kline,
-  KlineInterval,
-} from "../models/transactions";
 import {
   stopWords,
   specialCharacters,
   customStopWords,
 } from "../utils/stopwords";
 import { tokens as TOKENS } from "../utils/tokens";
-import { getExchangeInfo, getExchangeInfoSymbols } from "./transactions";
+import { getExchangeInfo, getExchangeInfoSymbols } from "./binance/market";
 
 const tokens = TOKENS.filter(
   (token) =>
@@ -88,66 +84,6 @@ export const removeBannedSymbols = (
   return symbols.filter(
     (symbol) => !bannedSymbols.includes(symbol.toUpperCase())
   );
-};
-
-export const getKlines = async (
-  symbol: string,
-  interval: KlineInterval,
-  limit: number,
-  startTime?: number,
-  endTime?: number
-): Promise<Kline[]> => {
-  const klines = await BinanceClient.klines(symbol, interval, {
-    startTime,
-    endTime,
-    limit,
-  })
-    .then((res: any) => res.data)
-    .then(
-      (data: []) =>
-        data.map((kline) => ({
-          openTime: kline[0],
-          open: kline[1],
-          high: kline[2],
-          low: kline[3],
-          close: kline[4],
-          volume: kline[5],
-          closeTime: kline[6],
-          quoteAssetVolume: kline[7],
-          numberOfTrades: kline[8],
-          takerBuyBaseAssetVolume: kline[9],
-          takerBuyQuoteAssetVolume: kline[10],
-          ignore: kline[11],
-        })) as Kline[]
-    )
-    .catch((err: any) => {
-      console.error(err);
-      return err;
-    });
-  return klines;
-};
-
-export const getAverageMove24h = async (symbol: string, limit: number) => {
-  const time = Date.now();
-  try {
-    const klines = await getKlines(
-      symbol,
-      "1m",
-      limit,
-      time - 24 * 60 * 60 * 1000,
-      time
-    );
-    const averageMove = klines.reduce((acc, kline) => {
-      const open = parseFloat(kline.open);
-      const close = parseFloat(kline.close);
-      const move = (close - open) / open;
-      return acc + move;
-    }, 0);
-    return averageMove / klines.length;
-  } catch (err) {
-    console.error(err);
-    return 0;
-  }
 };
 
 export const getTickerPrice = async (

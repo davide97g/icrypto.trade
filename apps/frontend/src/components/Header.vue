@@ -3,13 +3,13 @@
     style="
       height: 60px;
       overflow: hidden;
-      justify-content: space-between;
+      justify-content: space-around;
       padding: 10px;
       position: relative;
     "
-    class="flex-center"
+    class="flex-center full-width"
   >
-    <div class="flex-center">
+    <div class="flex-center flex-start grow">
       <Avatar :position="'topRight'" :relative="true" />
       <a-badge-ribbon
         style="font-size: 12px; font-weight: 600"
@@ -19,47 +19,27 @@
         <h3 style="margin: 10px 5px; padding: 15px 0px">Crypto Feed Trader</h3>
       </a-badge-ribbon>
     </div>
-    <div class="menu-links" v-if="isLoggedIn !== undefined">
-      <router-link class="m1" :to="{ name: LoginPageName }" v-if="!isLoggedIn">
-        <a-button type="danger">Login</a-button>
-      </router-link>
-      <router-link class="m1" :to="{ name: NewsPageName }" v-if="isLoggedIn">
-        <a-button type="primary" ghost>News</a-button>
-      </router-link>
-      <router-link class="m1" :to="{ name: OrdersPageName }" v-if="isAdmin">
-        <a-button type="primary" ghost>Orders</a-button>
-      </router-link>
-      <router-link class="m1" :to="{ name: AssetsPageName }" v-if="isAdmin">
-        <a-button type="primary" ghost>Assets</a-button>
-      </router-link>
-      <router-link class="m1" :to="{ name: SettingsPageName }" v-if="isAdmin">
-        <a-button type="primary" ghost>Settings</a-button>
-      </router-link>
-    </div>
+    <DesktopMenu v-if="!isMobile" />
+    <MobileMenu v-else />
   </header>
 </template>
 
 <script setup lang="ts">
-import {
-  LoginPageName,
-  SettingsPageName,
-  OrdersPageName,
-  NewsPageName,
-  AssetsPageName,
-} from "../router";
-import { isLoggedIn, isAdmin } from "../services/utils";
 import Avatar from "../components/Avatar.vue";
-import { Server } from "../api/server";
+import { ApiClient } from "../api/server";
 import { ref } from "vue";
 import { message } from "ant-design-vue";
+import DesktopMenu from "./Menu/DesktopMenu.vue";
+import MobileMenu from "./Menu/MobileMenu.vue";
+import { isMobile } from "../services/utils";
 
 const serverInfo = ref<{
   version: string;
   env: "test" | "production";
 }>();
 
-const getServerInfo = async () => {
-  Server.getServerInfo()
+const ServerGetInfo = async () => {
+  ApiClient.Server.getInfo()
     .then((res) => (serverInfo.value = res))
     .catch((err) => {
       console.error(err);
@@ -67,7 +47,7 @@ const getServerInfo = async () => {
     });
 };
 
-getServerInfo();
+ServerGetInfo();
 </script>
 
 <style lang="scss" scoped>
@@ -76,5 +56,16 @@ getServerInfo();
   flex-grow: 1;
   margin: 0 10px;
   justify-content: flex-end;
+}
+#header {
+  position: absolute;
+  height: 70px;
+  top: 0;
+  background-color: salmon;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  z-index: 100;
 }
 </style>

@@ -8,26 +8,23 @@
     @change="() => onSearch(searchElement)"
   />
   <div class="flex-center">
-    <p style="margin-bottom: 0">
-      News since: {{ new Date(defaultLast24Hours()).toLocaleString() }}
-    </p>
-    <a-button @click="getNews(true)" type="danger" class="m1"
+    <a-button @click="getNews()" type="danger" class="m1"
       >Get All News</a-button
     >
   </div>
   <a-table
-    class="ant-table-custom"
-    :columns="columns"
+    :columns="cols"
     :rowKey="(record:News) => record._id"
     :data-source="news"
     :pagination="{ pageSize: 10 }"
     :row-class-name="(record:News) => (record.matchFound ? 'row-match-found' : null)"
+    :custom-row="customRow"
   >
     <template #bodyCell="{ column, record }">
       <template v-if="column.title === 'Symbols'">
         <a-tag v-for="symbol in record.symbols">{{ symbol }}</a-tag>
       </template>
-      <template v-if="column.title === 'Symbols Guess'">
+      <template v-if="column.title === 'Guess'">
         <a-tag
           v-for="symbol in record.symbolsGuess"
           v-if="record.symbolsGuess.length"
@@ -41,9 +38,7 @@
         {{ new Date(record.time).toLocaleTimeString() }}
       </template>
       <template v-if="column.title === 'Details'">
-        <a-button
-          type="primary"
-          @click="() => $router.push(`/news/prospect/${record._id}`)"
+        <a-button type="primary" @click="() => openProspect(record._id)"
           >Details</a-button
         >
       </template>
@@ -53,10 +48,11 @@
 
 <script setup lang="ts">
 import { message } from "ant-design-vue";
-import { ref } from "vue";
-import { Server } from "../../api/server";
+import { computed, ref } from "vue";
+import { ApiClient } from "../../api/server";
 import { News } from "../../models/feed";
-import { setIsLoading } from "../../services/utils";
+import { router } from "../../router";
+import { isMobile, setIsLoading } from "../../services/utils";
 
 const columns = [
   {
@@ -66,13 +62,13 @@ const columns = [
     ellipsis: true,
   },
   {
-    title: "Likes",
+    title: "👍🏻",
     dataIndex: "likes",
     width: 2,
     sorter: (a: News, b: News) => a.likes - b.likes,
   },
   {
-    title: "Dislikes",
+    title: "👎🏻",
     dataIndex: "dislikes",
     width: 2,
     sorter: (a: News, b: News) => a.dislikes - b.dislikes,
@@ -83,7 +79,7 @@ const columns = [
     width: 3,
   },
   {
-    title: "Symbols Guess",
+    title: "Guess",
     dataIndex: "symbolsGuess",
     width: 3,
   },
@@ -104,6 +100,36 @@ const columns = [
   },
 ];
 
+const columnsMobile = [
+  {
+    title: "👍🏻",
+    dataIndex: "likes",
+    width: 2,
+    sorter: (a: News, b: News) => a.likes - b.likes,
+  },
+  {
+    title: "👎🏻",
+    dataIndex: "dislikes",
+    width: 2,
+    sorter: (a: News, b: News) => a.dislikes - b.dislikes,
+  },
+  {
+    title: "Guess",
+    dataIndex: "symbolsGuess",
+    width: 3,
+  },
+  {
+    title: "Date",
+    dataIndex: "time",
+    width: 3,
+    sorter: (a: News, b: News) => a.time - b.time,
+  },
+];
+
+const cols = computed(() => {
+  return isMobile.value ? columnsMobile : columns;
+});
+
 const news = ref<News[]>([]);
 const originalNews = ref<News[]>([]);
 
@@ -117,17 +143,9 @@ const onSearch = (searchValue: string) => {
   );
 };
 
-const defaultLast24Hours = () => {
-  // last 24 hours
-  const date = new Date();
-  date.setDate(date.getDate() - 1);
-  return date.getTime();
-};
-
-const getNews = async (all?: boolean) => {
+const getNews = async () => {
   setIsLoading(true);
-  const time = all ? undefined : defaultLast24Hours();
-  await Server.News.get({ time })
+  await ApiClient.News.get()
     .then((res) => {
       news.value = res;
     })
@@ -137,5 +155,14 @@ const getNews = async (all?: boolean) => {
     })
     .finally(() => setIsLoading(false));
 };
-getNews();
+
+const openProspect = (id: string) => {
+  router.push(`/news/prospect/${id}`);
+};
+
+const customRow = (record: News) => {
+  return {
+    onClick: () => openProspect(record._id),
+  };
+};
 </script>

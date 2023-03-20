@@ -5,45 +5,57 @@ import {
   getDoc,
   getDocs,
   query,
+  QueryFieldFilterConstraint,
   setDoc,
   where,
 } from "firebase/firestore";
 import { set, get, ref } from "firebase/database";
 import "firebase/auth";
-import { News, NewsStatus } from "../models/feed";
-import { TradeConfig, Transaction } from "../models/transactions";
 import { db, rtdb } from "../config/firebase";
 import { MyTrade } from "../models/binance";
+import { GoodFeedItem, GoodFeedItemStatus, User } from "../models/database";
+import { TradeConfig } from "../models/bot";
 
 export const DataBaseClient = {
-  News: {
+  Account: {
+    get: async (userId: string) => {
+      const querySnapshot = await getDoc(doc(db, `users/${userId}`));
+      return querySnapshot.data() as User;
+    },
+    update(userId: string, data: any) {
+      return setDoc(doc(db, `users/${userId}`), data, { merge: true });
+    },
+  },
+  GoodFeedItem: {
     get: async (time?: number) => {
       const q = query(collection(db, "news"), where("time", ">", time || 0));
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map((doc) => doc.data()) as News[];
+      return querySnapshot.docs.map((doc) => doc.data()) as GoodFeedItem[];
     },
     getById: async (id: string) => {
       const querySnapshot = await getDoc(doc(db, "news", id));
-      return querySnapshot.data() as News;
+      return querySnapshot.data() as GoodFeedItem;
     },
-    update: async (feed: News[]) => {
+    update: async (feed: GoodFeedItem[]) => {
       await Promise.all(
-        feed.map((item) => DataBaseClient.News.updateById(item._id, item))
+        feed.map((item) =>
+          DataBaseClient.GoodFeedItem.updateById(item._id, item)
+        )
       ).catch((err) => {
         console.log(err);
         return false;
       });
       return true;
     },
-    updateById: async (id: string, news: News) => {
+    updateById: async (id: string, news: GoodFeedItem) => {
       await setDoc(doc(db, "news", id), news);
     },
-    updateStatus: async (id: string, status: NewsStatus) => {
+    updateStatus: async (id: string, status: GoodFeedItemStatus) => {
       await setDoc(doc(db, "news", id), { status }, { merge: true });
     },
-    delete: async (news: News[]) => {
+    delete: async (news: GoodFeedItem[]) => {
       await Promise.all(
-        news.map((item) => DataBaseClient.News.deleteById(item._id))
+        news.map((item) => DataBaseClient.GoodFeedItem.deleteById(item._id))
       ).catch((err) => {
         console.log(err);
         return false;
@@ -54,48 +66,13 @@ export const DataBaseClient = {
       await deleteDoc(doc(db, "news", id));
     },
   },
-  Transaction: {
-    get: async (time?: number) => {
-      const q = time
-        ? query(
-            collection(db, "transactions"),
-            where("transactTime", ">", time)
-          )
-        : query(collection(db, "transactions"));
-      const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map((doc) => doc.data()) as Transaction[];
-    },
-    getById: async (id: string): Promise<Transaction | null> => {
-      const querySnapshot = await getDoc(doc(db, "transactions", id));
-      return querySnapshot.data() as Transaction;
-    },
-    add: async (transaction: Transaction) => {
-      await setDoc(
-        doc(db, "transactions", String(transaction.orderId)),
-        transaction
-      ).catch((err) => {
-        console.log(err);
-        return false;
-      });
-      return true;
-    },
-    update: async (transactions: Transaction[]) => {
-      await Promise.all(
-        transactions.map((item) =>
-          setDoc(doc(db, "transactions", String(item.orderId)), item)
-        )
-      ).catch((err) => {
-        console.log(err);
-        return false;
-      });
-      return true;
-    },
-  },
   Trade: {
-    get: async (time?: number) => {
-      const q = time
-        ? query(collection(db, "trades"), where("time", ">", time))
-        : query(collection(db, "trades"));
+    get: async (options?: { time?: number; symbol?: string }) => {
+      const contraints: QueryFieldFilterConstraint[] = [];
+      if (options?.time) contraints.push(where("time", ">", options.time));
+      if (options?.symbol)
+        contraints.push(where("symbol", "==", options.symbol));
+      const q = query(collection(db, "trades"), ...contraints);
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map((doc) => doc.data()) as MyTrade[];
     },
@@ -120,7 +97,7 @@ export const DataBaseClient = {
       return true;
     },
   },
-  Scheduler: {
+  Bot: {
     getTradeConfig: async (): Promise<TradeConfig | null> => {
       try {
         return await get(ref(rtdb, "tradeConfig"))
@@ -154,23 +131,21 @@ export const DataBaseClient = {
       }
     },
   },
-  Token: {
-    bannedTokens: [] as { symbol: string }[],
-    getBannedTokens: async (
-      avoidCache?: boolean
-    ): Promise<{ symbol: string }[]> => {
-      if (DataBaseClient.Token.bannedTokens.length && !avoidCache) {
+  Symbols: {
+    banned: [] as { symbol: string }[],
+    getBanned: async (avoidCache?: boolean): Promise<{ symbol: string }[]> => {
+      if (DataBaseClient.Symbols.banned.length && !avoidCache) {
         console.info(
-          `✨ using cached ${DataBaseClient.Token.bannedTokens.length} banned tokens`
+          `✨ using cached ${DataBaseClient.Symbols.banned.length} banned tokens`
         );
-        return DataBaseClient.Token.bannedTokens;
+        return DataBaseClient.Symbols.banned;
       }
       const querySnapshot = await getDocs(collection(db, "bannedTokens"));
-      const bannedTokens = querySnapshot.docs.map((doc) => doc.data()) as {
+      const banned = querySnapshot.docs.map((doc) => doc.data()) as {
         symbol: string;
       }[];
-      DataBaseClient.Token.bannedTokens = bannedTokens; // save for next time
-      return bannedTokens;
+      DataBaseClient.Symbols.banned = banned; // save for next time
+      return banned;
     },
   },
 };

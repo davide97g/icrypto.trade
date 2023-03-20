@@ -14,6 +14,8 @@ export const NewsPageName = "News";
 export const PotentialOrderPageName = "PotentialOrder";
 export const OrdersPageName = "Orders";
 export const OrderPageName = "Order";
+export const TradePageName = "Trade";
+export const TradesPageName = "Trades";
 export const SettingsPageName = "Settings";
 export const AssetsPageName = "Assets";
 
@@ -74,6 +76,20 @@ const routes: Readonly<RouteRecordRaw[]> = [
     path: "/order/:symbol/:orderId",
     name: OrderPageName,
     component: () => import("../pages/Order.vue"),
+    beforeEnter: loggedInGuard,
+    props: true,
+  },
+  {
+    path: "/trades/:symbol?",
+    name: TradesPageName,
+    component: () => import("../pages/Trades.vue"),
+    beforeEnter: loggedInGuard,
+    props: true,
+  },
+  {
+    path: "/trade/:symbol/:orderId",
+    name: TradePageName,
+    component: () => import("../pages/Trade.vue"),
     beforeEnter: loggedInGuard,
     props: true,
   },

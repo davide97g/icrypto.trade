@@ -1,68 +1,23 @@
-import { defaultAddresses, MailClient } from "../config/email";
 import { env } from "../config/environment";
+import { ADDRESSES, MailClient, SENDER } from "../config/email";
 import { telegramApi } from "../connections/telegram";
-import { News } from "../models/feed";
 import { BinanceOrderResult, Order } from "../models/orders";
-import {
-  BinanceOCOOrder,
-  BinanceTransaction,
-  Transaction,
-} from "../models/transactions";
+import { BinanceOCOOrder } from "../models/orders";
 import { getCircularReplacer } from "../utils/utils";
+import { GoodFeedItem } from "../models/database";
 
 // ? Generic template for sending an email
 const sendMail = async (subject: string, content: string) => {
   try {
     await MailClient.sendMail({
-      from: "dghiotto.dev@gmail.com",
-      to: defaultAddresses,
+      from: SENDER,
+      to: ADDRESSES,
       subject: `[iCrypto Trade] ${subject}`,
       html: content,
     });
   } catch (err) {
     console.error("[Email Error]", err);
   }
-};
-
-export const sendNewOrderMail = async (
-  marketBuy: Transaction,
-  stopLossTakeProfitTransaction?: BinanceTransaction<BinanceOCOOrder>
-) => {
-  let OCOOrderContent = "<h3>OCO Order</h3>";
-  if (stopLossTakeProfitTransaction?.transaction) {
-    const stopLossTakeProfit = stopLossTakeProfitTransaction.transaction;
-    OCOOrderContent += `<h3>OCO Order Id: ${
-      stopLossTakeProfit.orderListId
-    }</h3>        
-    <h4>Order Time: ${new Date(
-      stopLossTakeProfit.transactionTime || 0
-    ).toUTCString()}</h4>
-    <a href="${env.domain}/orders/${
-      stopLossTakeProfit.symbol
-    }/">See Open Orders</a>`;
-  } else {
-    OCOOrderContent += `<h3>${stopLossTakeProfitTransaction?.error}</h3>`;
-  }
-
-  const content = `
-    <h1>New Market Buy Order</h1>
-    <h3>Order Id: ${marketBuy?.orderId}</h3>
-    <h3>Symbol Executed: ${marketBuy?.symbol}</h3>
-    <h3>Quantity: ${marketBuy?.origQty}</h3>
-    <h3>Order Type: ${marketBuy?.type}</h3>
-    <h3>Status: ${marketBuy?.status}</h3>
-    <h3>Order Time: ${new Date(marketBuy?.transactTime || 0).toUTCString()}</h3>
-    <a href="${env.domain}/order/${marketBuy?.symbol}/${
-    marketBuy?.orderId
-  }">Market Buy</a>
-    <br />
-    ${OCOOrderContent}
-    `;
-  const subject = `New Order: [${marketBuy?.symbol}]`;
-  telegramApi.sendMessageToAdmins(
-    `New Order: [${marketBuy?.symbol}] <a href="${env.domain}/orders/${marketBuy.symbol}">${marketBuy.symbol}</a>`
-  );
-  await sendMail(subject, content);
 };
 
 export const sendOrderMail = async (
@@ -107,7 +62,7 @@ export const sendOrderMail = async (
   await sendMail(subject, content);
 };
 
-export const sendNewPotentialOrderMail = async (news: News) => {
+export const sendNewPotentialOrderMail = async (news: GoodFeedItem) => {
   const content = `
     <h1>New Potential Order</h1>
     <h3>Id: ${news._id}</h3>
@@ -138,9 +93,11 @@ export const sendErrorMail = async (
     getCircularReplacer()
   )}`;
   telegramApi.sendMessageToAdmins(
-    subject +
-      "\n" +
-      `<code style="text-align:left">${JSON.stringify(err, null, 2)}</code>`
+    `🤯 Error: ${subject}\n ${message}\n <code style="text-align:left; font-size:10px">${JSON.stringify(
+      err,
+      null,
+      2
+    )}</code>`
   );
   await sendMail(subject, content);
 };

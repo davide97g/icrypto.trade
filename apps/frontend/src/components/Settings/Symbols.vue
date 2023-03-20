@@ -1,57 +1,11 @@
 <template>
-  <a-row>
-    <a-auto-complete
-      v-model:value="selectedSymbol"
-      :options="options"
-      style="width: 200px"
-      placeholder="Select Token"
-      @search="onSearch"
-    />
-    <a-button type="primary" @click="getKlines" :disabled="!selectedSymbol"
-      >Get Klines</a-button
-    >
-    <a-button type="primary" @click="trackTicker" :disabled="!selectedSymbol"
-      >Track Ticker</a-button
-    >
-  </a-row>
-  <br />
-  <a-row v-if="selectedSymbol">
-    <a-input-number
-      v-model:value="averageMove24h"
-      style="width: 200px"
-      :step="0.00000000000001"
-      string-mode
-      disabled
-    />
-    <a-button type="primary" @click="getAverageMove24h"
-      >Get Average Move 24h</a-button
-    >
-  </a-row>
-  <a-divider />
-  <div class="klines-table">
-    <a-table
-      v-if="klines.length > 0"
-      :columns="columns"
-      :rowKey="(record:Kline) => record.openTime"
-      :data-source="klines"
-      :pagination="{ pageSize: 10 }"
-    >
-      <template #bodyCell="{ column, record }">
-        <template v-if="column.title === 'Open Time'">
-          {{ new Date(record.openTime).toLocaleString() }}
-        </template>
-        <template v-if="column.title === 'Close Time'">
-          {{ new Date(record.closeTime).toLocaleString() }}
-        </template>
-      </template>
-    </a-table>
+  <div>
+    <code>Work in Progess ... </code>
   </div>
 </template>
 
 <script setup lang="ts">
-import { message } from "ant-design-vue";
 import { ref } from "vue";
-import { Server } from "../../api/server";
 import { ExchangeInfoSymbol, Kline } from "../../models/trade";
 
 const props = defineProps<{
@@ -135,37 +89,6 @@ const onSearch = (searchText: string) => {
   options.value = originalOptions.value.filter((o) =>
     o.symbol.toUpperCase().includes(searchText.toUpperCase())
   );
-};
-
-const klines = ref<Kline[]>([]);
-
-const getKlines = async () => {
-  await Server.Symbols.getKlines(selectedSymbol.value)
-    .then((res) => (klines.value = res))
-    .catch((err) => {
-      console.log(err);
-      message.error(err.message);
-    });
-};
-
-const trackTicker = async () => {
-  await Server.WebSocket.track(selectedSymbol.value)
-    .then((res) => console.info(res))
-    .catch((err) => {
-      console.log(err);
-      message.error(err.message);
-    });
-};
-
-const averageMove24h = ref(0);
-
-const getAverageMove24h = async () => {
-  await Server.Symbols.getAverageMove24h(selectedSymbol.value)
-    .then((res) => (averageMove24h.value = res))
-    .catch((err) => {
-      console.log(err);
-      message.error(err.message);
-    });
 };
 </script>
 

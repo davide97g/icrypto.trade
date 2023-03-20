@@ -1,17 +1,20 @@
 import WebSocket from "ws";
 import { WsNTALikeMessage, WsNTANewsMessage } from "../models/websocket";
+import { getWS } from "../services/bot/bot";
 
-let retryCount = 0;
 const MAX_RETRIES = 10;
 
 export function wsConnect<T extends WsNTALikeMessage | WsNTANewsMessage>(
   wsURL: string,
-  callback: (data: T) => void
+  callback: (data: T) => void,
+  reconnectFn?: () => void
 ): WebSocket {
   const socket = new WebSocket(wsURL);
+  let retryCount = 0;
 
   socket.addEventListener("open", (event) => {
     console.log(wsURL, "WebSocket connection established");
+    retryCount = 0;
   });
 
   socket.addEventListener("message", (event) =>
@@ -20,20 +23,30 @@ export function wsConnect<T extends WsNTALikeMessage | WsNTANewsMessage>(
 
   socket.addEventListener("close", (event) => {
     console.log(wsURL, "WebSocket connection closed");
-    // if (retryCount < MAX_RETRIES) {
-    //   console.info(wsURL, "Reconnecting in 10 seconds");
-    //   retryCount++;
-    //   setTimeout(() => wsConnect(wsURL, callback), 10000); // Reconnect
-    // }
+    console.info(wsURL, "Reconnecting in 10 seconds");
+    setTimeout(() => {
+      if (retryCount < MAX_RETRIES) {
+        const WS = getWS();
+        if (WS.isRunning && reconnectFn) {
+          retryCount++;
+          reconnectFn();
+        }
+      } else console.warn(wsURL, "Max retries reached, stopping reconnecting");
+    }, 10000); // Reconnect
   });
 
   socket.addEventListener("error", (event) => {
     console.error(wsURL, "WebSocket error", event);
-    if (retryCount < MAX_RETRIES) {
-      console.info(wsURL, "Reconnecting in 10 seconds");
-      retryCount++;
-      setTimeout(() => wsConnect(wsURL, callback), 10000); // Reconnect
-    }
+    console.info(wsURL, "Reconnecting in 10 seconds");
+    setTimeout(() => {
+      if (retryCount < MAX_RETRIES) {
+        const WS = getWS();
+        if (WS.isRunning && reconnectFn) {
+          retryCount++;
+          reconnectFn();
+        }
+      } else console.warn(wsURL, "Max retries reached, stopping reconnecting");
+    }, 10000); // Reconnect
   });
 
   return socket;

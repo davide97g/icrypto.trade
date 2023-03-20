@@ -1,3 +1,7 @@
+export interface BinanceResponse<D, E = BinanceErrorData> {
+  data?: D;
+  error?: E;
+}
 export interface BinanceErrorData {
   code: number;
   msg: string;
@@ -14,25 +18,6 @@ export interface BinanceError {
     request: any;
     data: BinanceErrorData;
   };
-}
-export interface BinanceAccount {
-  makerCommission: number;
-  takerCommission: number;
-  buyerCommission: number;
-  sellerCommission: number;
-  canTrade: boolean;
-  canWithdraw: boolean;
-  canDeposit: boolean;
-  brokered: boolean;
-  updateTime: number;
-  accountType: string;
-  balances: BinanceBalance[];
-  permissions: string[];
-}
-export interface BinanceBalance {
-  asset: string;
-  free: string;
-  locked: string;
 }
 
 export interface BinanceTicker {

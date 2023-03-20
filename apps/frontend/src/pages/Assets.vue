@@ -1,8 +1,12 @@
 <template>
   <div>
     <h2>Assets</h2>
-    <a-list>
-      <a-list-item v-for="asset in assets" :key="asset.asset">
+    <a-list class="asset-list">
+      <a-list-item
+        v-for="asset in assets"
+        :key="asset.asset"
+        style="align-items: baseline"
+      >
         <a-list-item-meta title="Asset">
           <template #description>
             <a-button type="link" @click="openOrdersForSymbol(asset.asset)">
@@ -10,9 +14,18 @@
             </a-button>
           </template>
         </a-list-item-meta>
-        <a-list-item-meta title="Quantity">
+        <a-list-item-meta title="Free">
           <template #description>
-            {{ asset.free }} / {{ asset.locked }}
+            <a-tag color="green">
+              {{ asset.free }}
+            </a-tag>
+          </template>
+        </a-list-item-meta>
+        <a-list-item-meta title="Locked">
+          <template #description>
+            <a-tag color="red">
+              {{ asset.locked }}
+            </a-tag>
           </template>
         </a-list-item-meta>
       </a-list-item>
@@ -22,14 +35,14 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { Server } from "../api/server";
+import { ApiClient } from "../api/server";
 import { Account } from "../models/trade";
 import { OrdersPageName, router } from "../router";
 
 const account = ref<Account>();
 
 const getAssets = () => {
-  Server.Transaction.getAccount().then((res) => {
+  ApiClient.Account.get().then((res) => {
     if (res) account.value = res;
   });
 };
@@ -44,3 +57,10 @@ const openOrdersForSymbol = (symbol: string) => {
 
 getAssets();
 </script>
+
+<style lang="scss" scoped>
+.asset-list {
+  max-height: calc(100vh - 140px);
+  overflow: auto;
+}
+</style>

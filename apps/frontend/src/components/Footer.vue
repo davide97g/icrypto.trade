@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import packageJson from "../../package.json";
-import { Server } from "../api/server";
+import { ApiClient } from "../api/server";
 const serverVersion = ref("?.?.?");
-Server.getServerInfo().then((res) => {
+ApiClient.Server.getInfo().then((res) => {
   if (res) serverVersion.value = res.version;
 });
 </script>
 
 <template>
   <div style="height: 30px">
-    <p id="server-version">Server: v{{ serverVersion }}</p>
+    <p id="server-version">ApiClient: v{{ serverVersion }}</p>
     <p id="version">Website: v{{ packageJson.version }}</p>
   </div>
 </template>

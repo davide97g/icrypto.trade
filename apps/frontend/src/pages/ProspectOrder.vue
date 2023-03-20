@@ -1,28 +1,32 @@
 <template>
-  <div style="text-align: left">
-    <h1>News Potential Order Details</h1>
+  <div class="left">
+    <h1>Prospect</h1>
     <a-row class="w100">
-      <a-col :span="12">
+      <a-col :span="isMobile ? 24 : 12">
         <p>
-          Id <a-tag>{{ news?._id }}</a-tag>
+          <CopyOutlined
+            v-if="news"
+            style="cursor: pointer; margin-right: 10px"
+            @click="copyToClipboard(news!._id)"
+          />
+          <strong style="margin-right: 5px">ID:</strong>
+          <a-tag>{{ news?._id }}</a-tag>
         </p>
         <p>
-          Date
-          <a-tag v-if="news?.time">
+          <strong style="margin-right: 5px">Date: </strong>
+          <span v-if="news?.time">
             {{ new Date(news?.time).toLocaleString() }}
-          </a-tag>
+          </span>
           <span v-else>-</span>
         </p>
-        <p>
-          Likes <a-tag>{{ news?.likes }}</a-tag>
-        </p>
-        <p>
-          Dislikes <a-tag>{{ news?.dislikes }}</a-tag>
-        </p>
+        <h3>
+          👍🏻 <a-tag color="green">{{ news?.likes }}</a-tag> 👎🏻
+          <a-tag color="red">{{ news?.dislikes }}</a-tag>
+        </h3>
       </a-col>
-      <a-col :span="12">
+      <a-col :span="isMobile ? 24 : 12">
         <p>
-          Symbols Guess
+          <strong style="margin-right: 5px"> Symbols Guess </strong>
           <a-tag
             v-if="news?.symbolsGuess.length"
             v-for="symbol in news?.symbolsGuess"
@@ -31,36 +35,32 @@
           >
           <a-tag v-else>[ ]</a-tag>
         </p>
-        <p>
+        <p v-if="news?.orderId">
           Order Id
-          <span v-if="!news?.orderId">
+          <span>
             <a-tag>{{ news?.orderId }}</a-tag>
             <LinkOutlined @click="openOrder" />
           </span>
-          <span v-else>-</span>
         </p>
-        <p>
+        <p v-if="news?.orderStatus">
           Status
           <a-tag :color="getColor(news?.orderStatus)">{{
             news?.orderStatus?.toUpperCase()
           }}</a-tag>
         </p>
-        <p>
-          Title: <a-tag>{{ news?.title }}</a-tag>
-        </p>
+        <p><strong>Title:</strong> {{ news?.title }}</p>
+        <a-button size="small" @click="showFullNews = !showFullNews"
+          >Show Full Transaction</a-button
+        >
       </a-col>
     </a-row>
     <a-divider />
     <a-row>
-      <a-col :span="12">
+      <a-col :span="isMobile ? 24 : 12">
         <h3>Actions</h3>
-        <br />
-        <a-button type="primary" @click="showFullNews = !showFullNews"
-          >Show Full Transaction</a-button
-        >
+
         <a-button
           type="primary"
-          class="m1"
           @click="showSymbolSelectionModal = true"
           :disabled="
             !!news?.orderId || !binanceStore.exchangeInfo?.symbols?.length
@@ -70,14 +70,20 @@
         </a-button>
         <a-button
           type="danger"
-          class="m1"
           @click="markAsIgnore"
           :disabled="!!news?.orderId || news?.orderStatus == 'ignore'"
         >
           Mark as Ignore
         </a-button>
       </a-col>
-      <a-col :span="12" class="code-container" v-if="showFullNews">
+      <a-col
+        :span="isMobile ? 24 : 12"
+        class="code-container"
+        :class="{
+          mobile: isMobile,
+        }"
+        v-if="showFullNews"
+      >
         <code>
           {{ formatJSON(news) }}
         </code>
@@ -102,7 +108,8 @@ import SymbolSelectionModal from "../components/Orders/SymbolSelectionModal.vue"
 import { BinanceError } from "../models/binance";
 import { News, ProspectOrderStatus } from "../models/feed";
 import { router } from "../router";
-import { setIsLoading, formatJSON } from "../services/utils";
+import { setIsLoading, formatJSON, isMobile } from "../services/utils";
+import { CopyOutlined } from "@ant-design/icons-vue";
 import { useBinanceStore } from "../stores/binance";
 
 const news = ref<News>();
@@ -182,23 +189,30 @@ const openOrder = () => {
 if (!binanceStore.exchangeInfo) getExchangeInfo();
 
 const markAsIgnore = () => {
-  if (!news?.value) {
-    message.error(`News not found`);
-    return;
-  }
-  const newsToUpdate: News = {
-    ...news?.value,
-    orderStatus: "ignore",
-  };
-  ApiClient.News.updateById(newsToUpdate)
-    .then(() => {
-      message.success(`News marked as ignore`);
-      getNews();
-    })
-    .catch((err: BinanceError) => {
-      console.error(err);
-      message.error(err.response.data.msg || `Error marking news as ignore`);
-    });
+  message.warning(`'Marking as ignore' Not implemented yet`);
+  return;
+  // if (!news?.value) {
+  //   message.error(`News not found`);
+  //   return;
+  // }
+  // const newsToUpdate: News = {
+  //   ...news?.value,
+  //   orderStatus: "ignore",
+  // };
+  // ApiClient.News.updateById(newsToUpdate)
+  //   .then(() => {
+  //     message.success(`News marked as ignore`);
+  //     getNews();
+  //   })
+  //   .catch((err: BinanceError) => {
+  //     console.error(err);
+  //     message.error(err.response.data.msg || `Error marking news as ignore`);
+  //   });
+};
+
+const copyToClipboard = (id: string) => {
+  navigator.clipboard.writeText(id);
+  message.success("ID copied!");
 };
 </script>
 
@@ -208,6 +222,10 @@ const markAsIgnore = () => {
   padding: 10px;
   background-color: #ffffff;
   border: 1px solid #e8e8e8;
+  &.mobile {
+    margin-top: 10px;
+    font-size: x-small;
+  }
 }
 code {
   white-space: pre-wrap;

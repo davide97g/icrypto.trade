@@ -93,9 +93,11 @@ export const sendErrorMail = async (
     getCircularReplacer()
   )}`;
   telegramApi.sendMessageToAdmins(
-    subject +
-      "\n" +
-      `<code style="text-align:left">${JSON.stringify(err, null, 2)}</code>`
+    `🤯 Error: ${subject}\n ${message}\n <code style="text-align:left; font-size:10px">${JSON.stringify(
+      err,
+      null,
+      2
+    )}</code>`
   );
   await sendMail(subject, content);
 };

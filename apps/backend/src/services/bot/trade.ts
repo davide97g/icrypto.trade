@@ -2,7 +2,6 @@ import { WebSocket } from "ws";
 import { BinanceClient } from "../../config/binance";
 import { BinanceTicker } from "../../models/binance";
 import {
-  Fill,
   NewOCOOrderRequest,
   NewOrderRequest,
   Order,
@@ -11,7 +10,6 @@ import { roundToNDigits } from "../../utils/utils";
 import { sendErrorMail, sendOrderMail } from "../mail";
 import { newOrder, newOCOOrder } from "../orders";
 import { subscribeSymbolTrade } from "../trades";
-import { telegramApi } from "../../connections/telegram";
 import { DataBaseClient } from "../../connections/database";
 import { ExchangeInfoSymbol } from "../../models/account";
 import { TradeConfig } from "../../models/bot";
@@ -135,9 +133,6 @@ export const trade = async (
   tickersPrice: BinanceTicker[]
 ) => {
   console.info("Trade", newsId, exchangeInfoSymbol.symbol, tradeConfig);
-  telegramApi.sendMessageToAdmins(
-    `Trade ${newsId} ${exchangeInfoSymbol.symbol}`
-  );
   try {
     const marketOrderTransaction = await newMarketOrder(
       exchangeInfoSymbol,

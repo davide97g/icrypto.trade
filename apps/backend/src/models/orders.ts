@@ -121,6 +121,5 @@ export interface NewOCOOrderRequest {
   quantity: number;
   takeProfitPrice: number;
   stopLossPrice: number;
-  marketBuyOrderId: number;
   timeInForce: OrderTimeInForce;
 }

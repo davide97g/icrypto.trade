@@ -11,6 +11,8 @@ import { setIsLoading } from "../services/utils";
 
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
+import { useBinanceStore } from "../stores/binance";
+import { ApiClient } from "./server";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAQymUgf3aKt0MVHSrptWf35HY8PjXiTXU",

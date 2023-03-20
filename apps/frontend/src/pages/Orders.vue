@@ -16,8 +16,15 @@
       class="m1"
       type="primary"
       @click="newOrderModalVisible = true"
-      :disabled="!account || !exchangeInfo"
+      :disabled="!account || !binance.exchangeInfo"
       >New Order</a-button
+    >
+    <a-button
+      class="m1"
+      type="primary"
+      @click="newOCOOrderModalVisible = true"
+      :disabled="!account || !binance.exchangeInfo"
+      >New OCO Order</a-button
     >
     <a-popconfirm
       :title="`Are you sure sell all ${symbol} ?`"
@@ -31,196 +38,27 @@
       </a-button>
     </a-popconfirm>
     <NewOrderModal
-      v-if="exchangeInfo && account"
+      v-if="binance.exchangeInfo && account"
       :visible="newOrderModalVisible"
-      :tokens="exchangeInfo?.symbols"
+      :tokens="binance.exchangeInfo?.symbols"
       :balances="account?.balances"
       @close="newOrderModalVisible = false"
+    />
+    <NewOrderModal
+      v-if="binance.exchangeInfo && account"
+      :isOCO="true"
+      :visible="newOCOOrderModalVisible"
+      :tokens="binance.exchangeInfo?.symbols"
+      :balances="account?.balances"
+      @close="newOCOOrderModalVisible = false"
     />
     <a-divider />
     <a-tabs v-model:activeKey="activeKey">
       <a-tab-pane key="open" tab="Open Orders">
-        <a-row class="my1">
-          <a-popconfirm
-            title="Are you sure cancel all open orders?"
-            ok-text="Yes"
-            cancel-text="No"
-            :disabled="!orders.length"
-            @confirm="cancelAllOpenOrders"
-          >
-            <a-button type="danger" :disabled="!orders.length">
-              Cancel All Open Orders
-            </a-button>
-          </a-popconfirm>
-        </a-row>
-        <a-table
-          class="ant-table-custom"
-          :columns="columnsOpenOrders"
-          :rowKey="(record:BinanceOrderDetails) => record.orderId"
-          :data-source="orders"
-          :pagination="{ pageSize: 10 }"
-        >
-          <template #bodyCell="{ column, record }">
-            <template v-if="column.title === 'Order Id'">
-              <CopyOutlined
-                style="cursor: pointer; margin-right: 10px"
-                @click="copyToClipboard(record.orderId)"
-              />
-              {{ record.orderId }}
-              <WalletOutlined
-                style="cursor: pointer; margin-right: 10px"
-                @click="openOrderDetails(record.symbol, record.orderId)"
-              />
-            </template>
-            <template v-if="column.title === 'Symbol'">
-              <a-tag>{{ record.symbol }}</a-tag>
-            </template>
-            <template v-if="column.title === 'Side'">
-              <a-tag
-                :color="record.side === 'BUY' ? 'green' : 'red'"
-                class="strong"
-              >
-                {{ record.side }}
-              </a-tag>
-            </template>
-            <template v-if="column.title === 'Type'">
-              <a-tag>
-                {{ record.type }}
-              </a-tag>
-            </template>
-            <template v-if="column.title === 'Price'">
-              <a-tag class="strong">{{ record.price }}</a-tag>
-            </template>
-            <template v-if="column.title === 'Stop Price'">
-              <a-tag class="strong">{{ record.stopPrice }}</a-tag>
-            </template>
-            <template v-if="column.title === 'Quantity'">
-              <a-tag class="strong">{{ record.origQty }}</a-tag>
-            </template>
-            <template v-if="column.title === 'Status'">
-              <a-tag class="strong">
-                {{ record.status }}
-              </a-tag>
-            </template>
-            <template v-if="column.title === 'Date'">
-              {{ new Date(record.time).toLocaleString() }}
-            </template>
-          </template>
-        </a-table>
+        <OrderList :symbol="symbol" />
       </a-tab-pane>
-      <a-tab-pane key="trades" tab="Trades" class="left">
-        <a-button
-          type="primary"
-          title="Refresh my trades"
-          class="m1"
-          @click="getMyTrades"
-          >Refresh</a-button
-        >
-        <a-table
-          class="ant-table-custom"
-          :columns="columnsMyTrades"
-          :rowKey="(record:MyTrade) => record.id"
-          :data-source="myTrades"
-          :pagination="{ pageSize: 10 }"
-        >
-          <template #bodyCell="{ column, record }">
-            <template v-if="column.title === 'Order Id'">
-              <CopyOutlined
-                style="cursor: pointer; margin-right: 10px"
-                @click="copyToClipboard(record.orderId)"
-              />
-              {{ record.orderId }}
-              <WalletOutlined
-                style="cursor: pointer; margin-right: 10px"
-                @click="openTradeDetails(record.symbol, record.orderId)"
-              />
-            </template>
-            <template v-if="column.title === 'Symbol'">
-              <a-tag>{{ record.symbol }}</a-tag>
-            </template>
-            <template v-if="column.title === 'Side'">
-              <a-tag :color="record.isBuyer ? 'green' : 'red'">{{
-                record.isBuyer ? "BUY" : "SELL"
-              }}</a-tag>
-            </template>
-            <template v-if="column.title === 'Price'">
-              <a-tag class="strong">{{ record.price }}</a-tag>
-            </template>
-            <template v-if="column.title === 'Quantity'">
-              <a-tag class="strong">{{ record.qty }}</a-tag>
-            </template>
-            <template v-if="column.title === 'Date'">
-              {{ new Date(record.time).toLocaleString() }}
-            </template>
-          </template>
-          <template #expandedRowRender="{ record }">
-            <div>
-              <p>
-                Commission:
-                <a-tag
-                  >{{ record.commission }} {{ record.commissionAsset }}
-                </a-tag>
-              </p>
-            </div>
-          </template>
-        </a-table>
-      </a-tab-pane>
-      <a-tab-pane key="binance-trades" tab="Binance Trades" class="left">
-        <a-button
-          type="primary"
-          title="Refresh my trades (Binance)"
-          class="m1"
-          @click="getMyTradesBinance"
-          >Refresh Binance</a-button
-        >
-        <a-table
-          class="ant-table-custom"
-          :columns="columnsMyTrades"
-          :rowKey="(record:MyTrade) => record.id"
-          :data-source="myTradesBinance"
-          :pagination="{ pageSize: 10 }"
-        >
-          <template #bodyCell="{ column, record }">
-            <template v-if="column.title === 'Order Id'">
-              <CopyOutlined
-                style="cursor: pointer; margin-right: 10px"
-                @click="copyToClipboard(record.orderId)"
-              />
-              {{ record.orderId }}
-              <WalletOutlined
-                style="cursor: pointer; margin-right: 10px"
-                @click="openTradeDetails(record.symbol, record.orderId)"
-              />
-            </template>
-            <template v-if="column.title === 'Symbol'">
-              <a-tag>{{ record.symbol }}</a-tag>
-            </template>
-            <template v-if="column.title === 'Side'">
-              <a-tag :color="record.isBuyer ? 'green' : 'red'">{{
-                record.isBuyer ? "BUY" : "SELL"
-              }}</a-tag>
-            </template>
-            <template v-if="column.title === 'Price'">
-              <a-tag class="strong">{{ record.price }}</a-tag>
-            </template>
-            <template v-if="column.title === 'Quantity'">
-              <a-tag class="strong">{{ record.qty }}</a-tag>
-            </template>
-            <template v-if="column.title === 'Date'">
-              {{ new Date(record.time).toLocaleString() }}
-            </template>
-          </template>
-          <template #expandedRowRender="{ record }">
-            <div>
-              <p>
-                Commission:
-                <a-tag
-                  >{{ record.commission }} {{ record.commissionAsset }}
-                </a-tag>
-              </p>
-            </div>
-          </template>
-        </a-table>
+      <a-tab-pane key="open-oco" tab="Open OCO Orders">
+        <OrderOCOList :symbol="symbol" />
       </a-tab-pane>
     </a-tabs>
   </div>
@@ -244,17 +82,16 @@
 </template>
 
 <script setup lang="ts">
-import { loading } from "../services/utils";
 import { message } from "ant-design-vue";
 import { computed, ref, watch } from "vue";
 import { ApiClient } from "../api/server";
-import { setIsLoading } from "../services/utils";
-import { CopyOutlined, WalletOutlined } from "@ant-design/icons-vue";
-import { BinanceOrderDetails, MyTrade } from "../models/orders";
-import { router, TradePageName } from "../router";
-import { Account, ExchangeInfo } from "../models/trade";
-import { BinanceError } from "../models/binance";
 import NewOrderModal from "../components/Orders/NewOrderModal.vue";
+import OrderList from "../components/Orders/OrderList.vue";
+import OrderOCOList from "../components/Orders/OrderOCOList.vue";
+import { Account } from "../models/trade";
+import { router } from "../router";
+import { loading, setIsLoading } from "../services/utils";
+import { useBinanceStore } from "../stores/binance";
 
 const props = defineProps<{
   symbol?: string;
@@ -264,42 +101,22 @@ const symbol = ref(props.symbol);
 
 const activeKey = ref("open");
 
-watch(
-  () => props.symbol,
-  (newSymbol) => {
-    symbol.value = newSymbol?.includes("USDT") ? newSymbol : newSymbol + "USDT";
-    getOpenOrders();
-    getMyTrades();
-  }
-);
-
-const orders = ref<BinanceOrderDetails[]>([]);
-const myTrades = ref<MyTrade[]>([]);
-const myTradesBinance = ref<MyTrade[]>([]);
 const account = ref<Account>();
-const exchangeInfo = ref<ExchangeInfo>();
+const binance = useBinanceStore();
 
 const asset = computed(() =>
   account.value?.balances.find((s) => symbol.value?.startsWith(s.asset))
 );
 
-// Symbol selection
-
 const selectedSymbol = ref(symbol.value || "");
 
-const options = ref<any>([]);
-const originalOptions = ref(options.value);
-
-watch(
-  () => exchangeInfo.value?.symbols,
-  (symbols) => {
-    options.value = symbols?.map((t) => ({
-      ...t,
-      value: t.symbol,
-    }));
-    originalOptions.value = options.value;
-  }
+const options = ref<any>(
+  binance.exchangeInfo.symbols.map((t) => ({
+    ...t,
+    value: t.symbol,
+  }))
 );
+const originalOptions = ref(options.value);
 
 const onSearch = (searchText: string) => {
   options.value = originalOptions.value?.filter((o: any) =>
@@ -310,194 +127,10 @@ const onSearch = (searchText: string) => {
 const selectSymbol = () => {
   symbol.value = selectedSymbol.value;
   router.push({ name: "Orders", params: { symbol: symbol.value } });
-  getOpenOrders();
-  getMyTrades();
-};
-
-const columnsOpenOrders = [
-  {
-    title: "Order Id",
-    dataIndex: "orderId",
-    width: 3,
-    ellipsis: true,
-    sorter: (a: BinanceOrderDetails, b: BinanceOrderDetails) =>
-      a.orderId - b.orderId,
-  },
-  {
-    title: "Symbol",
-    dataIndex: "symbol",
-    width: 2,
-  },
-  {
-    title: "Side",
-    dataIndex: "side",
-    width: 1,
-  },
-  {
-    title: "Type",
-    dataIndex: "type",
-    width: 2,
-  },
-  {
-    title: "Price",
-    dataIndex: "price",
-    width: 2,
-  },
-  {
-    title: "Stop Price",
-    dataIndex: "stopPrice",
-    width: 2,
-  },
-  {
-    title: "Quantity",
-    dataIndex: "origQty",
-    width: 2,
-  },
-  {
-    title: "Status",
-    dataIndex: "status",
-    width: 2,
-  },
-  {
-    title: "Date",
-    dataIndex: "time",
-    width: 4,
-    sorter: (a: BinanceOrderDetails, b: BinanceOrderDetails) => a.time - b.time,
-  },
-];
-
-const columnsMyTrades = [
-  {
-    title: "Id",
-    dataIndex: "id",
-    width: "15%",
-    ellipsis: true,
-    sorter: (a: MyTrade, b: MyTrade) => a.id - b.id,
-    fixed: true,
-  },
-  {
-    title: "Order Id",
-    dataIndex: "orderId",
-    width: "20%",
-    ellipsis: true,
-    sorter: (a: MyTrade, b: MyTrade) => a.orderId - b.orderId,
-  },
-  {
-    title: "Side",
-    dataIndex: "isBuyer",
-    width: "10%",
-  },
-  {
-    title: "Symbol",
-    dataIndex: "symbol",
-    width: "10%",
-  },
-  {
-    title: "Quantity",
-    dataIndex: "qty",
-    width: "15%",
-  },
-  {
-    title: "Price",
-    dataIndex: "price",
-    width: "15%",
-  },
-  {
-    title: "Date",
-    dataIndex: "time",
-    width: "20%",
-    sorter: (a: MyTrade, b: MyTrade) => a.time - b.time,
-  },
-];
-
-const copyToClipboard = (id: string) => {
-  navigator.clipboard.writeText(id);
-  message.success("Order Id copied!");
 };
 
 const openOnBinance = () => {
   window.open(`https://www.binance.com/en/trade/${symbol.value}`, "_blank");
-};
-
-const openOrderDetails = (symbol: string, orderId: string) => {
-  router.push({
-    name: "Order",
-    params: { symbol, orderId },
-  });
-};
-
-const openTradeDetails = (symbol: string, orderId: string) => {
-  router.push({
-    name: TradePageName,
-    params: { symbol, orderId },
-  });
-};
-
-const getOpenOrders = async () => {
-  if (!symbol.value) return;
-  setIsLoading(true);
-  await ApiClient.Orders.get(symbol.value)
-    .then((res) => {
-      if (res) orders.value = res;
-      else message.warning("No orders found");
-    })
-    .catch((err) => {
-      console.error(err);
-      message.error(err);
-    })
-    .finally(() => {
-      setIsLoading(false);
-    });
-};
-
-const getMyTrades = async () => {
-  if (!symbol.value) return;
-  setIsLoading(true);
-  await ApiClient.Trades.get(symbol.value)
-    .then((res) => {
-      if (res) myTrades.value = res;
-    })
-    .catch((err) => {
-      console.error(err);
-      message.error(err);
-    })
-    .finally(() => setIsLoading(false));
-};
-
-const getMyTradesBinance = async () => {
-  if (!symbol.value) return;
-  setIsLoading(true);
-  await ApiClient.Trades.getBinance(symbol.value)
-    .then((res) => {
-      if (res) myTradesBinance.value = res;
-    })
-    .catch((err) => {
-      console.error(err);
-      message.error(err);
-    })
-    .finally(() => setIsLoading(false));
-};
-
-const cancelAllOpenOrders = () => {
-  if (!symbol.value) return;
-  setIsLoading(true);
-  ApiClient.Orders.cancelAll(symbol.value)
-    .then((res) => {
-      if (res) {
-        getOpenOrders();
-        message.success("All open orders cancelled");
-      } else
-        message.warning(
-          "Something went wrong while cancelling all open orders"
-        );
-    })
-    .catch((err) => {
-      console.error(err);
-      message.error(err);
-    })
-    .finally(() => {
-      setIsLoading(false);
-    });
 };
 
 const sellAll = () => {
@@ -507,7 +140,6 @@ const sellAll = () => {
     .then((res) => {
       if (res) {
         getAccount();
-        getMyTrades();
         message.success(`Sold ${res.executedQty} of ${props.symbol}`);
       } else message.warning("Something went wrong while selling all");
     })
@@ -526,22 +158,10 @@ const getAccount = () => {
   });
 };
 
-const getExchangeInfo = () =>
-  ApiClient.Trades.getExchangeInfo()
-    .then((res) => {
-      if (res) exchangeInfo.value = res;
-      else message.warning(`Error getting exchange info`);
-    })
-    .catch((err: BinanceError) => {
-      console.error(err);
-      message.error(err.response.data.msg || `Error getting exchange info`);
-    });
-
 const newOrderModalVisible = ref(false);
+const newOCOOrderModalVisible = ref(false);
 
-getExchangeInfo();
 getAccount();
-getOpenOrders();
 </script>
 
 <style lang="scss" scoped>

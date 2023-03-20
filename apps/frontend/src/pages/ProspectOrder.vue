@@ -62,9 +62,7 @@
         <a-button
           type="primary"
           @click="showSymbolSelectionModal = true"
-          :disabled="
-            !!news?.orderId || !binanceStore.exchangeInfo?.symbols?.length
-          "
+          :disabled="!!news?.orderId || !binance.exchangeInfo?.symbols?.length"
         >
           Add Symbol Guess
         </a-button>
@@ -90,9 +88,9 @@
       </a-col>
     </a-row>
     <SymbolSelectionModal
-      v-if="binanceStore.exchangeInfo?.symbols?.length"
+      v-if="binance.exchangeInfo?.symbols?.length"
       :visible="showSymbolSelectionModal"
-      :exchangeInfoSymbols="binanceStore.exchangeInfo?.symbols"
+      :exchangeInfoSymbols="binance.exchangeInfo?.symbols"
       @close="showSymbolSelectionModal = false"
       @ok="addSymbolToNews"
     />
@@ -108,7 +106,12 @@ import SymbolSelectionModal from "../components/Orders/SymbolSelectionModal.vue"
 import { BinanceError } from "../models/binance";
 import { News, ProspectOrderStatus } from "../models/feed";
 import { router } from "../router";
-import { setIsLoading, formatJSON, isMobile } from "../services/utils";
+import {
+  setIsLoading,
+  formatJSON,
+  isMobile,
+  copyToClipboard,
+} from "../services/utils";
 import { CopyOutlined } from "@ant-design/icons-vue";
 import { useBinanceStore } from "../stores/binance";
 
@@ -133,20 +136,7 @@ getNews();
 
 const showFullNews = ref(false);
 
-const binanceStore = useBinanceStore();
-
-const getExchangeInfo = () =>
-  ApiClient.Trades.getExchangeInfo()
-    .then((res) => {
-      if (res) binanceStore.setExchangeInfo(res);
-      else message.warning(`Error getting exchange info`);
-    })
-    .catch((err: BinanceError) => {
-      console.error(err);
-      message.error(err.response.data.msg || `Error getting exchange info`);
-    });
-
-getExchangeInfo();
+const binance = useBinanceStore();
 
 const showSymbolSelectionModal = ref(false);
 const addSymbolToNews = (symbol: string) => {
@@ -186,8 +176,6 @@ const openOrder = () => {
   router.push(`/order/${symbol}/${orderId}`);
 };
 
-if (!binanceStore.exchangeInfo) getExchangeInfo();
-
 const markAsIgnore = () => {
   message.warning(`'Marking as ignore' Not implemented yet`);
   return;
@@ -208,11 +196,6 @@ const markAsIgnore = () => {
   //     console.error(err);
   //     message.error(err.response.data.msg || `Error marking news as ignore`);
   //   });
-};
-
-const copyToClipboard = (id: string) => {
-  navigator.clipboard.writeText(id);
-  message.success("ID copied!");
 };
 </script>
 

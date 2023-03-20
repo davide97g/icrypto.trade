@@ -1,6 +1,6 @@
 import { BinanceClient } from "../config/binance";
 import { DataBaseClient } from "../connections/database";
-import { BinanceError, MyTrade } from "../models/binance";
+import { BinanceError } from "../models/binance";
 import { FeedItem } from "../models/feed";
 import {
   BinanceOCOOrder,
@@ -13,17 +13,34 @@ import {
 import { getAccount, getExchangeInfo } from "./binance/market";
 import { getBinanceTradesByOrderId } from "./binance/trade";
 
-export const getOpenOrders = async (symbol: string) => {
+export const openOrders = async (symbol: string) => {
   return BinanceClient.openOrders(symbol)
     .then((response: any) => response.data as BinanceOrderDetails)
     .catch((error: BinanceError) => error.response.data);
 };
 
-export const getOrderById = async (
+export const getOpenOCOOrders = async () => {
+  return BinanceClient.getOpenOCOOrders()
+    .then((response: any) => response.data as BinanceOCOOrder)
+    .catch((error: BinanceError) => error.response.data);
+};
+
+export const getOrder = async (
   symbol: string,
   orderId: string
 ): Promise<BinanceOrderDetails> => {
   return BinanceClient.getOrder(symbol, { orderId })
+    .then((response: any) => response.data)
+    .catch((err: BinanceError) => {
+      console.error(err.response.data);
+      return err.response.data;
+    });
+};
+
+export const getOCOOrder = async (
+  orderListId: string
+): Promise<BinanceOCOOrder> => {
+  return BinanceClient.getOCOOrder({ orderListId })
     .then((response: any) => response.data)
     .catch((err: BinanceError) => {
       console.error(err.response.data);
@@ -47,6 +64,20 @@ export const cancelOrder = async (
     orderId,
   })
     .then((response: any) => response.data as BinanceOrderResponse)
+    .catch((err: BinanceError) => {
+      console.error(err.response.data);
+      return err.response.data;
+    });
+};
+
+export const cancelOCOOrder = async (
+  symbol: string,
+  orderListId: string
+): Promise<BinanceOrderResponse> => {
+  return BinanceClient.cancelOCOOrder(symbol, {
+    orderListId,
+  })
+    .then((response: any) => response.data as BinanceOCOOrder)
     .catch((err: BinanceError) => {
       console.error(err.response.data);
       return err.response.data;
@@ -132,7 +163,6 @@ export const newOCOOrder = async ({
   takeProfitPrice,
   stopLossPrice: stopLimitPrice,
   timeInForce: stopLimitTimeInForce,
-  marketBuyOrderId: listClientOrderId,
 }: NewOCOOrderRequest): Promise<BinanceOCOOrder> => {
   return BinanceClient.newOCOOrder(
     symbol,
@@ -143,7 +173,6 @@ export const newOCOOrder = async ({
     {
       stopLimitPrice,
       stopLimitTimeInForce,
-      listClientOrderId,
       newOrderRespType: "FULL",
     }
   )

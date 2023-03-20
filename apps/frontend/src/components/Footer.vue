@@ -10,7 +10,7 @@ ApiClient.Server.getInfo().then((res) => {
 
 <template>
   <div style="height: 30px">
-    <p id="server-version">ApiClient: v{{ serverVersion }}</p>
+    <p id="server-version">Server: v{{ serverVersion }}</p>
     <p id="version">Website: v{{ packageJson.version }}</p>
   </div>
 </template>

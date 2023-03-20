@@ -1,7 +1,7 @@
 import { User } from "firebase/auth";
 import { computed, ref } from "vue";
 import { useUserStore } from "../stores/user";
-import { notification } from "ant-design-vue";
+import { message, notification } from "ant-design-vue";
 
 const windowWidth = ref(window.innerWidth);
 window.addEventListener(
@@ -59,4 +59,9 @@ export function equals<T>(obj1: T, obj2: T): boolean {
 
 export const formatJSON = (json: any) => {
   return JSON.stringify(json, null, 2);
+};
+
+export const copyToClipboard = (text: string) => {
+  navigator.clipboard.writeText(text);
+  message.success("Copied!", 1000);
 };

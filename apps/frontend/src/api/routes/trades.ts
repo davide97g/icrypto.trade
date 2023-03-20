@@ -1,5 +1,4 @@
-import { BinanceError } from "../../models/binance";
-import { BinanceOrderDetails, MyTrade } from "../../models/orders";
+import { BinanceError, MyTrade } from "../../models/binance";
 import { ExchangeInfo } from "../../models/trade";
 import { setIsLoading } from "../../services/utils";
 import { getIdToken } from "../auth";

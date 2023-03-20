@@ -63,8 +63,7 @@
 import { message } from "ant-design-vue";
 import { ref } from "vue";
 import { ApiClient } from "../api/server";
-import { BinanceError } from "../models/binance";
-import { MyTrade } from "../models/orders";
+import { BinanceError, MyTrade } from "../models/binance";
 import { router, OrdersPageName } from "../router";
 import { loading } from "../services/utils";
 

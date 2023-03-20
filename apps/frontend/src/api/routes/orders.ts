@@ -1,6 +1,11 @@
 import { BinanceError } from "../../models/binance";
-import { BinanceOrderDetails } from "../../models/orders";
-import { BinanceOrderResponse, NewOrderRequest } from "../../models/trade";
+import {
+  BinanceOrderDetails,
+  BinanceOrderResponse,
+  BinanceOCOOrder,
+  NewOCOOrderRequest,
+  NewOrderRequest,
+} from "../../models/orders";
 import { setIsLoading } from "../../services/utils";
 import { getIdToken } from "../auth";
 import { API, apiHost } from "../server";
@@ -95,6 +100,64 @@ export const OrdersRoutes = {
     return await API.post(
       `${apiHost}/${routeName}/${order.symbol}/new`,
       { order },
+      {
+        headers: { authorization: `Bearer ${await getIdToken()}` },
+      }
+    )
+      .then((res) => res.data)
+      .catch((err) => console.error(err))
+      .finally(() => setIsLoading(false));
+  },
+  getOCO: async (symbol: string): Promise<BinanceOCOOrder[]> => {
+    setIsLoading(true);
+    return await API.get(`${apiHost}/${routeName}/${symbol}/oco`, {
+      headers: { authorization: `Bearer ${await getIdToken()}` },
+    })
+      .then((res) => res.data)
+      .catch((err) => {
+        console.error(err);
+        throw err;
+      })
+      .finally(() => setIsLoading(false));
+  },
+  getByIdOCO: async (
+    symbol: string,
+    orderListId: string
+  ): Promise<BinanceOCOOrder> => {
+    setIsLoading(true);
+    return await API.get(
+      `${apiHost}/${routeName}/${symbol}/${orderListId}/oco`,
+      {
+        headers: { authorization: `Bearer ${await getIdToken()}` },
+      }
+    )
+      .then((res) => res.data)
+      .catch((err) => {
+        console.error(err);
+        throw err;
+      })
+      .finally(() => setIsLoading(false));
+  },
+  cancelOCO: async (symbol: string, orderListId: string) => {
+    setIsLoading(true);
+    return await API.delete(
+      `${apiHost}/${routeName}/${symbol}/${orderListId}/oco`,
+      {
+        headers: { authorization: `Bearer ${await getIdToken()}` },
+      }
+    )
+      .then((res) => res.data as BinanceOCOOrder)
+      .catch((err: BinanceError) => {
+        console.error(err);
+        throw err;
+      })
+      .finally(() => setIsLoading(false));
+  },
+  newOrderOCO: async (orderOCO: NewOCOOrderRequest) => {
+    setIsLoading(true);
+    return await API.post(
+      `${apiHost}/${routeName}/${orderOCO.symbol}/new/oco`,
+      { orderOCO },
       {
         headers: { authorization: `Bearer ${await getIdToken()}` },
       }

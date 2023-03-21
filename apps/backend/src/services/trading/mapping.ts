@@ -1,6 +1,6 @@
-import { Kline, KlineWS } from "./types";
+import { KlineData, KlineWS } from "./types";
 
-export const cleanKline = (kline: KlineWS): Kline => {
+export const cleanKline = (kline: KlineWS): KlineData => {
   const { e, E, s, k } = kline;
   const { t, T, s: symbol, i, f, L, o, c, h, l, v, n, x, q, V, Q, B } = k;
   return {

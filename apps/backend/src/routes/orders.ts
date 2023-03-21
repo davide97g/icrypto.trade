@@ -15,6 +15,7 @@ import {
   sellAll,
   newOCOOrder,
 } from "../services/orders";
+import { trackKlines } from "../services/trading/strategy";
 
 const router = Router();
 
@@ -58,7 +59,11 @@ router.post("/:symbol/new/oco", checkIfAdmin, async (req, res) => {
   if (!symbol) return res.status(400).send("Symbol is required");
   const orderRequest = req.body.orderOCO as NewOCOOrderRequest;
   await newOCOOrder(orderRequest)
-    .then((response) => res.send(response))
+    .then((response) => {
+      const ocoOrder = response;
+      trackKlines(ocoOrder.symbol, orderRequest, ocoOrder.orderListId);
+      res.send(ocoOrder);
+    })
     .catch((error: BinanceErrorData) => res.status(500).send(error));
 });
 

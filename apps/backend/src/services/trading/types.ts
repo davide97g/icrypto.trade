@@ -24,28 +24,30 @@ export interface KlineWS {
 }
 
 export interface Kline {
+  startTime: number;
+  closeTime: number;
+  symbol: string;
+  interval: string;
+  firstTradeId: number;
+  lastTradeId: number;
+  openPrice: string;
+  closePrice: string;
+  highPrice: string;
+  lowPrice: string;
+  baseAssetVolume: string;
+  numberOfTrades: number;
+  isKlineClosed: boolean;
+  quoteAssetVolume: string;
+  takerBuyBaseAssetVolume: string;
+  takerBuyQuoteAssetVolume: string;
+  ignore: string;
+}
+
+export interface KlineData {
   eventType: string;
   eventTime: number;
   symbol: string;
-  kline: {
-    startTime: number;
-    closeTime: number;
-    symbol: string;
-    interval: string;
-    firstTradeId: number;
-    lastTradeId: number;
-    openPrice: string;
-    closePrice: string;
-    highPrice: string;
-    lowPrice: string;
-    baseAssetVolume: string;
-    numberOfTrades: number;
-    isKlineClosed: boolean;
-    quoteAssetVolume: string;
-    takerBuyBaseAssetVolume: string;
-    takerBuyQuoteAssetVolume: string;
-    ignore: string;
-  };
+  kline: Kline;
 }
 
 export type BinanceInterval =

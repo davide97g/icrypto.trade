@@ -21,6 +21,7 @@ import {
   calculateAvgMarketBuyPrice,
   computePrice,
 } from "../trading/utils";
+import { trackKlines } from "../trading/strategy";
 
 interface TickerWS {
   e: string; // Event type
@@ -270,5 +271,12 @@ const newTPSLOrder = async (
 
   console.info("📈 stop loss take profit request", newOCOOrderRequest);
 
-  return newOCOOrder(newOCOOrderRequest);
+  const ocoOrder = await newOCOOrder(newOCOOrderRequest);
+  trackKlines(
+    exchangeInfoSymbol.symbol,
+    newOCOOrderRequest,
+    ocoOrder.orderListId
+  );
+
+  return ocoOrder;
 };

@@ -19,57 +19,107 @@
     :data-source="orders"
     :pagination="{ pageSize: 10 }"
   >
-    <template #bodyCell="{ column, record }">
-      <template v-if="column.title === 'Order Id'">
-        <CopyOutlined
-          style="cursor: pointer; margin-right: 10px"
-          @click="copyToClipboard(record.orderId)"
-        />
-        {{ record.orderId }}
-        <WalletOutlined
-          style="cursor: pointer; margin-right: 10px"
-          @click="openOrderDetails(record.symbol, record.orderId)"
-        />
-      </template>
-      <template v-if="column.title === 'Symbol'">
-        <a-tag>{{ record.symbol }}</a-tag>
+    <template #bodyCell="{ column, record }" style="cursor: pointer">
+      <template v-if="column.title === 'Order Id' && !isMobile">
+        <div class="text small">
+          <CopyOutlined
+            style="cursor: pointer; margin-right: 10px"
+            @click="copyToClipboard(record.orderId)"
+          />
+          {{ record.orderId }}
+          <WalletOutlined
+            style="cursor: pointer; margin-right: 10px"
+            @click="openOrderDetails(record.symbol, record.orderId)"
+          />
+        </div>
       </template>
       <template v-if="column.title === 'Side'">
-        <a-tag :color="record.side === 'BUY' ? 'green' : 'red'" class="strong">
+        <a-tag
+          :color="record.side === 'BUY' ? 'green' : 'red'"
+          class="strong text small"
+        >
           {{ record.side }}
         </a-tag>
       </template>
       <template v-if="column.title === 'Type'">
-        <a-tag>
+        <a-tag class="text small">
           {{ record.type }}
         </a-tag>
       </template>
       <template v-if="column.title === 'Price'">
-        <a-tag class="strong">{{ record.price }}</a-tag>
-      </template>
-      <template v-if="column.title === 'Stop Price'">
-        <a-tag class="strong">{{ record.stopPrice }}</a-tag>
+        <a-tag class="strong text small">{{ record.price }}</a-tag>
       </template>
       <template v-if="column.title === 'Quantity'">
-        <a-tag class="strong">{{ record.origQty }}</a-tag>
+        <a-tag class="strong text small">{{ record.origQty }}</a-tag>
       </template>
       <template v-if="column.title === 'Status'">
-        <a-tag class="strong">
+        <a-tag class="strong text small">
           {{ record.status }}
         </a-tag>
       </template>
       <template v-if="column.title === 'Date'">
-        {{ new Date(record.time).toLocaleString() }}
+        <p class="text small">
+          {{ new Date(record.time).toLocaleString() }}
+        </p>
       </template>
+    </template>
+    <template #expandedRowRender="{ record }" v-if="isMobile">
+      <a-row class="flex-center">
+        <a-col :span="12">
+          <div class="text small">
+            <strong> Order Id: </strong>
+            {{ record.orderId }}
+            <CopyOutlined
+              style="cursor: pointer"
+              @click="copyToClipboard(record.orderId)"
+            />
+            <WalletOutlined
+              v-if="!isMobile"
+              style="cursor: pointer; margin-right: 10px"
+              @click="openOrderDetails(record.symbol, record.orderId)"
+            />
+          </div>
+        </a-col>
+        <a-col :span="12">
+          <div class="text small">
+            <strong>Side</strong>
+            <a-tag
+              style="margin-left: 5px"
+              :color="record.side === 'BUY' ? 'green' : 'red'"
+              class="strong text small"
+            >
+              {{ record.side }}
+            </a-tag>
+          </div>
+        </a-col>
+      </a-row>
+      <a-row class="flex-center" style="margin-top: 5px">
+        <a-col :span="12">
+          <div class="text small">
+            <strong>Quantity</strong>
+            <a-tag style="margin-left: 5px" class="text small">
+              {{ record.origQty }}
+            </a-tag>
+          </div>
+        </a-col>
+        <a-col :span="12">
+          <div class="text small">
+            <strong>Price</strong>
+            <a-tag style="margin-left: 5px" class="text small">
+              {{ record.price }}
+            </a-tag>
+          </div>
+        </a-col>
+      </a-row>
     </template>
   </a-table>
 </template>
 
 <script lang="ts" setup>
-import { ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { CopyOutlined, WalletOutlined } from "@ant-design/icons-vue";
 import { BinanceOrderDetails } from "../../models/orders";
-import { copyToClipboard, setIsLoading } from "../../services/utils";
+import { copyToClipboard, isMobile, setIsLoading } from "../../services/utils";
 import { OrderPageName, router } from "../../router";
 import { ApiClient } from "../../api/server";
 import { message } from "ant-design-vue";
@@ -79,7 +129,7 @@ const props = defineProps<{
 
 const symbol = ref(props.symbol);
 
-const cols = [
+const colsDesktop = [
   {
     title: "Order Id",
     dataIndex: "orderId",
@@ -87,11 +137,6 @@ const cols = [
     ellipsis: true,
     sorter: (a: BinanceOrderDetails, b: BinanceOrderDetails) =>
       a.orderId - b.orderId,
-  },
-  {
-    title: "Symbol",
-    dataIndex: "symbol",
-    width: 2,
   },
   {
     title: "Side",
@@ -106,11 +151,6 @@ const cols = [
   {
     title: "Price",
     dataIndex: "price",
-    width: 2,
-  },
-  {
-    title: "Stop Price",
-    dataIndex: "stopPrice",
     width: 2,
   },
   {
@@ -130,6 +170,27 @@ const cols = [
     sorter: (a: BinanceOrderDetails, b: BinanceOrderDetails) => a.time - b.time,
   },
 ];
+
+const colsMobile = [
+  {
+    title: "Type",
+    dataIndex: "type",
+    width: 20,
+  },
+  {
+    title: "Status",
+    dataIndex: "status",
+    width: 20,
+  },
+  {
+    title: "Date",
+    dataIndex: "time",
+    width: 50,
+    sorter: (a: BinanceOrderDetails, b: BinanceOrderDetails) => a.time - b.time,
+  },
+];
+
+const cols = computed(() => (isMobile.value ? colsMobile : colsDesktop));
 
 const orders = ref<BinanceOrderDetails[]>([]);
 
@@ -180,10 +241,12 @@ const cancelAllOpenOrders = () => {
     });
 };
 
-const openOrderDetails = (symbol: string, orderId: string) => {
+const openOrderDetails = (symbol: string, orderId: number) => {
   router.push({
     name: OrderPageName,
     params: { symbol, orderId },
   });
 };
+
+getOpenOrders();
 </script>

@@ -1,8 +1,8 @@
 import { BinanceClient } from "../config/binance";
 import { DataBaseClient } from "../connections/database";
-import { BinanceError, BinanceTradeStream, MyTrade } from "../models/binance";
+import { BinanceTradeStream } from "../models/binance";
 import { getBinanceTradesByOrderId } from "./binance/trade";
-import { unsubscribeKlineWS } from "./trading/strategy";
+import { stopStrategy } from "./trading/strategy";
 
 // ****
 
@@ -49,7 +49,7 @@ export const subscribeSymbolTrade = (symbol: string, orderIds: number[]) => {
 };
 
 export const unsubscribeSymbolTrade = (symbol: string) => {
-  unsubscribeKlineWS(symbol);
+  stopStrategy(symbol);
   const wsRef = WS_TRADES.get(symbol);
   if (!wsRef) {
     console.warn(`Warn: no WS for ${symbol}`);

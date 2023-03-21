@@ -2,7 +2,7 @@ import { BinanceClient } from "../../config/binance";
 import { NewOCOOrderRequest } from "../../models/orders";
 import { cancelOCOOrder, newOCOOrder } from "../orders";
 import { cleanKline } from "./mapping";
-import { BinanceInterval, Kline } from "./types";
+import { BinanceInterval, Kline, Strategy, StrategyStats } from "./types";
 import { WebSocket } from "ws";
 
 const subscribeKlineWS = (symbol: string, interval: BinanceInterval) => {
@@ -25,7 +25,7 @@ const subscribeKlineWS = (symbol: string, interval: BinanceInterval) => {
   return BinanceClient.klineWS(symbol, interval, callbacks);
 };
 
-export const unsubscribeKlineWS = (symbol: string) => {
+export const stopStrategy = (symbol: string) => {
   const strategy = STRATEGY_MAP.get(symbol);
   if (!strategy) return;
   const { wsRef } = strategy;
@@ -33,34 +33,30 @@ export const unsubscribeKlineWS = (symbol: string) => {
   removeStrategy(symbol);
 };
 
-export const trackKlines = (
+export const startStrategy = (
   symbol: string,
+  openPrice: string,
   request: NewOCOOrderRequest,
   orderListId: number
 ) => {
   const wsRef = subscribeKlineWS(symbol, "1m");
-  addStrategy(symbol, orderListId, request, wsRef);
+  addStrategy(symbol, orderListId, openPrice, request, wsRef);
   // setTimeout(() => {
   //   unsubscribeTickerWS(symbol, wsRef);
   // }, 60000);
 };
-
-interface Strategy {
-  wsRef: WebSocket;
-  lastOrderListId: number;
-  lastOcoOrderRequest: NewOCOOrderRequest;
-  data: Kline[];
-}
 
 const STRATEGY_MAP = new Map<string, Strategy>(); // LOCAL MAP TO STORE WS REFERENCES
 
 const addStrategy = (
   symbol: string,
   orderListId: number,
+  openPrice: string,
   request: NewOCOOrderRequest,
   wsRef: WebSocket
 ) => {
   const strategy: Strategy = {
+    openPrice,
     lastOrderListId: orderListId,
     lastOcoOrderRequest: request,
     data: [],
@@ -89,29 +85,46 @@ const onNewKline = (symbol: string, kline: Kline) => {
   if (!STRATEGY_MAP.has(symbol)) return;
   const strategy = STRATEGY_MAP.get(symbol);
   if (!strategy) return;
-  strategy.data.push(kline);
+  insertData(strategy, kline);
   console.info("new kline");
   analyzeStrategy(strategy);
 };
 
+const insertData = (strategy: Strategy, kline: Kline) => {
+  strategy.data.push(kline);
+  // - *open_price* (prezzo di esecuzione dell’ordine iniziale, quello di acquisto dovuto alla news)
+  // - *last_price* (prezzo di mercato disponibile. Se non c’è direttamente, media tra prezzi bid e ask)
+  // - *last_move* (differenza percentuale del prezzo tra la candela attuale e la candela precedente. Su Binance si chiama *change*)
+  // - *average_move* (media nelle ultime 24 ore dei movimenti nelle candele a 1 minuto. Non serve ricalcolarlo ogni volta, basta la prima perché lo supponiamo costante)
+  // - *average_move_since_open* (media movimenti candele 1 minuto a partire dalla candela del minuto dove è uscita la news) Penso l’ideale sarebbe un array e ad ogni minuto aggiunge un nuovo elemento
+  // - *average_volume* (media nelle ultime 24 ore dei volumi nelle candele a 1 minuto. Non serve ricalcolarlo ogni volta, basta la prima perché lo supponiamo costante)
+  // - *open_volume* (volume della candela a 1 minuto nel minuto della news)
+  // - *average_volume_since_open* (media volumi candele 1 minuto a partire dalla candela del minuto dove è uscita la news) Penso l’ideale sarebbe un array e ad ogni minuto aggiunge un nuovo elemento. In questo modo: *open_volume* = *average_volume_since_open* [0]
+  // - *last_volume*
+  // - *max_price_since_open*
+  // - *min_price_since_open*
+  const openPrice = parseFloat(strategy.openPrice);
+  const lastPrice = parseFloat(kline.closePrice);
+  const stats: StrategyStats = {
+    openPrice,
+    lastPrice,
+    lastMove: (lastPrice - openPrice) / openPrice,
+    averageMove: 0.0,
+    averageMoveSinceOpen: 0.0,
+    averageVolume: 0.0,
+    openVolume: 0.0,
+    averageVolumeSinceOpen: 0.0,
+    lastVolume: 0.0,
+    maxPriceSinceOpen: 0.0,
+    minPriceSinceOpen: 0.0,
+  };
+  strategy.stats = stats; // update the stats in any case (even if they are null)
+};
+
 const analyzeStrategy = async (strategy: Strategy) => {
-  const { data } = strategy;
-  const lastKline = data[data.length - 1];
+  if (!needsUpdate(strategy)) return;
 
-  if (
-    !needsUpdate(
-      lastKline,
-      strategy.lastOcoOrderRequest.takeProfitPrice,
-      strategy.lastOcoOrderRequest.stopLossPrice
-    )
-  )
-    return;
-
-  const request = createOCOOrderRequest(
-    strategy.lastOcoOrderRequest,
-    data,
-    lastKline
-  );
+  const request = createOCOOrderRequest(strategy);
 
   await cancelReplaceOCOOrder(
     request.symbol,
@@ -120,26 +133,33 @@ const analyzeStrategy = async (strategy: Strategy) => {
   );
 };
 
-const needsUpdate = (
-  lastKline: Kline,
-  lastTakeProfitPrice: number,
-  lastStopLossPrice: number
-) => {
+const needsUpdate = (strategy: Strategy) => {
+  //   Le condizioni con cui giocare sono:
+
+  // 1. last_price / *max_price_since_open* > parametro
+  // 2. *last_move* / *average_move* > parametro
+  // 3. *last_move* / *average_move_since_open* > parametro
+  // 4. *last_volume* / *average_volume* > parametro
+  // 5. *last_volume* / *average_volume_since_open*> parametro
+
+  // Intuitivamente:
+
+  // 1. Se il prezzo è sceso troppo dai massimi
+  // 2. Se il movimento sta tornando vicino alla sua media
+  // 3. Se il movimento si sta spegnendo, diventando sempre meno ampio rispetto all’esplosione dovuta alla news
+  // 4. Se il volume sta tornando vicino alla sua media
+  // 5. Se il volume (in dollari!) si sta spegnendo, diventando sempre meno pronunciato rispetto all’esplosione dovuta alla news
   // TODO: implement this
   return false;
 };
 
-const createOCOOrderRequest = (
-  lastOcoOrderRequest: NewOCOOrderRequest,
-  data: Kline[],
-  lastKline: Kline
-) => {
+const createOCOOrderRequest = (strategy: Strategy) => {
   // TODO: compute new prices based on kline data
   const request: NewOCOOrderRequest = {
-    symbol: lastOcoOrderRequest.symbol,
-    quantity: lastOcoOrderRequest.quantity,
-    takeProfitPrice: lastOcoOrderRequest.takeProfitPrice,
-    stopLossPrice: lastOcoOrderRequest.stopLossPrice,
+    symbol: strategy.lastOcoOrderRequest.symbol,
+    quantity: strategy.lastOcoOrderRequest.quantity,
+    takeProfitPrice: strategy.lastOcoOrderRequest.takeProfitPrice,
+    stopLossPrice: strategy.lastOcoOrderRequest.stopLossPrice,
     timeInForce: "GTC",
   };
   return request;

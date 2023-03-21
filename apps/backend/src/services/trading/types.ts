@@ -1,3 +1,5 @@
+import { NewOCOOrderRequest } from "../../models/orders";
+import { WebSocket } from "ws";
 export interface KlineWS {
   e: string;
   E: number;
@@ -66,3 +68,14 @@ export type BinanceInterval =
   | "3d"
   | "1w"
   | "1M";
+
+export interface StrategyStats {}
+
+export interface Strategy {
+  wsRef: WebSocket;
+  lastOrderListId: number;
+  lastOcoOrderRequest: NewOCOOrderRequest;
+  openPrice: string;
+  data: Kline[];
+  stats?: StrategyStats;
+}

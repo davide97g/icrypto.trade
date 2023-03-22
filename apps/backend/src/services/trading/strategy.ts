@@ -110,8 +110,6 @@ const addStrategy = async (
       },
     },
   };
-
-  console.info("strategy added");
   console.info(strategy.lastOcoOrderRequest, strategy.stats);
   STRATEGY_MAP.set(symbol, strategy);
 };
@@ -183,10 +181,8 @@ const insertData = (strategy: Strategy, kline: Kline, eventTime: number) => {
 
 const analyzeStrategy = async (strategy: Strategy) => {
   if (!needsUpdate(strategy)) return;
-
   const request = createOCOOrderRequest(strategy);
   console.info("📝 New request", request);
-
   await cancelReplaceOCOOrder(
     request.symbol,
     strategy.lastOrderListId.toString(),
@@ -215,7 +211,6 @@ const needsUpdate = (strategy: Strategy) => {
   const takeProfitPriceChange =
     strategy.lastOcoOrderRequest.takeProfitPrice /
     strategy.stats.variable.lastPrice;
-  console.info("takeProfitPriceChange", takeProfitPriceChange);
   return takeProfitPriceChange < 1.01; // ? change less than 1%
 };
 

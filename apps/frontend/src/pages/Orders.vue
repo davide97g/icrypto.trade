@@ -39,6 +39,7 @@
     </a-popconfirm>
     <NewOrderModal
       v-if="binance.exchangeInfo && account"
+      :symbol="symbol"
       :visible="newOrderModalVisible"
       :tokens="binance.exchangeInfo?.symbols"
       :balances="account?.balances"
@@ -47,6 +48,7 @@
     <NewOrderModal
       v-if="binance.exchangeInfo && account"
       :isOCO="true"
+      :symbol="symbol"
       :visible="newOCOOrderModalVisible"
       :tokens="binance.exchangeInfo?.symbols"
       :balances="account?.balances"

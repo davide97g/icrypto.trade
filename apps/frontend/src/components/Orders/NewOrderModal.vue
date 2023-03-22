@@ -94,6 +94,7 @@ import { OrderSide, OrderType } from "../../models/types";
 
 const props = defineProps<{
   visible: boolean;
+  symbol?: string;
   tokens: ExchangeInfoSymbol[];
   isOCO?: boolean;
 }>();
@@ -110,7 +111,7 @@ watch(
   }
 );
 
-const symbol = ref("");
+const symbol = ref(props.symbol || "");
 const side = ref<OrderSide>("BUY");
 const type = ref<OrderType>("MARKET");
 const quantity = ref(0);

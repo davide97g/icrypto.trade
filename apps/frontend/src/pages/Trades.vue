@@ -32,6 +32,7 @@
     </a-popconfirm>
     <NewOrderModal
       v-if="exchangeInfo && account"
+      :symbol="symbol"
       :visible="newOrderModalVisible"
       :tokens="exchangeInfo?.symbols"
       :balances="account?.balances"

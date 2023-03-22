@@ -11,6 +11,10 @@ import {
 } from "./types";
 import { WebSocket } from "ws";
 import { getKlines } from "../binance/market";
+import { computePrice } from "./utils";
+import { ExchangeInfoSymbol } from "../../models/account";
+import { getWS } from "../bot/bot";
+import { subscribeSymbolTrade, unsubscribeSymbolTrade } from "../trades";
 
 const subscribeKlineWS = (symbol: string, interval: BinanceInterval) => {
   const callbacks = {
@@ -42,14 +46,12 @@ export const stopStrategy = (symbol: string) => {
 
 export const startStrategy = (
   symbol: string,
+  exchangeInfoSymbol: ExchangeInfoSymbol,
   request: NewOCOOrderRequest,
   orderListId: number
 ) => {
   const wsRef = subscribeKlineWS(symbol, "1m");
-  addStrategy(symbol, orderListId, request, wsRef);
-  // setTimeout(() => {
-  //   unsubscribeTickerWS(symbol, wsRef);
-  // }, 60000);
+  addStrategy(symbol, orderListId, request, exchangeInfoSymbol, wsRef);
 };
 
 const STRATEGY_MAP = new Map<string, Strategy>(); // LOCAL MAP TO STORE WS REFERENCES
@@ -58,6 +60,7 @@ const addStrategy = async (
   symbol: string,
   orderListId: number,
   request: NewOCOOrderRequest,
+  exchangeInfoSymbol: ExchangeInfoSymbol,
   wsRef: WebSocket
 ) => {
   const klinesRecords: KlineRecord[] = await getKlines(symbol, "1m", 1000);
@@ -85,6 +88,7 @@ const addStrategy = async (
   const strategy: Strategy = {
     lastOrderListId: orderListId,
     lastOcoOrderRequest: request,
+    exchangeInfoSymbol,
     data: [],
     wsRef,
     stats: {
@@ -208,21 +212,30 @@ const needsUpdate = (strategy: Strategy) => {
   // 4. Se il volume sta tornando vicino alla sua media
   // 5. Se il volume (in dollari!) si sta spegnendo, diventando sempre meno pronunciato rispetto all’esplosione dovuta alla news
   // TODO: implement this
-  return false;
+  const takeProfitPriceChange =
+    strategy.lastOcoOrderRequest.takeProfitPrice /
+    strategy.stats.variable.lastPrice;
+  console.info("takeProfitPriceChange", takeProfitPriceChange);
+  return takeProfitPriceChange < 1.01; // ? change less than 1%
 };
 
+// TODO: implement better strategy to follow up the price
 const createOCOOrderRequest = (strategy: Strategy) => {
-  // TODO: compute new prices based on kline data
+  const { tradeConfig } = getWS();
+  const takeProfitPercentage = tradeConfig?.takeProfitPercentage || 0.03;
+  const stopLossPercentage = tradeConfig?.stopLossPercentage || 0.01;
+  const TP = (1 + takeProfitPercentage) * strategy.stats.variable.lastPrice;
+  const SL = (1 - stopLossPercentage) * strategy.stats.variable.lastPrice;
 
-  const priceChangeUp = 0.0;
-  const priceChangeDown = 0.0;
+  const newTakeProfitPrice = computePrice(TP, TP, strategy.exchangeInfoSymbol);
+
+  const newStopLossPrice = computePrice(SL, SL, strategy.exchangeInfoSymbol);
 
   const request: NewOCOOrderRequest = {
     symbol: strategy.lastOcoOrderRequest.symbol,
     quantity: strategy.lastOcoOrderRequest.quantity,
-    takeProfitPrice:
-      strategy.lastOcoOrderRequest.takeProfitPrice + priceChangeUp,
-    stopLossPrice: strategy.lastOcoOrderRequest.stopLossPrice - priceChangeDown,
+    takeProfitPrice: newTakeProfitPrice,
+    stopLossPrice: newStopLossPrice,
     timeInForce: "GTC",
   };
   return request;
@@ -234,6 +247,11 @@ const cancelReplaceOCOOrder = async (
   request: NewOCOOrderRequest
 ) => {
   await cancelOCOOrder(symbol, orderListId);
+  unsubscribeSymbolTrade(symbol);
   const ocoOrder = await newOCOOrder(request);
+  subscribeSymbolTrade(
+    symbol,
+    ocoOrder.orders.map((order) => order.orderId)
+  );
   updateStrategy(symbol, ocoOrder.orderListId, request);
 };

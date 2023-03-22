@@ -88,8 +88,7 @@ export const computeQuantity = (
 export const computePrice = (
   avgPrice: number,
   orderPrice: number,
-  exchangeInfoSymbol: ExchangeInfoSymbol,
-  precision: number
+  exchangeInfoSymbol: ExchangeInfoSymbol
 ) => {
   const filterPercentPriceBySide = findFilterByType(
     exchangeInfoSymbol.filters,
@@ -110,7 +109,10 @@ export const computePrice = (
   const { maxPrice, minPrice, tickSize } = filterPriceFilter;
   const maxPriceValue = parseFloat(maxPrice || "0");
   const minPriceValue = parseFloat(minPrice || "0");
-  const tickSizePrecision = getPrecision(tickSize || "0.00010000", precision);
+  const tickSizePrecision = getPrecision(
+    tickSize || "0.00010000",
+    exchangeInfoSymbol.baseAssetPrecision
+  );
 
   const notRoundedPrice = Math.min(
     Math.max(price, minPriceValue),

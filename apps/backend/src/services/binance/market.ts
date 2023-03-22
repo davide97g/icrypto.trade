@@ -52,7 +52,9 @@ export const getExchangeInfoSymbol = async (
 ): Promise<ExchangeInfoSymbol> => {
   return BinanceClient.exchangeInfo({ symbol })
     .then((response: any) => response.data as ExchangeInfo)
-    .then((exchangeInfo: ExchangeInfo) => exchangeInfo.symbols)
+    .then((exchangeInfo: ExchangeInfo) =>
+      exchangeInfo.symbols.find((s) => s.symbol === symbol)
+    )
     .catch((err: BinanceError) => {
       console.info(err.response.data);
       throw err.response.data;

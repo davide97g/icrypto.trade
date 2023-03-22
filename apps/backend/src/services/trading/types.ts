@@ -1,5 +1,6 @@
 import { NewOCOOrderRequest } from "../../models/orders";
 import { WebSocket } from "ws";
+import { ExchangeInfoSymbol } from "../../models/account";
 export interface KlineWS {
   e: string;
   E: number;
@@ -130,6 +131,7 @@ export interface StrategyStats {
 
 export interface Strategy {
   wsRef: WebSocket;
+  exchangeInfoSymbol: ExchangeInfoSymbol;
   lastOrderListId: number;
   lastOcoOrderRequest: NewOCOOrderRequest;
   data: Kline[];

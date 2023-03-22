@@ -248,8 +248,7 @@ const newTPSLOrder = async (
   const stopLossStopPrice = computePrice(
     avgMarketBuyPrice,
     slOriginalPrice,
-    exchangeInfoSymbol,
-    precision
+    exchangeInfoSymbol
   );
 
   const tpOriginalPrice =
@@ -257,8 +256,7 @@ const newTPSLOrder = async (
   const takeProfitStopPrice = computePrice(
     avgMarketBuyPrice,
     tpOriginalPrice,
-    exchangeInfoSymbol,
-    precision
+    exchangeInfoSymbol
   );
 
   const newOCOOrderRequest: NewOCOOrderRequest = {
@@ -274,6 +272,7 @@ const newTPSLOrder = async (
   const ocoOrder = await newOCOOrder(newOCOOrderRequest);
   startStrategy(
     exchangeInfoSymbol.symbol,
+    exchangeInfoSymbol,
     newOCOOrderRequest,
     ocoOrder.orderListId
   );

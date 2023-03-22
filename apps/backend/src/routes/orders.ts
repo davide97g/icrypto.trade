@@ -2,6 +2,7 @@ import { Router } from "express";
 import { checkIfAdmin } from "../middlewares/auth-middleware";
 import { BinanceErrorData } from "../models/binance";
 import { NewOCOOrderRequest, NewOrderRequest } from "../models/orders";
+import { getExchangeInfoSymbol } from "../services/binance/market";
 import {
   cancelAllOpenOrders,
   cancelOCOOrder,
@@ -15,6 +16,7 @@ import {
   sellAll,
   newOCOOrder,
 } from "../services/orders";
+import { subscribeSymbolTrade } from "../services/trades";
 import { startStrategy } from "../services/trading/strategy";
 
 const router = Router();
@@ -61,7 +63,19 @@ router.post("/:symbol/new/oco", checkIfAdmin, async (req, res) => {
   await newOCOOrder(orderRequest)
     .then(async (response) => {
       const ocoOrder = response;
-      startStrategy(ocoOrder.symbol, orderRequest, ocoOrder.orderListId);
+      const exchangeInfoSymbol = await getExchangeInfoSymbol(
+        orderRequest.symbol
+      );
+      subscribeSymbolTrade(
+        orderRequest.symbol,
+        ocoOrder.orders.map((o) => o.orderId)
+      );
+      startStrategy(
+        ocoOrder.symbol,
+        exchangeInfoSymbol,
+        orderRequest,
+        ocoOrder.orderListId
+      );
       res.send(ocoOrder);
     })
     .catch((error: BinanceErrorData) => res.status(500).send(error));

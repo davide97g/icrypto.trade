@@ -32,7 +32,7 @@ export const subscribeSymbolTrade = (symbol: string, orderIds: number[]) => {
         console.info(`${symbol}@trade`, orderId, res);
         const trades = await getBinanceTradesByOrderId(symbol, orderId);
         await DataBaseClient.Trade.insertMany(trades);
-        unsubscribeSymbolTrade(symbol);
+        unsubscribeSymbolTrade(symbol, true);
       }
     },
     error: (error: any) => console.error(`${symbol}@trade`, error),
@@ -48,8 +48,11 @@ export const subscribeSymbolTrade = (symbol: string, orderIds: number[]) => {
   }, 1000 * 60 * 60); // 5 minutes
 };
 
-export const unsubscribeSymbolTrade = (symbol: string) => {
-  stopStrategy(symbol);
+export const unsubscribeSymbolTrade = (
+  symbol: string,
+  terminateStrategy?: boolean
+) => {
+  if (terminateStrategy) stopStrategy(symbol);
   const wsRef = WS_TRADES.get(symbol);
   if (!wsRef) {
     console.warn(`Warn: no WS for ${symbol}`);

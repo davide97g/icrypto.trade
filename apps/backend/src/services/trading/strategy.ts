@@ -133,18 +133,17 @@ const removeStrategy = (symbol: string) => {
 const onNewKline = (symbol: string, kline: Kline, eventTime: number) => {
   if (!STRATEGY_MAP.has(symbol)) return;
   const strategy = STRATEGY_MAP.get(symbol);
-  if (!strategy) return;
+  if (
+    !strategy || // ? strategy not found
+    (!kline.isKlineClosed && // ? kline not closed
+      eventTime - 60 * 1000 <= strategy.stats.variable.eventTime) // ? only if not already inserted t the last kline (1m interval)
+  )
+    return;
   insertData(strategy, kline, eventTime);
   analyzeStrategy(strategy);
 };
 
 const insertData = (strategy: Strategy, kline: Kline, eventTime: number) => {
-  if (
-    !kline.isKlineClosed &&
-    eventTime - 60 * 1000 <= strategy.stats.variable.eventTime // ? only the last kline (1m interval)
-  )
-    return;
-
   strategy.data.push(kline);
 
   const lastPrice = parseFloat(kline.closePrice);

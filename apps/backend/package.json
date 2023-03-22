@@ -1,12 +1,12 @@
 {
   "name": "icrypto-trade-server",
-  "version": "1.6.1",
+  "version": "1.7.0",
   "description": "",
   "main": "app.js",
   "scripts": {
     "build": "tsc",
     "start": "NODE_ENV=prod node dist/app.js",
-    "dev": "kill -9 $(lsof -ti:3000) && pnpm build && NODE_ENV=local node dist/app.js",
+    "dev": "pnpm build && NODE_ENV=local node dist/app.js",
     "test": "jest",
     "postinstall": "npm run build"
   },

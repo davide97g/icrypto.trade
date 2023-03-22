@@ -45,6 +45,21 @@ export interface Kline {
   ignore: string;
 }
 
+export interface KlineRecord {
+  openTime: number;
+  openPrice: string;
+  highPrice: string;
+  lowPrice: string;
+  closePrice: string;
+  volume: string;
+  closeTime: number;
+  quoteAssetVolume: string;
+  numberOfTrades: number;
+  takerBuyBaseAssetVolume: string;
+  takerBuyQuoteAssetVolume: string;
+  ignore: string;
+}
+
 export interface KlineData {
   eventType: string;
   eventTime: number;
@@ -69,13 +84,54 @@ export type BinanceInterval =
   | "1w"
   | "1M";
 
-export interface StrategyStats {}
+/**
+ * @param lastPrice prezzo di mercato disponibile. Se non c’è direttamente, media tra prezzi bid e ask
+ * @param lastMove differenza percentuale del prezzo tra la candela attuale e la candela precedente. Su Binance si chiama *change*
+ * @param lastVolume volume della candela attuale (baseAssetVolume | quoteAssetVolume)
+ * @param averageMoveSinceOpenList lista della media movimenti candele 1 minuto a partire dalla candela del minuto dove è uscita la news) Penso l’ideale sarebbe un array e ad ogni minuto aggiunge un nuovo elemento
+ * @param averageVolumeSinceOpenList lista della media volumi candele 1 minuto a partire dalla candela del minuto dove è uscita la news) Penso l’ideale sarebbe un array e ad ogni minuto aggiunge un nuovo elemento. In questo modo: *open_volume* = *average_volume_since_open* [0]
+ * @param maxPriceSinceOpen massimo prezzo raggiunto dalla candela a 1 minuto dal minuto della news
+ * @param minPriceSinceOpen minimo prezzo raggiunto dalla candela a 1 minuto dal minuto della news
+ */
+
+export interface StrategyVariableStats {
+  eventTime: number;
+  lastPrice: number;
+  lastMove: number;
+  lastVolume: number;
+  maxPriceSinceOpen: number;
+  minPriceSinceOpen: number;
+  averageMoveSinceOpenList: number[];
+  averageVolumeSinceOpenList: number[];
+}
+
+/**
+ * @param openPrice prezzo di esecuzione dell’ordine iniziale, quello di acquisto dovuto alla news
+ * @param openVolume volume della candela a 1 minuto nel minuto della news
+ * @param averageMove media nelle ultime 24 ore dei movimenti nelle candele a 1 minuto. Supponiamo costante
+ * @param averageVolume media nelle ultime 24 ore dei volumi nelle candele a 1 minuto. Supponiamo costante
+ *
+ */
+export interface StrategyConstantStats {
+  openPrice: number; // constant
+  openVolume: number; // constant
+  averageMove: number; // constant
+  averageVolume: number; // constant
+}
+
+/**
+ * @param constant dati costanti
+ * @param variable dati variabili
+ */
+export interface StrategyStats {
+  constant: StrategyConstantStats;
+  variable: StrategyVariableStats;
+}
 
 export interface Strategy {
   wsRef: WebSocket;
   lastOrderListId: number;
   lastOcoOrderRequest: NewOCOOrderRequest;
-  openPrice: string;
   data: Kline[];
-  stats?: StrategyStats;
+  stats: StrategyStats;
 }

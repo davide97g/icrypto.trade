@@ -15,7 +15,6 @@ import {
   sellAll,
   newOCOOrder,
 } from "../services/orders";
-import { getTickerPrice } from "../services/symbols";
 import { startStrategy } from "../services/trading/strategy";
 
 const router = Router();
@@ -62,13 +61,7 @@ router.post("/:symbol/new/oco", checkIfAdmin, async (req, res) => {
   await newOCOOrder(orderRequest)
     .then(async (response) => {
       const ocoOrder = response;
-      const currentPrice = await getTickerPrice(ocoOrder.symbol);
-      startStrategy(
-        ocoOrder.symbol,
-        currentPrice.price,
-        orderRequest,
-        ocoOrder.orderListId
-      );
+      startStrategy(ocoOrder.symbol, orderRequest, ocoOrder.orderListId);
       res.send(ocoOrder);
     })
     .catch((error: BinanceErrorData) => res.status(500).send(error));

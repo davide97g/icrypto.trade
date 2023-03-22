@@ -274,7 +274,6 @@ const newTPSLOrder = async (
   const ocoOrder = await newOCOOrder(newOCOOrderRequest);
   startStrategy(
     exchangeInfoSymbol.symbol,
-    avgMarketBuyPrice.toString(),
     newOCOOrderRequest,
     ocoOrder.orderListId
   );

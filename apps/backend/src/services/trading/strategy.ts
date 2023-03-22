@@ -2,8 +2,15 @@ import { BinanceClient } from "../../config/binance";
 import { NewOCOOrderRequest } from "../../models/orders";
 import { cancelOCOOrder, newOCOOrder } from "../orders";
 import { cleanKline } from "./mapping";
-import { BinanceInterval, Kline, Strategy, StrategyStats } from "./types";
+import {
+  BinanceInterval,
+  Kline,
+  KlineRecord,
+  Strategy,
+  StrategyVariableStats,
+} from "./types";
 import { WebSocket } from "ws";
+import { getKlines } from "../binance/market";
 
 const subscribeKlineWS = (symbol: string, interval: BinanceInterval) => {
   const callbacks = {
@@ -16,7 +23,7 @@ const subscribeKlineWS = (symbol: string, interval: BinanceInterval) => {
     message: (msg: string) => {
       const kline_raw = JSON.parse(msg);
       const klineData = cleanKline(kline_raw);
-      onNewKline(symbol, klineData.kline);
+      onNewKline(symbol, klineData.kline, klineData.eventTime);
     },
     error: (error: Error) => {
       console.log(error);
@@ -35,12 +42,11 @@ export const stopStrategy = (symbol: string) => {
 
 export const startStrategy = (
   symbol: string,
-  openPrice: string,
   request: NewOCOOrderRequest,
   orderListId: number
 ) => {
   const wsRef = subscribeKlineWS(symbol, "1m");
-  addStrategy(symbol, orderListId, openPrice, request, wsRef);
+  addStrategy(symbol, orderListId, request, wsRef);
   // setTimeout(() => {
   //   unsubscribeTickerWS(symbol, wsRef);
   // }, 60000);
@@ -48,20 +54,61 @@ export const startStrategy = (
 
 const STRATEGY_MAP = new Map<string, Strategy>(); // LOCAL MAP TO STORE WS REFERENCES
 
-const addStrategy = (
+const addStrategy = async (
   symbol: string,
   orderListId: number,
-  openPrice: string,
   request: NewOCOOrderRequest,
   wsRef: WebSocket
 ) => {
+  const klinesRecords: KlineRecord[] = await getKlines(symbol, "1m", 1000);
+
+  const openKline = klinesRecords[klinesRecords.length - 1];
+
+  const openPrice = parseFloat(openKline.closePrice);
+  const openVolume = parseFloat(openKline.volume);
+
+  const averageVolume =
+    klinesRecords.reduce((acc, kline) => {
+      return acc + parseFloat(kline.volume);
+    }, 0.0) / klinesRecords.length;
+
+  const averageMove =
+    klinesRecords.reduce((acc, kline, index) => {
+      if (index === 0) return acc;
+      const previousKline = klinesRecords[index - 1];
+      const move =
+        (parseFloat(kline.closePrice) - parseFloat(previousKline.closePrice)) /
+        parseFloat(previousKline.closePrice);
+      return acc + move;
+    }, 0.0) / klinesRecords.length;
+
   const strategy: Strategy = {
-    openPrice,
     lastOrderListId: orderListId,
     lastOcoOrderRequest: request,
     data: [],
     wsRef,
+    stats: {
+      constant: {
+        openPrice,
+        openVolume,
+        averageMove,
+        averageVolume,
+      },
+      variable: {
+        eventTime: 0,
+        lastPrice: openPrice, // ? ultimo prezzo = prezzo di apertura
+        lastVolume: openVolume, // ? ultimo volume = volume di apertura
+        lastMove: 0.0, // ? partiamo da un cambiamento nullo
+        averageMoveSinceOpenList: [0.0], // ? lista dei cambiamenti dall'apertura
+        averageVolumeSinceOpenList: [0.0], // ? lista dei volumi dall'apertura
+        maxPriceSinceOpen: openPrice, // ? massimo prezzo dall'apertura
+        minPriceSinceOpen: openPrice, // ? minimo prezzo dall'apertura
+      },
+    },
   };
+
+  console.info("strategy added");
+  console.info(strategy.lastOcoOrderRequest, strategy.stats);
   STRATEGY_MAP.set(symbol, strategy);
 };
 
@@ -81,56 +128,67 @@ const removeStrategy = (symbol: string) => {
   STRATEGY_MAP.delete(symbol);
 };
 
-const onNewKline = (symbol: string, kline: Kline) => {
+const onNewKline = (symbol: string, kline: Kline, eventTime: number) => {
   if (!STRATEGY_MAP.has(symbol)) return;
   const strategy = STRATEGY_MAP.get(symbol);
   if (!strategy) return;
-  insertData(strategy, kline);
-  console.info("new kline");
+  insertData(strategy, kline, eventTime);
   analyzeStrategy(strategy);
 };
 
-const insertData = (strategy: Strategy, kline: Kline) => {
+const insertData = (strategy: Strategy, kline: Kline, eventTime: number) => {
+  if (
+    !kline.isKlineClosed &&
+    eventTime - 60 * 1000 <= strategy.stats.variable.eventTime // ? only the last kline (1m interval)
+  )
+    return;
+
   strategy.data.push(kline);
-  // - *open_price* (prezzo di esecuzione dell’ordine iniziale, quello di acquisto dovuto alla news)
-  // - *last_price* (prezzo di mercato disponibile. Se non c’è direttamente, media tra prezzi bid e ask)
-  // - *last_move* (differenza percentuale del prezzo tra la candela attuale e la candela precedente. Su Binance si chiama *change*)
-  // - *average_move* (media nelle ultime 24 ore dei movimenti nelle candele a 1 minuto. Non serve ricalcolarlo ogni volta, basta la prima perché lo supponiamo costante)
-  // - *average_move_since_open* (media movimenti candele 1 minuto a partire dalla candela del minuto dove è uscita la news) Penso l’ideale sarebbe un array e ad ogni minuto aggiunge un nuovo elemento
-  // - *average_volume* (media nelle ultime 24 ore dei volumi nelle candele a 1 minuto. Non serve ricalcolarlo ogni volta, basta la prima perché lo supponiamo costante)
-  // - *open_volume* (volume della candela a 1 minuto nel minuto della news)
-  // - *average_volume_since_open* (media volumi candele 1 minuto a partire dalla candela del minuto dove è uscita la news) Penso l’ideale sarebbe un array e ad ogni minuto aggiunge un nuovo elemento. In questo modo: *open_volume* = *average_volume_since_open* [0]
-  // - *last_volume*
-  // - *max_price_since_open*
-  // - *min_price_since_open*
-  const openPrice = parseFloat(strategy.openPrice);
+
   const lastPrice = parseFloat(kline.closePrice);
-  const stats: StrategyStats = {
-    openPrice,
+  const baseAssetVolume = parseFloat(kline.baseAssetVolume);
+  const highPrice = parseFloat(kline.highPrice);
+  const lowPrice = parseFloat(kline.lowPrice);
+
+  const { stats } = strategy;
+
+  const previousLastPrice = strategy.stats.variable.lastPrice;
+  const lastMove = (lastPrice - previousLastPrice) / previousLastPrice;
+
+  const variableStats: StrategyVariableStats = {
+    eventTime,
     lastPrice,
-    lastMove: (lastPrice - openPrice) / openPrice,
-    averageMove: 0.0,
-    averageMoveSinceOpen: 0.0,
-    averageVolume: 0.0,
-    openVolume: 0.0,
-    averageVolumeSinceOpen: 0.0,
-    lastVolume: 0.0,
-    maxPriceSinceOpen: 0.0,
-    minPriceSinceOpen: 0.0,
+    lastMove,
+    lastVolume: baseAssetVolume,
+    averageMoveSinceOpenList: stats.variable.averageMoveSinceOpenList.concat([
+      lastMove,
+    ]),
+    averageVolumeSinceOpenList:
+      stats.variable.averageVolumeSinceOpenList.concat([baseAssetVolume]),
+    maxPriceSinceOpen: Math.max(
+      highPrice,
+      strategy.stats.variable.maxPriceSinceOpen
+    ),
+    minPriceSinceOpen: Math.min(
+      lowPrice,
+      strategy.stats.variable.minPriceSinceOpen
+    ),
   };
-  strategy.stats = stats; // update the stats in any case (even if they are null)
+  strategy.stats.variable = variableStats;
 };
 
 const analyzeStrategy = async (strategy: Strategy) => {
   if (!needsUpdate(strategy)) return;
 
   const request = createOCOOrderRequest(strategy);
+  console.info("📝 New request", request);
 
   await cancelReplaceOCOOrder(
     request.symbol,
     strategy.lastOrderListId.toString(),
     request
   );
+  console.info("🚀 OCO Order updated");
 };
 
 const needsUpdate = (strategy: Strategy) => {
@@ -155,11 +213,16 @@ const needsUpdate = (strategy: Strategy) => {
 
 const createOCOOrderRequest = (strategy: Strategy) => {
   // TODO: compute new prices based on kline data
+
+  const priceChangeUp = 0.0;
+  const priceChangeDown = 0.0;
+
   const request: NewOCOOrderRequest = {
     symbol: strategy.lastOcoOrderRequest.symbol,
     quantity: strategy.lastOcoOrderRequest.quantity,
-    takeProfitPrice: strategy.lastOcoOrderRequest.takeProfitPrice,
-    stopLossPrice: strategy.lastOcoOrderRequest.stopLossPrice,
+    takeProfitPrice:
+      strategy.lastOcoOrderRequest.takeProfitPrice + priceChangeUp,
+    stopLossPrice: strategy.lastOcoOrderRequest.stopLossPrice - priceChangeDown,
     timeInForce: "GTC",
   };
   return request;

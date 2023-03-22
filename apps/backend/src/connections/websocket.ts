@@ -30,7 +30,10 @@ export function wsConnect<T extends WsNTALikeMessage | WsNTANewsMessage>(
         if (WS.isRunning && reconnectFn) {
           retryCount++;
           reconnectFn();
-        }
+        } else
+          console.info(
+            "WS is not running or no reconnect function available, stopping reconnecting"
+          );
       } else console.warn(wsURL, "Max retries reached, stopping reconnecting");
     }, 10000); // Reconnect
   });
@@ -44,7 +47,10 @@ export function wsConnect<T extends WsNTALikeMessage | WsNTANewsMessage>(
         if (WS.isRunning && reconnectFn) {
           retryCount++;
           reconnectFn();
-        }
+        } else
+          console.info(
+            "WS is not running or no reconnect function available, stopping reconnecting"
+          );
       } else console.warn(wsURL, "Max retries reached, stopping reconnecting");
     }, 10000); // Reconnect
   });

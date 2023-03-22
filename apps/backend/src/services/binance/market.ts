@@ -11,6 +11,8 @@ import {
   BinanceErrorData,
   BinanceResponse,
 } from "../../models/binance";
+import { BinanceInterval, KlineRecord } from "../trading/types";
+import { buildKlineRecord } from "../trading/mapping";
 
 export const getAccount = async (): Promise<
   BinanceResponse<BinanceAccount>
@@ -51,6 +53,22 @@ export const getExchangeInfoSymbol = async (
   return BinanceClient.exchangeInfo({ symbol })
     .then((response: any) => response.data as ExchangeInfo)
     .then((exchangeInfo: ExchangeInfo) => exchangeInfo.symbols)
+    .catch((err: BinanceError) => {
+      console.info(err.response.data);
+      throw err.response.data;
+    });
+};
+
+export const getKlines = async (
+  symbol: string,
+  interval?: BinanceInterval,
+  limit?: number
+): Promise<KlineRecord[]> => {
+  return BinanceClient.klines(symbol, interval || "1m", { limit })
+    .then((response: any) => response.data as any[])
+    .then((klines: any[]) =>
+      klines.map((kline: any) => buildKlineRecord(kline))
+    )
     .catch((err: BinanceError) => {
       console.info(err.response.data);
       throw err.response.data;

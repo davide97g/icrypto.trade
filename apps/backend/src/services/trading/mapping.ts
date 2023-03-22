@@ -1,4 +1,4 @@
-import { KlineData, KlineWS } from "./types";
+import { KlineData, KlineRecord, KlineWS } from "./types";
 
 export const cleanKline = (kline: KlineWS): KlineData => {
   const { e, E, s, k } = kline;
@@ -27,4 +27,21 @@ export const cleanKline = (kline: KlineWS): KlineData => {
       ignore: B,
     },
   };
+};
+
+export const buildKlineRecord = (kline: any[]) => {
+  return {
+    openTime: kline[0],
+    openPrice: kline[1],
+    highPrice: kline[2],
+    lowPrice: kline[3],
+    closePrice: kline[4],
+    volume: kline[5],
+    closeTime: kline[6],
+    quoteAssetVolume: kline[7],
+    numberOfTrades: kline[8],
+    takerBuyBaseAssetVolume: kline[9],
+    takerBuyQuoteAssetVolume: kline[10],
+    ignore: kline[11],
+  } as KlineRecord;
 };

@@ -16,13 +16,13 @@ router.get("/info", checkIfAuthenticated, async (req, res) => {
   res.send(JSON.stringify(wsInfo, getCircularReplacer()));
 });
 
-router.get("/logs/start", async (req, res) => {
+router.post("/logs/start", checkIfAdmin, async (req, res) => {
   await startHerokuLogs()
-    .then(() => res.send("Started logs"))
+    .then(() => res.send({ message: "Logs started", ok: true }))
     .catch((err) => res.status(500).send(err));
 });
 
-router.get("/logs", async (req, res) => {
+router.get("/logs", checkIfAuthenticated, async (req, res) => {
   await getHerokuLogs()
     .then((logs) => res.send(logs))
     .catch((err) => res.status(500).send(err));

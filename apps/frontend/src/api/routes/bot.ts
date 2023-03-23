@@ -1,3 +1,4 @@
+import { ServerLog } from "../../models/bot";
 import { TradeConfig } from "../../models/trade";
 import { setIsLoading } from "../../services/utils";
 import { getIdToken } from "../auth";
@@ -71,6 +72,37 @@ export const BotRoutes = {
           }
       )
       .catch((err) => console.error(err))
+      .finally(() => setIsLoading(false));
+  },
+  startLogs: async () => {
+    setIsLoading(true);
+    return await API.post(
+      `${apiHost}/${routeName}/logs/start`,
+      {},
+      {
+        headers: { authorization: `Bearer ${await getIdToken()}` },
+      }
+    )
+      .then(
+        (res) =>
+          res.data as {
+            message: string;
+            ok: boolean;
+          }
+      )
+      .catch((err) => console.log(err))
+      .finally(() => setIsLoading(false));
+  },
+  getLogs: async () => {
+    setIsLoading(true);
+    return await API.get(`${apiHost}/${routeName}/logs`, {
+      headers: { authorization: `Bearer ${await getIdToken()}` },
+    })
+      .then((res) => res.data as ServerLog[])
+      .catch((err) => {
+        console.error(err);
+        throw err;
+      })
       .finally(() => setIsLoading(false));
   },
 };

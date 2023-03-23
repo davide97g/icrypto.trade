@@ -10,6 +10,9 @@
     <a-tab-pane key="symbols" tab="Symbols Info" v-if="exchangeInfo">
       <Symbols :symbols="exchangeInfo?.symbols" />
     </a-tab-pane>
+    <a-tab-pane key="logs" tab="Logs">
+      <Logs />
+    </a-tab-pane>
   </a-tabs>
 </template>
 
@@ -18,6 +21,7 @@ import { message } from "ant-design-vue";
 import { ref } from "vue";
 import { ApiClient } from "../api/server";
 import BannedTokens from "../components/Settings/BannedTokens.vue";
+import Logs from "../components/Settings/Logs.vue";
 import ServerConfig from "../components/Settings/ServerConfig.vue";
 import Symbols from "../components/Settings/Symbols.vue";
 import { ExchangeInfo } from "../models/trade";

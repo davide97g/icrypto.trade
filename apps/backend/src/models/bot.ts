@@ -6,3 +6,9 @@ export interface TradeConfig {
   stopLossPercentage: number;
   tradeAmount: number;
 }
+
+export interface ServerLog {
+  message: string;
+  timestamp: string;
+  source: string;
+}

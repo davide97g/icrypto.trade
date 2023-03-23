@@ -1,19 +1,30 @@
 import { env } from "../config/environment";
 import { heroku } from "../config/heroku";
 import EventSource from "eventsource";
+import { ServerLog } from "../models/bot";
 
 export const getApps = async () => {
   return heroku.get("/apps");
 };
 
-const LOGS: string[] = [];
+let LOGS: string[] = [];
 
 const addLog = (event: MessageEvent) => {
   LOGS.push(event.data);
 };
 
+const logger: {
+  eventSource: EventSource | null;
+} = {
+  eventSource: null,
+};
+
 export const startLogs = async (app?: string) => {
   try {
+    if (logger.eventSource) {
+      logger.eventSource.close();
+    }
+    LOGS = [];
     const appName = app || env.herokuAppName;
     const logSession = await heroku
       .post(`/apps/${appName}/log-sessions`, {
@@ -26,23 +37,32 @@ export const startLogs = async (app?: string) => {
       .catch((err) => console.log(err));
 
     const logUrl = logSession.logplex_url;
-    const eventSource = new EventSource(logUrl);
+    logger.eventSource = new EventSource(logUrl);
 
-    eventSource.onmessage = (event) => addLog(event);
+    logger.eventSource.onmessage = (event) => addLog(event);
 
-    eventSource.onerror = (error) => {
+    logger.eventSource.onerror = (error) => {
       console.error("[Heroku Logs] Error:", error);
     };
 
     // Close the connection after 2 min
     setTimeout(() => {
-      eventSource.close();
+      logger.eventSource?.close();
     }, 2 * 60 * 1000);
   } catch (err) {
     console.log(err);
   }
 };
 
-export const getLogs = async () => {
-  return LOGS;
+export const getLogs = (): ServerLog[] => {
+  return LOGS.map((log) => {
+    const timestamp = log.split(" ")[0];
+    const source = log.split(" ")[1].replace(":", "");
+    const message = log.split(" ").slice(2).join(" ");
+    return {
+      timestamp,
+      source,
+      message,
+    };
+  });
 };

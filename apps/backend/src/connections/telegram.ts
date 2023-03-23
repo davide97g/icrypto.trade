@@ -18,8 +18,12 @@ interface TelegramUpdate {
 const ids: string[] =
   process.env.NODE_ENV === "local" ? ["444270183"] : ["444270183", "33016687"];
 
+const devIds: string[] = ["444270183"];
+
 let offset: number | null = null;
 export const telegramApi = {
+  sendMessageToDevs: (text: string) =>
+    devIds.forEach((id) => telegramApi.sendMessage(id, `[DEV]\n${text}`)),
   sendMessageToAdmins: (text: string) =>
     ids.forEach((id) => telegramApi.sendMessage(id, text)),
   sendMessage: (chatId: string, text: string) =>

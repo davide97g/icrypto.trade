@@ -5,6 +5,7 @@ import {
   WsNTANewsMessage,
 } from "../models/websocket";
 import { getWS } from "../services/bot/bot";
+import { telegramApi } from "./telegram";
 
 const MAX_RETRIES = 10;
 
@@ -35,12 +36,18 @@ export function wsConnect<
         const WS = getWS();
         if (WS.isRunning && reconnectFn) {
           retryCount++;
+          telegramApi.sendMessageToDevs(`${wsURL} - Reconnecting`);
           reconnectFn();
-        } else
-          console.info(
-            "WS is not running or no reconnect function available, stopping reconnecting"
-          );
-      } else console.warn(wsURL, "Max retries reached, stopping reconnecting");
+        } else {
+          const message = `${wsURL} - WS is not running or no 'reconnectFn' available. Event Reason: ${event.reason}`;
+          telegramApi.sendMessageToDevs(message);
+          console.warn(message);
+        }
+      } else {
+        const message = `${wsURL} - Max retries reached, stopping reconnecting. Event Reason: ${event.reason}`;
+        telegramApi.sendMessageToDevs(message);
+        console.warn(message);
+      }
     }, 10000); // Reconnect
   });
 

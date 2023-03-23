@@ -170,7 +170,7 @@
       type="primary"
       @click="selectSymbol"
       :disabled="!selectedSymbol"
-      >Get Orders</a-button
+      >Get Trades</a-button
     >
   </div>
 </template>
@@ -183,7 +183,7 @@ import { ApiClient } from "../api/server";
 import { setIsLoading } from "../services/utils";
 import { CopyOutlined, WalletOutlined } from "@ant-design/icons-vue";
 import { BinanceOrderDetails } from "../models/orders";
-import { router, TradePageName } from "../router";
+import { router, TradePageName, TradesPageName } from "../router";
 import { Account, ExchangeInfo } from "../models/trade";
 import { BinanceError, MyTrade } from "../models/binance";
 import NewOrderModal from "../components/Orders/NewOrderModal.vue";
@@ -239,7 +239,7 @@ const onSearch = (searchText: string) => {
 
 const selectSymbol = () => {
   symbol.value = selectedSymbol.value;
-  router.push({ name: "Orders", params: { symbol: symbol.value } });
+  router.push({ name: TradesPageName, params: { symbol: symbol.value } });
   getMyTrades();
 };
 

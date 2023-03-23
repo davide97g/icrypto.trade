@@ -15,3 +15,10 @@ export interface WsNTANewsMessage {
   url: string;
   _id: string;
 }
+
+export interface HerokuLogMessage {
+  at: string;
+  message: string;
+  source: string;
+  time: string;
+}

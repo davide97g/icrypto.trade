@@ -1,10 +1,16 @@
 import WebSocket from "ws";
-import { WsNTALikeMessage, WsNTANewsMessage } from "../models/websocket";
+import {
+  HerokuLogMessage,
+  WsNTALikeMessage,
+  WsNTANewsMessage,
+} from "../models/websocket";
 import { getWS } from "../services/bot/bot";
 
 const MAX_RETRIES = 10;
 
-export function wsConnect<T extends WsNTALikeMessage | WsNTANewsMessage>(
+export function wsConnect<
+  T extends WsNTALikeMessage | WsNTANewsMessage | HerokuLogMessage
+>(
   wsURL: string,
   callback: (data: T) => void,
   reconnectFn?: () => void

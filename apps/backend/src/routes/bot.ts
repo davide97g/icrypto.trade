@@ -6,6 +6,7 @@ import {
 } from "../middlewares/auth-middleware";
 import { TradeConfig } from "../models/bot";
 import { getWS, startWebSockets, stopWebSockets } from "../services/bot/bot";
+import { getHerokuLogs, startHerokuLogs } from "../services/bot/logs";
 import { getCircularReplacer } from "../utils/utils";
 
 const router = Router();
@@ -13,6 +14,18 @@ const router = Router();
 router.get("/info", checkIfAuthenticated, async (req, res) => {
   const wsInfo = getWS();
   res.send(JSON.stringify(wsInfo, getCircularReplacer()));
+});
+
+router.get("/logs/start", async (req, res) => {
+  await startHerokuLogs()
+    .then(() => res.send("Started logs"))
+    .catch((err) => res.status(500).send(err));
+});
+
+router.get("/logs", async (req, res) => {
+  await getHerokuLogs()
+    .then((logs) => res.send(logs))
+    .catch((err) => res.status(500).send(err));
 });
 
 router.post("/start", checkIfAdmin, async (req, res) => {

@@ -153,7 +153,7 @@ const getOpenOrders = async () => {
   setIsLoading(true);
   await ApiClient.Orders.getOCO(symbol.value)
     .then((res) => {
-      if (res) orders.value = res;
+      if (res) orders.value = res.filter((o) => o.symbol === symbol.value);
       else message.warning("No orders found");
     })
     .catch((err) => {

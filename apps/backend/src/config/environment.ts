@@ -12,6 +12,8 @@ export const env = {
   env: process.env.NODE_ENV,
   test: process.env.NODE_ENV !== "prod",
   telegramToken: process.env.TELEGRAM_TOKEN,
+  herokuAppName: process.env.HEROKU_APP_NAME,
+  herokuApiToken: process.env.HEROKU_API_TOKEN,
   domain: process.env.DOMAIN,
   emailPassword: process.env.EMAIL_PASSWORD,
 };

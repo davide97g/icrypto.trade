@@ -51,8 +51,6 @@ export const getWS = () => ({
   tradeConfig: WS.tradeConfig,
 });
 
-// trackKlines("BTCUSDT", "1m");
-
 export const startWebSockets = async () => {
   const resNews = await StartNewsWebSocket();
   const resLikes = await StartLikesWebSocket();
@@ -75,11 +73,18 @@ export const stopWebSockets = () => {
 };
 
 const pingWS = () => {
+  if (WS.interval) clearInterval(WS.interval);
   const interval = setInterval(() => {
-    if (WS.news) WS.news.ping();
-    if (WS.likes) WS.likes.ping();
+    if (WS.news) {
+      console.info("Ping News WS");
+      WS.news.ping();
+    }
+    if (WS.likes) {
+      console.info("Ping Likes WS");
+      WS.likes.ping();
+    }
     if (!WS.news && !WS.likes) clearInterval(interval);
-  }, 10000);
+  }, 30000);
   return interval;
 };
 

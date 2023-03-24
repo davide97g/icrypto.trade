@@ -141,7 +141,7 @@ const getWSInfo = () =>
 const startWS = async () => {
   await ApiClient.Bot.start()
     .then((res) => {
-      if (res) message.success(res.message);
+      if (res) message.success("Bot Started 🤖");
     })
     .catch((err) => {
       console.error(err);

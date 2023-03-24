@@ -26,10 +26,10 @@ setIsLoading(false);
     overflow: auto;
     .text {
       &.small {
-        font-size: 10px;
+        font-size: 9px;
       }
       &.very-small {
-        font-size: 8px;
+        font-size: 7px;
       }
     }
   }

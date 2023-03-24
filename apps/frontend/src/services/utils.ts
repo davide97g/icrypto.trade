@@ -65,3 +65,8 @@ export const copyToClipboard = (text: string) => {
   navigator.clipboard.writeText(text);
   message.success("Copied!", 1000);
 };
+
+export const roundToNDigits = (num: number, n: number) => {
+  const mult = Math.pow(10, n);
+  return Math.round(num * mult) / mult;
+};

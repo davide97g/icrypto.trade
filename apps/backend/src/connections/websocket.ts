@@ -19,6 +19,10 @@ export function wsConnect<
   const socket = new WebSocket(wsURL);
   let retryCount = 0;
 
+  socket.on("pong", () => {
+    console.log(wsURL, "Pong");
+  });
+
   socket.addEventListener("open", (event) => {
     console.log(wsURL, "WebSocket connection established");
     retryCount = 0;
@@ -30,42 +34,38 @@ export function wsConnect<
 
   socket.addEventListener("close", (event) => {
     console.log(wsURL, "WebSocket connection closed");
-    console.info(wsURL, "Reconnecting in 10 seconds");
-    setTimeout(() => {
-      if (retryCount < MAX_RETRIES) {
-        const WS = getWS();
-        if (WS.isRunning && reconnectFn) {
-          retryCount++;
-          telegramApi.sendMessageToDevs(`${wsURL} - Reconnecting`);
-          reconnectFn();
-        } else {
-          const message = `${wsURL} - WS is not running or no 'reconnectFn' available. Event Reason: ${event.reason}`;
-          telegramApi.sendMessageToDevs(message);
-          console.warn(message);
-        }
+
+    if (retryCount < MAX_RETRIES) {
+      const WS = getWS();
+      if (WS.isRunning && reconnectFn) {
+        retryCount++;
+        telegramApi.sendMessageToDevs(`${wsURL} - Reconnecting`);
+        reconnectFn();
       } else {
-        const message = `${wsURL} - Max retries reached, stopping reconnecting. Event Reason: ${event.reason}`;
+        const message = `${wsURL} - WS is not running or no 'reconnectFn' available. Event Reason: ${event.reason}`;
         telegramApi.sendMessageToDevs(message);
         console.warn(message);
       }
-    }, 10000); // Reconnect
+    } else {
+      const message = `${wsURL} - Max retries reached, stopping reconnecting. Event Reason: ${event.reason}`;
+      telegramApi.sendMessageToDevs(message);
+      console.warn(message);
+    }
   });
 
   socket.addEventListener("error", (event) => {
     console.error(wsURL, "WebSocket error", event);
     console.info(wsURL, "Reconnecting in 10 seconds");
-    setTimeout(() => {
-      if (retryCount < MAX_RETRIES) {
-        const WS = getWS();
-        if (WS.isRunning && reconnectFn) {
-          retryCount++;
-          reconnectFn();
-        } else
-          console.info(
-            "WS is not running or no reconnect function available, stopping reconnecting"
-          );
-      } else console.warn(wsURL, "Max retries reached, stopping reconnecting");
-    }, 10000); // Reconnect
+    if (retryCount < MAX_RETRIES) {
+      const WS = getWS();
+      if (WS.isRunning && reconnectFn) {
+        retryCount++;
+        reconnectFn();
+      } else
+        console.info(
+          "WS is not running or no reconnect function available, stopping reconnecting"
+        );
+    } else console.warn(wsURL, "Max retries reached, stopping reconnecting");
   });
 
   return socket;

@@ -253,9 +253,4 @@ const addSymbolsGuessToFeedItem = async (
   return item;
 };
 
-const autoStart = async () => {
-  await StartNewsWebSocket();
-  await StartLikesWebSocket();
-};
-
-autoStart();
+startWebSockets();

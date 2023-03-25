@@ -252,3 +252,10 @@ const addSymbolsGuessToFeedItem = async (
     item.symbols = [...new Set(item.symbols)];
   return item;
 };
+
+const autoStart = async () => {
+  await StartNewsWebSocket();
+  await StartLikesWebSocket();
+};
+
+autoStart();

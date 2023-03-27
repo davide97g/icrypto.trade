@@ -135,19 +135,19 @@ export const trade = async (
 ) => {
   console.info("Trade", newsId, exchangeInfoSymbol.symbol, tradeConfig);
   try {
-    const marketOrderTransaction = await newMarketOrder(
+    const marketOrder = await newMarketOrder(
       exchangeInfoSymbol,
       tradeConfig,
       tickersPrice
     );
-    console.info("Market Order", marketOrderTransaction);
+    console.info("Market Order", marketOrder);
     const trades = await getBinanceTradesByOrderId(
       exchangeInfoSymbol.symbol,
-      marketOrderTransaction.orderId
+      marketOrder.orderId
     );
     if (trades.length === 0) {
       throw new Error(
-        "No trades found for market order: " + marketOrderTransaction.orderId
+        "No trades found for market order: " + marketOrder.orderId
       );
     }
     await DataBaseClient.Trade.insertMany(trades);
@@ -155,18 +155,18 @@ export const trade = async (
       const ocoOrder = await newTPSLOrder(
         exchangeInfoSymbol,
         tradeConfig,
-        marketOrderTransaction
+        marketOrder
       );
       const orderIds = ocoOrder.orders.map((o) => o.orderId);
       subscribeSymbolTrade(exchangeInfoSymbol.symbol, orderIds);
       await DataBaseClient.GoodFeedItem.updateStatus(newsId, "success");
-      await sendOrderMail(marketOrderTransaction, {
+      await sendOrderMail(marketOrder, {
         order: ocoOrder,
       });
     } catch (e: any) {
       console.error("[Error OCO Order]", e);
       await DataBaseClient.GoodFeedItem.updateStatus(newsId, "oco-error");
-      await sendOrderMail(marketOrderTransaction, {
+      await sendOrderMail(marketOrder, {
         error: e,
       });
     }
@@ -222,12 +222,12 @@ const newMarketOrder = async (
 const newTPSLOrder = async (
   exchangeInfoSymbol: ExchangeInfoSymbol,
   tradeConfig: TradeConfig,
-  marketOrderTransaction: Order
+  marketOrder: Order
 ) => {
   console.info("New OCO order", exchangeInfoSymbol.symbol);
 
   const precision = exchangeInfoSymbol.baseAssetPrecision || 8;
-  const quantityWithCommission = marketOrderTransaction.fills.reduce(
+  const quantityWithCommission = marketOrder.fills.reduce(
     (acc, fill) => acc + parseFloat(fill.qty) - parseFloat(fill.commission),
     0
   );
@@ -239,9 +239,7 @@ const newTPSLOrder = async (
 
   console.info("📈 market buy executed quantity", quantity);
 
-  const avgMarketBuyPrice = calculateAvgMarketBuyPrice(
-    marketOrderTransaction.fills
-  );
+  const avgMarketBuyPrice = calculateAvgMarketBuyPrice(marketOrder.fills);
 
   const slOriginalPrice =
     (avgMarketBuyPrice * (100 - tradeConfig.stopLossPercentage)) / 100;

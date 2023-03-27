@@ -222,7 +222,7 @@ const analyzeFeedItem = async (
         );
         // ? here I start to execute orders for each of the guessed symbols
         // ? 1 MARKET BUY ORDER + 1 OCO (SL / TP) ORDER
-        const INTERVAL_MS = 1000;
+        const INTERVAL_MS = 500;
         let i = 0;
         const interval = setInterval(() => {
           const symbol = availableSymbols[i];

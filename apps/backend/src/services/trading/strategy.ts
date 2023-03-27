@@ -133,18 +133,19 @@ const removeStrategy = (symbol: string) => {
 const onNewKline = (symbol: string, kline: Kline, eventTime: number) => {
   if (!STRATEGY_MAP.has(symbol)) return;
   const strategy = STRATEGY_MAP.get(symbol);
-  if (
-    !strategy || // ? strategy not found
-    (!kline.isKlineClosed && // ? kline not closed
-      eventTime - 60 * 1000 <= strategy.stats.variable.eventTime) // ? only if not already inserted t the last kline (1m interval)
-  )
-    return;
+  if (!strategy) return;
   insertData(strategy, kline, eventTime);
   analyzeStrategy(strategy);
 };
 
 const insertData = (strategy: Strategy, kline: Kline, eventTime: number) => {
-  strategy.data.push(kline);
+  if (!strategy.data.length) strategy.data.push(kline);
+  else {
+    const previous = strategy.data[strategy.data.length - 1];
+    if (previous.startTime === kline.startTime)
+      strategy.data[strategy.data.length - 1] = kline;
+    else strategy.data.push(kline);
+  }
 
   const lastPrice = parseFloat(kline.closePrice);
   const baseAssetVolume = parseFloat(kline.baseAssetVolume);
@@ -216,8 +217,8 @@ const needsUpdate = (strategy: Strategy) => {
 // TODO: implement better strategy to follow up the price
 const createOCOOrderRequest = (strategy: Strategy) => {
   const { tradeConfig } = getWS();
-  const takeProfitPercentage = tradeConfig?.takeProfitPercentage || 0.03;
-  const stopLossPercentage = tradeConfig?.stopLossPercentage || 0.01;
+  const takeProfitPercentage = tradeConfig!.takeProfitPercentage / 100;
+  const stopLossPercentage = tradeConfig!.stopLossPercentage / 100;
   const TP = (1 + takeProfitPercentage) * strategy.stats.variable.lastPrice;
   const SL = (1 - stopLossPercentage) * strategy.stats.variable.lastPrice;
 

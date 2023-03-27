@@ -13,8 +13,9 @@ import { WebSocket } from "ws";
 import { getKlines } from "../binance/market";
 import { computePrice } from "./utils";
 import { ExchangeInfoSymbol } from "../../models/account";
-import { getWS } from "../bot/bot";
+import { getNews, getWS } from "../bot/bot";
 import { subscribeSymbolTrade, unsubscribeSymbolTrade } from "../trades";
+import { telegramApi } from "../../connections/telegram";
 
 const subscribeKlineWS = (symbol: string, interval: BinanceInterval) => {
   const callbacks = {
@@ -48,20 +49,29 @@ export const startStrategy = (
   symbol: string,
   exchangeInfoSymbol: ExchangeInfoSymbol,
   request: NewOCOOrderRequest,
-  orderListId: number
+  orderListId: number,
+  newsId?: string
 ) => {
   const wsRef = subscribeKlineWS(symbol, "1m");
-  addStrategy(symbol, orderListId, request, exchangeInfoSymbol, wsRef);
+  addStrategy(symbol, orderListId, request, exchangeInfoSymbol, wsRef, newsId);
 };
 
 const STRATEGY_MAP = new Map<string, Strategy>(); // LOCAL MAP TO STORE WS REFERENCES
+
+const getStrategyByNewsId = (newsId: string) => {
+  for (const strategy of STRATEGY_MAP.values()) {
+    if (strategy.newsId === newsId) return strategy;
+  }
+  return null;
+};
 
 const addStrategy = async (
   symbol: string,
   orderListId: number,
   request: NewOCOOrderRequest,
   exchangeInfoSymbol: ExchangeInfoSymbol,
-  wsRef: WebSocket
+  wsRef: WebSocket,
+  newsId?: string
 ) => {
   const klinesRecords: KlineRecord[] = await getKlines(symbol, "1m", 1000);
 
@@ -85,11 +95,17 @@ const addStrategy = async (
       return acc + move;
     }, 0.0) / klinesRecords.length;
 
+  const news = getNews(newsId);
+
+  const likes = news ? news.likes : 0;
+  const dislikes = news ? news.dislikes : 0;
+
   const strategy: Strategy = {
     lastOrderListId: orderListId,
     lastOcoOrderRequest: request,
     exchangeInfoSymbol,
     data: [],
+    newsId,
     wsRef,
     stats: {
       constant: {
@@ -100,6 +116,8 @@ const addStrategy = async (
       },
       variable: {
         eventTime: 0,
+        likes,
+        dislikes,
         lastPrice: openPrice, // ? ultimo prezzo = prezzo di apertura
         lastVolume: openVolume, // ? ultimo volume = volume di apertura
         lastMove: 0.0, // ? partiamo da un cambiamento nullo
@@ -128,6 +146,19 @@ const updateStrategy = (
 
 const removeStrategy = (symbol: string) => {
   STRATEGY_MAP.delete(symbol);
+};
+
+export const feedbackUpdate = (
+  newsId: string,
+  likes: number,
+  dislikes: number
+) => {
+  const strategy = getStrategyByNewsId(newsId);
+  if (strategy) {
+    strategy.stats.variable.likes = likes;
+    strategy.stats.variable.dislikes = dislikes;
+    analyzeStrategy(strategy);
+  }
 };
 
 const onNewKline = (symbol: string, kline: Kline, eventTime: number) => {
@@ -159,6 +190,8 @@ const insertData = (strategy: Strategy, kline: Kline, eventTime: number) => {
 
   const variableStats: StrategyVariableStats = {
     eventTime,
+    likes: stats.variable.likes,
+    dislikes: stats.variable.dislikes,
     lastPrice,
     lastMove,
     lastVolume: baseAssetVolume,
@@ -188,7 +221,7 @@ const analyzeStrategy = async (strategy: Strategy) => {
     strategy.lastOrderListId.toString(),
     request
   );
-  console.info("🚀 OCO Order updated");
+  telegramApi.sendMessageToDevs("🚀 OCO Order updated");
 };
 
 const needsUpdate = (strategy: Strategy) => {

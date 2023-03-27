@@ -97,6 +97,8 @@ export type BinanceInterval =
 
 export interface StrategyVariableStats {
   eventTime: number;
+  likes: number;
+  dislikes: number;
   lastPrice: number;
   lastMove: number;
   lastVolume: number;
@@ -131,6 +133,7 @@ export interface StrategyStats {
 
 export interface Strategy {
   wsRef: WebSocket;
+  newsId?: string;
   exchangeInfoSymbol: ExchangeInfoSymbol;
   lastOrderListId: number;
   lastOcoOrderRequest: NewOCOOrderRequest;

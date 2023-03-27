@@ -155,7 +155,8 @@ export const trade = async (
       const ocoOrder = await newTPSLOrder(
         exchangeInfoSymbol,
         tradeConfig,
-        marketOrder
+        marketOrder,
+        newsId
       );
       const orderIds = ocoOrder.orders.map((o) => o.orderId);
       subscribeSymbolTrade(exchangeInfoSymbol.symbol, orderIds);
@@ -222,7 +223,8 @@ const newMarketOrder = async (
 const newTPSLOrder = async (
   exchangeInfoSymbol: ExchangeInfoSymbol,
   tradeConfig: TradeConfig,
-  marketOrder: Order
+  marketOrder: Order,
+  newsId: string
 ) => {
   console.info("New OCO order", exchangeInfoSymbol.symbol);
 
@@ -272,7 +274,8 @@ const newTPSLOrder = async (
     exchangeInfoSymbol.symbol,
     exchangeInfoSymbol,
     newOCOOrderRequest,
-    ocoOrder.orderListId
+    ocoOrder.orderListId,
+    newsId
   );
 
   return ocoOrder;

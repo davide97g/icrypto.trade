@@ -14,6 +14,7 @@ import { trade } from "./trade";
 import { TradeConfig } from "../../models/bot";
 import { GoodFeedItem } from "../../models/database";
 import { FeedItem } from "../../models/feed";
+import { feedbackUpdate } from "../trading/strategy";
 
 interface WsFeedItem {
   _id: string;
@@ -50,6 +51,10 @@ export const getWS = () => ({
   isRunning: WS.isRunning,
   tradeConfig: WS.tradeConfig,
 });
+
+export const getNews = (newsId?: string) => {
+  return newsId && FEED[newsId];
+};
 
 export const startWebSockets = async () => {
   const resNews = await StartNewsWebSocket();
@@ -112,11 +117,11 @@ const StartNewsWebSocket = async () => {
         dislikes: 0,
         time: data.time,
       };
-      console.log("[GoodFeedItem]", data._id);
+      console.log("[News]", data._id);
     },
     StartNewsWebSocket
   );
-  return { message: "WSGoodFeedItemconnected" };
+  return { message: "WS News Connected" };
 };
 
 const StartLikesWebSocket = async () => {
@@ -132,17 +137,11 @@ const StartLikesWebSocket = async () => {
     (data) => {
       if (FEED[data.newsId]) {
         const isAlreadyGood = isGood(FEED[data.newsId], config);
+        FEED[data.newsId].dislikes = data.dislikes;
+        FEED[data.newsId].likes = data.likes;
+        feedbackUpdate(data.newsId, data.likes, data.dislikes);
         if (!isAlreadyGood) {
-          FEED[data.newsId].dislikes = data.dislikes;
-          FEED[data.newsId].likes = data.likes;
-          console.log(
-            "[Feedback]",
-            data.newsId,
-            "👍",
-            data.likes,
-            "👎",
-            data.dislikes
-          );
+          console.log(data.newsId, "👍", data.likes, "👎", data.dislikes);
           if (isGood(FEED[data.newsId], config))
             analyzeFeedItem(FEED[data.newsId], config, bannedSymbols);
         }

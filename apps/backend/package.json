@@ -7,6 +7,7 @@
     "build": "tsc",
     "start": "NODE_ENV=prod node dist/app.js",
     "dev": "pnpm build && NODE_ENV=local node dist/app.js",
+    "stats": "pnpm build && NODE_ENV=local node dist/utils/stats/index.js",
     "test": "jest",
     "postinstall": "npm run build"
   },

@@ -106,7 +106,6 @@ export interface StrategyVariableStats {
   minPriceSinceOpen: number;
   averageMoveSinceOpenList: number[];
   averageVolumeSinceOpenList: number[];
-  lastOrderTime: number;
 }
 
 /**
@@ -121,7 +120,6 @@ export interface StrategyConstantStats {
   openVolume: number; // constant
   averageMove: number; // constant
   averageVolume: number; // constant
-  newsTime: number; // constant
 }
 
 /**
@@ -139,6 +137,8 @@ export interface Strategy {
   exchangeInfoSymbol: ExchangeInfoSymbol;
   lastOrderListId: number;
   lastOcoOrderRequest: NewOCOOrderRequest;
+  lastOcoOrderTime: number;
   data: Kline[];
+  history: KlineRecord[];
   stats: StrategyStats;
 }

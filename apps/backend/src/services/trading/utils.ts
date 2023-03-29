@@ -1,5 +1,3 @@
-// *** UTILITY FUNCTIONS ***
-
 import {
   ExchangeInfoSymbol,
   ExchangeInfoSymbolFilter,

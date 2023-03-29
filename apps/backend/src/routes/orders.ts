@@ -109,7 +109,7 @@ router.delete("/:symbol/:orderId", checkIfAdmin, async (req, res) => {
 });
 
 router.delete("/:symbol/:orderListId/oco", checkIfAdmin, async (req, res) => {
-  const orderListId = (req.params.orderListId as string) || "";
+  const orderListId = parseInt(req.params.orderListId || "0");
   const symbol = (req.params.symbol as string) || "";
   if (!orderListId) return res.status(400).send("Order List Id is required");
   if (!symbol) return res.status(400).send("Symbol is required");

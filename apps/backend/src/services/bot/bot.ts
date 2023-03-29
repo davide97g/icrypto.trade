@@ -14,7 +14,7 @@ import { trade } from "./trade";
 import { TradeConfig } from "../../models/bot";
 import { GoodFeedItem } from "../../models/database";
 import { FeedItem } from "../../models/feed";
-import { feedbackUpdate } from "../trading/strategy";
+import { onFeedbackUpdate } from "../trading/strategy";
 
 interface WsFeedItem {
   _id: string;
@@ -139,7 +139,7 @@ const StartLikesWebSocket = async () => {
         const isAlreadyGood = isGood(FEED[data.newsId], config);
         FEED[data.newsId].dislikes = data.dislikes;
         FEED[data.newsId].likes = data.likes;
-        feedbackUpdate(data.newsId, data.likes, data.dislikes);
+        onFeedbackUpdate(data.newsId, data.likes, data.dislikes);
         if (!isAlreadyGood) {
           console.log(data.newsId, "👍", data.likes, "👎", data.dislikes);
           if (isGood(FEED[data.newsId], config))

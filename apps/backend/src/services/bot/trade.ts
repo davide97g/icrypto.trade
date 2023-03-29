@@ -275,6 +275,7 @@ const newTPSLOrder = async (
     exchangeInfoSymbol,
     newOCOOrderRequest,
     ocoOrder.orderListId,
+    Date.now(),
     newsId
   );
 

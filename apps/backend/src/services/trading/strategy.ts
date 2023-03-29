@@ -16,6 +16,7 @@ import { ExchangeInfoSymbol } from "../../models/account";
 import { getNews, getWS } from "../bot/bot";
 import { subscribeSymbolTrade, unsubscribeSymbolTrade } from "../trades";
 import { telegramApi } from "../../connections/telegram";
+import { avgArray } from "../../utils/utils";
 
 const subscribeKlineWS = (symbol: string, interval: BinanceInterval) => {
   const callbacks = {
@@ -50,10 +51,11 @@ export const startStrategy = (
   exchangeInfoSymbol: ExchangeInfoSymbol,
   request: NewOCOOrderRequest,
   orderListId: number,
+  startingTime: number,
   newsId?: string
 ) => {
   const wsRef = subscribeKlineWS(symbol, "1m");
-  addStrategy(symbol, orderListId, request, exchangeInfoSymbol, wsRef, newsId);
+  addStrategy(symbol, orderListId, request, startingTime, exchangeInfoSymbol, wsRef, newsId);
 };
 
 const STRATEGY_MAP = new Map<string, Strategy>(); // LOCAL MAP TO STORE WS REFERENCES
@@ -69,6 +71,7 @@ const addStrategy = async (
   symbol: string,
   orderListId: number,
   request: NewOCOOrderRequest,
+  lastOrderTime: number,
   exchangeInfoSymbol: ExchangeInfoSymbol,
   wsRef: WebSocket,
   newsId?: string
@@ -78,6 +81,7 @@ const addStrategy = async (
   const openKline = klinesRecords[klinesRecords.length - 1];
 
   const openPrice = parseFloat(openKline.closePrice);
+  //openVolume probably not needed since is the volume in the kline until now, not the closing volume: getNewsKline is better
   const openVolume = parseFloat(openKline.volume);
 
   const averageVolume =
@@ -90,12 +94,13 @@ const addStrategy = async (
       if (index === 0) return acc;
       const previousKline = klinesRecords[index - 1];
       const move =
-        (parseFloat(kline.closePrice) - parseFloat(previousKline.closePrice)) /
+        Math.abs(parseFloat(kline.closePrice) - parseFloat(previousKline.closePrice)) /
         parseFloat(previousKline.closePrice);
       return acc + move;
     }, 0.0) / klinesRecords.length;
 
   const news = getNews(newsId);
+  const newsTime = news ? news.time : 0;
 
   const likes = news ? news.likes : 0;
   const dislikes = news ? news.dislikes : 0;
@@ -113,6 +118,7 @@ const addStrategy = async (
         openVolume,
         averageMove,
         averageVolume,
+        newsTime,
       },
       variable: {
         eventTime: 0,
@@ -125,6 +131,7 @@ const addStrategy = async (
         averageVolumeSinceOpenList: [0.0], // ? lista dei volumi dall'apertura
         maxPriceSinceOpen: openPrice, // ? massimo prezzo dall'apertura
         minPriceSinceOpen: openPrice, // ? minimo prezzo dall'apertura
+        lastOrderTime: lastOrderTime,
       },
     },
   };
@@ -173,20 +180,29 @@ const insertData = (strategy: Strategy, kline: Kline, eventTime: number) => {
   if (!strategy.data.length) strategy.data.push(kline);
   else {
     const previous = strategy.data[strategy.data.length - 1];
-    if (previous.startTime === kline.startTime)
+    if (previous.startTime === kline.startTime) {
       strategy.data[strategy.data.length - 1] = kline;
+      //baseAssetVolume and lastMove should replace the last value if the kline is the same
+      //to do this we need to remove the last value from the list
+      strategy.stats.variable.averageMoveSinceOpenList = strategy.stats.variable.averageMoveSinceOpenList.slice(0, -1);
+      strategy.stats.variable.averageVolumeSinceOpenList = strategy.stats.variable.averageVolumeSinceOpenList.slice(0, -1);
+    }
     else strategy.data.push(kline);
   }
 
   const lastPrice = parseFloat(kline.closePrice);
-  const baseAssetVolume = parseFloat(kline.baseAssetVolume);
   const highPrice = parseFloat(kline.highPrice);
   const lowPrice = parseFloat(kline.lowPrice);
+  const baseAssetVolume = parseFloat(kline.baseAssetVolume);
 
   const { stats } = strategy;
-
-  const previousLastPrice = strategy.stats.variable.lastPrice;
-  const lastMove = (lastPrice - previousLastPrice) / previousLastPrice;
+  
+  //lastMove is the difference between the last price and the previous last price, i.e. the closing price of the previous kline
+  const previous = strategy.data.length > 1 ? strategy.data[strategy.data.length - 2] : kline;
+  const previousLastPrice = parseFloat(previous.closePrice);
+  const lastMove = Math.abs(lastPrice - previousLastPrice) / previousLastPrice;
+  
+  const lastOrderTime = strategy.stats.variable.lastOrderTime;
 
   const variableStats: StrategyVariableStats = {
     eventTime,
@@ -195,11 +211,8 @@ const insertData = (strategy: Strategy, kline: Kline, eventTime: number) => {
     lastPrice,
     lastMove,
     lastVolume: baseAssetVolume,
-    averageMoveSinceOpenList: stats.variable.averageMoveSinceOpenList.concat([
-      lastMove,
-    ]),
-    averageVolumeSinceOpenList:
-      stats.variable.averageVolumeSinceOpenList.concat([baseAssetVolume]),
+    averageMoveSinceOpenList: stats.variable.averageMoveSinceOpenList.concat([lastMove]),
+    averageVolumeSinceOpenList: stats.variable.averageVolumeSinceOpenList.concat([baseAssetVolume]),
     maxPriceSinceOpen: Math.max(
       highPrice,
       strategy.stats.variable.maxPriceSinceOpen
@@ -208,6 +221,7 @@ const insertData = (strategy: Strategy, kline: Kline, eventTime: number) => {
       lowPrice,
       strategy.stats.variable.minPriceSinceOpen
     ),
+    lastOrderTime,
   };
   strategy.stats.variable = variableStats;
 };
@@ -221,7 +235,16 @@ const analyzeStrategy = async (strategy: Strategy) => {
     strategy.lastOrderListId.toString(),
     request
   );
+  strategy.stats.variable.lastOrderTime = Date.now();
   telegramApi.sendMessageToDevs("🚀 OCO Order updated");
+};
+
+// function that returns the kline in which the news happened
+const getNewsKline = (strategy: Strategy) => {
+  const { data, stats } = strategy;
+  const { newsTime } = stats.constant;
+  const newsKline = data.find((kline) => (kline.startTime < newsTime && kline.closeTime > newsTime));
+  return newsKline;
 };
 
 const needsUpdate = (strategy: Strategy) => {
@@ -241,6 +264,23 @@ const needsUpdate = (strategy: Strategy) => {
   // 4. Se il volume sta tornando vicino alla sua media
   // 5. Se il volume (in dollari!) si sta spegnendo, diventando sempre meno pronunciato rispetto all’esplosione dovuta alla news
   // TODO: implement this
+
+  //if the volume is less than 2 times the average volume, then update the order because the volume is fading
+  //if (strategy.stats.variable.lastVolume / strategy.stats.constant.averageVolume < 2) return true;
+
+  //if the volume is less than 0.5 times the average volume since open, then update the order because the volume is fading
+  //if (strategy.stats.variable.lastVolume / avgArray(strategy.stats.variable.averageVolumeSinceOpenList) < 0.5) return true;
+
+  //strategies relative to the time
+  const timeSinceLastOCOUpdate = Date.now() - strategy.stats.variable.lastOrderTime;
+  const timeSinceNews = strategy.stats.constant.newsTime === 0 ? 0 : Date.now() - strategy.stats.constant.newsTime;
+
+  console.info("Time since last update:", timeSinceLastOCOUpdate);
+  console.info("Time since the news:", timeSinceNews);
+
+  console.info(strategy.stats);
+  console.info("The number of seconds in the eventTime is:", (strategy.stats.variable.eventTime % (60*1000))/1000);
+
   const takeProfitPriceChange =
     strategy.lastOcoOrderRequest.takeProfitPrice /
     strategy.stats.variable.lastPrice;
@@ -249,6 +289,16 @@ const needsUpdate = (strategy: Strategy) => {
 
 // TODO: implement better strategy to follow up the price
 const createOCOOrderRequest = (strategy: Strategy) => {
+  const firstUpsideMove = (parseFloat(getNewsKline(strategy)!.highPrice) - parseFloat(getNewsKline(strategy)!.openPrice))/parseFloat(getNewsKline(strategy)!.openPrice);
+  const firstDownsideMove = (parseFloat(getNewsKline(strategy)!.lowPrice) - parseFloat(getNewsKline(strategy)!.openPrice))/parseFloat(getNewsKline(strategy)!.openPrice);
+  //first stop loss is at 20% of the first upside move (80% retracement is accettable)
+  const firstStopLoss = parseFloat(getNewsKline(strategy)!.openPrice) * (1 + firstUpsideMove * 0.2);
+
+  const firstVolume = parseFloat(getNewsKline(strategy)!.baseAssetVolume);
+  //if the volume is not significant, then close sooner
+  if (firstVolume/strategy.stats.constant.averageVolume < 2) { }
+
+
   const { tradeConfig } = getWS();
   const takeProfitPercentage = tradeConfig!.takeProfitPercentage / 100;
   const stopLossPercentage = tradeConfig!.stopLossPercentage / 100;

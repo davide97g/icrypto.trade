@@ -74,7 +74,8 @@ router.post("/:symbol/new/oco", checkIfAdmin, async (req, res) => {
         ocoOrder.symbol,
         exchangeInfoSymbol,
         orderRequest,
-        ocoOrder.orderListId
+        ocoOrder.orderListId,
+        Date.now()
       );
       res.send(ocoOrder);
     })

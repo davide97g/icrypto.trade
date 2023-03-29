@@ -53,7 +53,7 @@ export const getWS = () => ({
 });
 
 export const getNews = (newsId?: string) => {
-  return newsId && FEED[newsId];
+  return newsId ? FEED[newsId] : null;
 };
 
 export const startWebSockets = async () => {

@@ -16,7 +16,6 @@ import { ExchangeInfoSymbol } from "../../models/account";
 import { getNews, getWS } from "../bot/bot";
 import { subscribeSymbolTrade, unsubscribeSymbolTrade } from "../trades";
 import { telegramApi } from "../../connections/telegram";
-import { avgArray } from "../../utils/utils";
 
 const subscribeKlineWS = (symbol: string, interval: BinanceInterval) => {
   const callbacks = {
@@ -55,7 +54,15 @@ export const startStrategy = (
   newsId?: string
 ) => {
   const wsRef = subscribeKlineWS(symbol, "1m");
-  addStrategy(symbol, orderListId, request, startingTime, exchangeInfoSymbol, wsRef, newsId);
+  addStrategy(
+    symbol,
+    orderListId,
+    request,
+    startingTime,
+    exchangeInfoSymbol,
+    wsRef,
+    newsId
+  );
 };
 
 const STRATEGY_MAP = new Map<string, Strategy>(); // LOCAL MAP TO STORE WS REFERENCES
@@ -94,8 +101,9 @@ const addStrategy = async (
       if (index === 0) return acc;
       const previousKline = klinesRecords[index - 1];
       const move =
-        Math.abs(parseFloat(kline.closePrice) - parseFloat(previousKline.closePrice)) /
-        parseFloat(previousKline.closePrice);
+        Math.abs(
+          parseFloat(kline.closePrice) - parseFloat(previousKline.closePrice)
+        ) / parseFloat(previousKline.closePrice);
       return acc + move;
     }, 0.0) / klinesRecords.length;
 
@@ -131,7 +139,7 @@ const addStrategy = async (
         averageVolumeSinceOpenList: [0.0], // ? lista dei volumi dall'apertura
         maxPriceSinceOpen: openPrice, // ? massimo prezzo dall'apertura
         minPriceSinceOpen: openPrice, // ? minimo prezzo dall'apertura
-        lastOrderTime: lastOrderTime,
+        lastOrderTime,
       },
     },
   };
@@ -184,10 +192,11 @@ const insertData = (strategy: Strategy, kline: Kline, eventTime: number) => {
       strategy.data[strategy.data.length - 1] = kline;
       //baseAssetVolume and lastMove should replace the last value if the kline is the same
       //to do this we need to remove the last value from the list
-      strategy.stats.variable.averageMoveSinceOpenList = strategy.stats.variable.averageMoveSinceOpenList.slice(0, -1);
-      strategy.stats.variable.averageVolumeSinceOpenList = strategy.stats.variable.averageVolumeSinceOpenList.slice(0, -1);
-    }
-    else strategy.data.push(kline);
+      strategy.stats.variable.averageMoveSinceOpenList =
+        strategy.stats.variable.averageMoveSinceOpenList.slice(0, -1);
+      strategy.stats.variable.averageVolumeSinceOpenList =
+        strategy.stats.variable.averageVolumeSinceOpenList.slice(0, -1);
+    } else strategy.data.push(kline);
   }
 
   const lastPrice = parseFloat(kline.closePrice);
@@ -196,13 +205,12 @@ const insertData = (strategy: Strategy, kline: Kline, eventTime: number) => {
   const baseAssetVolume = parseFloat(kline.baseAssetVolume);
 
   const { stats } = strategy;
-  
+
   //lastMove is the difference between the last price and the previous last price, i.e. the closing price of the previous kline
-  const previous = strategy.data.length > 1 ? strategy.data[strategy.data.length - 2] : kline;
+  const previous =
+    strategy.data.length > 1 ? strategy.data[strategy.data.length - 2] : kline;
   const previousLastPrice = parseFloat(previous.closePrice);
   const lastMove = Math.abs(lastPrice - previousLastPrice) / previousLastPrice;
-  
-  const lastOrderTime = strategy.stats.variable.lastOrderTime;
 
   const variableStats: StrategyVariableStats = {
     eventTime,
@@ -211,8 +219,11 @@ const insertData = (strategy: Strategy, kline: Kline, eventTime: number) => {
     lastPrice,
     lastMove,
     lastVolume: baseAssetVolume,
-    averageMoveSinceOpenList: stats.variable.averageMoveSinceOpenList.concat([lastMove]),
-    averageVolumeSinceOpenList: stats.variable.averageVolumeSinceOpenList.concat([baseAssetVolume]),
+    averageMoveSinceOpenList: stats.variable.averageMoveSinceOpenList.concat([
+      lastMove,
+    ]),
+    averageVolumeSinceOpenList:
+      stats.variable.averageVolumeSinceOpenList.concat([baseAssetVolume]),
     maxPriceSinceOpen: Math.max(
       highPrice,
       strategy.stats.variable.maxPriceSinceOpen
@@ -221,33 +232,36 @@ const insertData = (strategy: Strategy, kline: Kline, eventTime: number) => {
       lowPrice,
       strategy.stats.variable.minPriceSinceOpen
     ),
-    lastOrderTime,
+    lastOrderTime: strategy.stats.variable.lastOrderTime,
   };
   strategy.stats.variable = variableStats;
 };
 
 const analyzeStrategy = async (strategy: Strategy) => {
-  if (!needsUpdate(strategy)) return;
-  const request = createOCOOrderRequest(strategy);
-  console.info("📝 New request", request);
-  await cancelReplaceOCOOrder(
-    request.symbol,
-    strategy.lastOrderListId.toString(),
-    request
-  );
-  strategy.stats.variable.lastOrderTime = Date.now();
-  telegramApi.sendMessageToDevs("🚀 OCO Order updated");
+  const request = tryUpdate(strategy);
+  if (request) {
+    await cancelReplaceOCOOrder(
+      request.symbol,
+      strategy.lastOrderListId.toString(),
+      request
+    );
+    strategy.stats.variable.lastOrderTime = Date.now();
+    telegramApi.sendMessageToDevs("🚀 OCO Order updated");
+  }
 };
 
 // function that returns the kline in which the news happened
 const getNewsKline = (strategy: Strategy) => {
   const { data, stats } = strategy;
   const { newsTime } = stats.constant;
-  const newsKline = data.find((kline) => (kline.startTime < newsTime && kline.closeTime > newsTime));
+  // TODO: change data to historicalData
+  const newsKline = data.find(
+    (kline) => kline.startTime < newsTime && kline.closeTime > newsTime
+  );
   return newsKline;
 };
 
-const needsUpdate = (strategy: Strategy) => {
+const tryUpdate = (strategy: Strategy) => {
   //   Le condizioni con cui giocare sono:
 
   // 1. last_price / *max_price_since_open* > parametro
@@ -272,32 +286,46 @@ const needsUpdate = (strategy: Strategy) => {
   //if (strategy.stats.variable.lastVolume / avgArray(strategy.stats.variable.averageVolumeSinceOpenList) < 0.5) return true;
 
   //strategies relative to the time
-  const timeSinceLastOCOUpdate = Date.now() - strategy.stats.variable.lastOrderTime;
-  const timeSinceNews = strategy.stats.constant.newsTime === 0 ? 0 : Date.now() - strategy.stats.constant.newsTime;
+  const timeSinceLastOCOUpdate =
+    Date.now() - strategy.stats.variable.lastOrderTime;
+  const timeSinceNews =
+    strategy.stats.constant.newsTime === 0
+      ? 0
+      : Date.now() - strategy.stats.constant.newsTime;
 
   console.info("Time since last update:", timeSinceLastOCOUpdate);
   console.info("Time since the news:", timeSinceNews);
 
   console.info(strategy.stats);
-  console.info("The number of seconds in the eventTime is:", (strategy.stats.variable.eventTime % (60*1000))/1000);
+  console.info(
+    "The number of seconds in the eventTime is:",
+    (strategy.stats.variable.eventTime % (60 * 1000)) / 1000
+  );
 
   const takeProfitPriceChange =
     strategy.lastOcoOrderRequest.takeProfitPrice /
     strategy.stats.variable.lastPrice;
-  return takeProfitPriceChange < 1.01; // ? change less than 1%
-};
+  const needsUpdate = takeProfitPriceChange < 1.01; // ? change less than 1%
 
-// TODO: implement better strategy to follow up the price
-const createOCOOrderRequest = (strategy: Strategy) => {
-  const firstUpsideMove = (parseFloat(getNewsKline(strategy)!.highPrice) - parseFloat(getNewsKline(strategy)!.openPrice))/parseFloat(getNewsKline(strategy)!.openPrice);
-  const firstDownsideMove = (parseFloat(getNewsKline(strategy)!.lowPrice) - parseFloat(getNewsKline(strategy)!.openPrice))/parseFloat(getNewsKline(strategy)!.openPrice);
+  if (!needsUpdate) return null;
+
+  const kline = getNewsKline(strategy)!;
+
+  // TODO: implement better strategy to follow up the price
+  const firstUpsideMove =
+    (parseFloat(kline.highPrice) - parseFloat(kline.openPrice)) /
+    parseFloat(kline.openPrice);
+  const firstDownsideMove =
+    (parseFloat(kline.lowPrice) - parseFloat(kline.openPrice)) /
+    parseFloat(kline.openPrice);
   //first stop loss is at 20% of the first upside move (80% retracement is accettable)
-  const firstStopLoss = parseFloat(getNewsKline(strategy)!.openPrice) * (1 + firstUpsideMove * 0.2);
+  const firstStopLoss =
+    parseFloat(kline.openPrice) * (1 + firstUpsideMove * 0.2);
 
-  const firstVolume = parseFloat(getNewsKline(strategy)!.baseAssetVolume);
+  const firstVolume = parseFloat(kline.baseAssetVolume);
   //if the volume is not significant, then close sooner
-  if (firstVolume/strategy.stats.constant.averageVolume < 2) { }
-
+  if (firstVolume / strategy.stats.constant.averageVolume < 2) {
+  }
 
   const { tradeConfig } = getWS();
   const takeProfitPercentage = tradeConfig!.takeProfitPercentage / 100;

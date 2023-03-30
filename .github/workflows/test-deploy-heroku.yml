@@ -34,12 +34,13 @@ jobs:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
           HEROKU_APP_NAME: ${{ secrets.HEROKU_APPLICATION_NAME }}
         run: |
+          # Log application name
+          echo $HEROKU_APP_NAME
+
           curl https://cli-assets.heroku.com/install.sh | sh
           heroku container:login
           tar czvf deploy.tar.gz ./apps/backend/dist
 
-          # Log application name
-          echo $HEROKU_APPLICATION_NAME
 
           # Create a new Heroku release
           response=$(curl -X POST https://api.heroku.com/sources -H "Authorization: Bearer $HEROKU_API_KEY" -H "Accept: application/vnd.heroku+json; version=3")
@@ -50,7 +51,7 @@ jobs:
           curl -X PUT -H "Content-Type:" --data-binary "@deploy.tar.gz" "$put_url"
 
           # Trigger a build with the uploaded tarball
-          build_response=$(curl -X POST https://api.heroku.com/apps/$HEROKU_APPLICATION_NAME/builds \
+          build_response=$(curl -X POST https://api.heroku.com/apps/$HEROKU_APP_NAME/builds \
             -d '{"source_blob": {"url": "'"${get_url}"'", "version": "v1"}}' \
             -H "Authorization: Bearer $HEROKU_API_KEY" \
             -H "Content-Type: application/json" \
@@ -60,4 +61,4 @@ jobs:
 
           # Stream the build logs
           curl -H "Authorization: Bearer $HEROKU_API_KEY" -H "Accept: application/vnd.heroku+json; version=3" \
-            -o - "https://api.heroku.com/apps/$HEROKU_APPLICATION_NAME/builds/$build_id/result" | jq -r '.output_stream_url' | xargs curl -s
+            -o - "https://api.heroku.com/apps/$HEROKU_APP_NAME/builds/$build_id/result" | jq -r '.output_stream_url' | xargs curl -s

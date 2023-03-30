@@ -1,3 +1,4 @@
+//TODO: THIS WILL BE MOVED OUT TO TYPES PACKAGES
 export interface WsNTALikeMessage {
   newsId: string;
   type: "like" | "dislike";

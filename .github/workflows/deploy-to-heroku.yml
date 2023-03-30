@@ -1,0 +1,46 @@
+name: Deploy to Heroku
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 18.14.2
+
+      - name: Install dependencies
+        run: pnpm i
+
+      - name: Change to backend folder
+        run: cd apps/backend
+
+      - name: Build
+        run: pnpm build
+
+      - name: Deploy to Heroku
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+          HEROKU_APP_NAME: ${{ secrets.HEROKU_APPLICATION_NAME }}
+        run: |
+          curl https://cli-assets.heroku.com/install.sh | sh
+          heroku container:login
+          tar czvf deploy.tar.gz ./dist
+          echo "{\"version\":\"$(date +%s)\",\"buildpack\":\"heroku/nodejs\"}" > ./dist/.slugignore
+          heroku plugins:install heroku-slugs
+          heroku slugs:push -a $HEROKU_APPLICATION_NAME deploy.tar.gz
+          heroku releases:create -a $HEROKU_APPLICATION_NAME --message "Deploy from GitHub Actions"

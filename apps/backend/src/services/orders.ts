@@ -72,7 +72,7 @@ export const cancelOrder = async (
 
 export const cancelOCOOrder = async (
   symbol: string,
-  orderListId: string
+  orderListId: number
 ): Promise<BinanceOrderResponse> => {
   return BinanceClient.cancelOCOOrder(symbol, {
     orderListId,

@@ -135,10 +135,19 @@ export const trade = async (
 ) => {
   console.info("Trade", newsId, exchangeInfoSymbol.symbol, tradeConfig);
   try {
+    const tickerPrice = parseFloat(
+      findTickerPrice(exchangeInfoSymbol.symbol, tickersPrice)?.price || "0"
+    );
+
+    if (!tickerPrice)
+      throw new Error(
+        "No ticker price found for symbol: " + exchangeInfoSymbol.symbol
+      );
+
     const marketOrder = await newMarketOrder(
       exchangeInfoSymbol,
       tradeConfig,
-      tickersPrice
+      tickerPrice
     );
     console.info("Market Order", marketOrder);
     const trades = await getBinanceTradesByOrderId(
@@ -156,6 +165,7 @@ export const trade = async (
         exchangeInfoSymbol,
         tradeConfig,
         marketOrder,
+        tickerPrice,
         newsId
       );
       const orderIds = ocoOrder.orders.map((o) => o.orderId);
@@ -185,19 +195,11 @@ export const trade = async (
 const newMarketOrder = async (
   exchangeInfoSymbol: ExchangeInfoSymbol,
   tradeConfig: TradeConfig,
-  tickerPrices: BinanceTicker[]
+  tickerPrice: number
 ) => {
   console.info("New Market Order", exchangeInfoSymbol.symbol);
 
   const precision = exchangeInfoSymbol.quoteAssetPrecision || 8;
-  const tickerPriceObj = findTickerPrice(
-    exchangeInfoSymbol.symbol,
-    tickerPrices
-  );
-  const tickerPrice = roundToNDigits(
-    parseFloat(tickerPriceObj?.price || "0"),
-    precision - 1
-  );
 
   console.info("📈", tickerPrice, exchangeInfoSymbol.symbol);
 
@@ -206,7 +208,12 @@ const newMarketOrder = async (
     tickerPrice,
     precision
   );
-  const quantity = computeQuantity(exchangeInfoSymbol, orderQty, precision);
+  const quantity = computeQuantity(
+    exchangeInfoSymbol,
+    orderQty,
+    tickerPrice,
+    precision
+  );
 
   const newOrderRequest: NewOrderRequest = {
     symbol: exchangeInfoSymbol.symbol,
@@ -224,6 +231,7 @@ const newTPSLOrder = async (
   exchangeInfoSymbol: ExchangeInfoSymbol,
   tradeConfig: TradeConfig,
   marketOrder: Order,
+  tickerPrice: number,
   newsId: string
 ) => {
   console.info("New OCO order", exchangeInfoSymbol.symbol);
@@ -236,6 +244,7 @@ const newTPSLOrder = async (
   const quantity = computeQuantity(
     exchangeInfoSymbol,
     quantityWithCommission,
+    tickerPrice,
     precision
   );
 
@@ -275,6 +284,7 @@ const newTPSLOrder = async (
     exchangeInfoSymbol,
     newOCOOrderRequest,
     ocoOrder.orderListId,
+    Date.now(),
     newsId
   );
 

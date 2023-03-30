@@ -9,12 +9,13 @@ import {
   setDoc,
   where,
 } from "firebase/firestore";
-import { set, get, ref } from "firebase/database";
+import { set, get, ref, remove } from "firebase/database";
 import "firebase/auth";
 import { db, rtdb } from "../config/firebase";
 import { MyTrade } from "../models/binance";
 import { GoodFeedItem, GoodFeedItemStatus, User } from "../models/database";
 import { TradeConfig } from "../models/bot";
+import { Strategy } from "../services/trading/types";
 
 export const DataBaseClient = {
   Account: {
@@ -129,6 +130,75 @@ export const DataBaseClient = {
         console.log(err);
         return false;
       }
+    },
+    Strategy: {
+      getAll: async (): Promise<Map<string, Strategy>> => {
+        try {
+          return await get(ref(rtdb, "strategy"))
+            .then((snapshot) => {
+              const map = new Map<string, Strategy>();
+              if (snapshot.exists()) {
+                const data = snapshot.val();
+                Object.keys(data).forEach((key) => map.set(key, data[key]));
+              } else console.log("No data available");
+              return map;
+            })
+            .catch((error) => {
+              console.error(error);
+              throw new Error("Could not get strategy");
+            });
+        } catch (err) {
+          console.log(err);
+          throw new Error("Could not get strategy");
+        }
+      },
+      get: async (symbol: string) => {
+        try {
+          return await get(ref(rtdb, `strategy/${symbol}`))
+            .then((snapshot) => {
+              if (snapshot.exists()) {
+                return snapshot.val() as Strategy;
+              } else {
+                console.log("No data available");
+                return null;
+              }
+            })
+            .catch((error) => {
+              console.error(error);
+              throw new Error("Could not get strategy");
+            });
+        } catch (err) {
+          console.log(err);
+          throw new Error("Could not get strategy");
+        }
+      },
+      update: async (symbol: string, strategy: Partial<Strategy>) => {
+        try {
+          await set(
+            ref(rtdb, `strategy/${symbol}`),
+            JSON.parse(JSON.stringify(strategy))
+          ).catch((err) => {
+            console.log(err);
+            return false;
+          });
+          return true;
+        } catch (err) {
+          console.log(err);
+          return false;
+        }
+      },
+      delete: async (symbol: string) => {
+        try {
+          await remove(ref(rtdb, `strategy/${symbol}`)).catch((err) => {
+            console.log(err);
+            return false;
+          });
+          return true;
+        } catch (err) {
+          console.log(err);
+          return false;
+        }
+      },
     },
   },
   Symbols: {

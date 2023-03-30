@@ -16,3 +16,6 @@ export const roundToNDigits = (n: number, digits: number) => {
   const multiplier = Math.pow(10, digits);
   return Math.round(n * multiplier) / multiplier;
 };
+
+export const sumArray = (arr: number[]) => arr.reduce((a, b) => a + b, 0);
+export const avgArray = (arr: number[]) => sumArray(arr) / arr.length;

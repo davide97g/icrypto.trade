@@ -1,5 +1,3 @@
-// *** UTILITY FUNCTIONS ***
-
 import {
   ExchangeInfoSymbol,
   ExchangeInfoSymbolFilter,
@@ -49,6 +47,7 @@ export const getPrecision = (sizeString: string, precision: number) => {
 export const computeQuantity = (
   exchangeInfoSymbol: ExchangeInfoSymbol,
   orderQty: number,
+  tickerPrice: number,
   precision: number
 ) => {
   const filterLotSize = findFilterByType(
@@ -73,8 +72,11 @@ export const computeQuantity = (
     filterMinNotional?.minNotional || "10.00000000"
   );
 
-  const safeQty = orderQty - stepSizeValue;
-  const minimumQuantity = Math.max(safeQty, minNotional, minLotSizeQty);
+  // TODO: use full quantity without "-stepSizeValue"
+  const safeQty = Math.min(minNotional / tickerPrice, orderQty - stepSizeValue);
+  const minimumQuantity = Math.max(safeQty, minLotSizeQty);
+  if (minimumQuantity > orderQty)
+    throw new Error(`Quantity error: ${minimumQuantity} > ${orderQty}`);
   const quantity = roundToNDigits(
     Math.min(minimumQuantity, maxLotSizeQty),
     stepSizePrecision

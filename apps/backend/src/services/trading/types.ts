@@ -131,12 +131,25 @@ export interface StrategyStats {
   variable: StrategyVariableStats;
 }
 
+/**
+ * @param wsRef riferimento al websocket
+ * @param newsId id della news
+ * @param exchangeInfoSymbol dati della coppia di valute
+ * @param lastOrderListId id dell’ultimo ordine
+ * @param lastOcoOrderRequest ultima richiesta di ordine
+ * @param lastOcoOrderTime timestamp dell’ultimo ordine
+ * @param data dati delle candele da dopo il market buy
+ * @param history storico delle candele (anche da prima della news, per la precisione 1k minuti prima del market buy)
+ * @param stats statistiche utili per la strategia
+ */
 export interface Strategy {
   wsRef: WebSocket;
   newsId?: string;
   exchangeInfoSymbol: ExchangeInfoSymbol;
   lastOrderListId: number;
   lastOcoOrderRequest: NewOCOOrderRequest;
+  lastOcoOrderTime: number;
   data: Kline[];
+  history: KlineRecord[];
   stats: StrategyStats;
 }

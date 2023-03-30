@@ -72,10 +72,9 @@ export const computeQuantity = (
     filterMinNotional?.minNotional || "10.00000000"
   );
 
-  // const safeQty = orderQty - stepSizeValue; // ? To avoid Binance API error
-  const safeQty = orderQty; // ! test exact quantity
-  const notional = Math.min(minNotional, safeQty * tickerPrice);
-  const minimumQuantity = Math.max(safeQty, notional, minLotSizeQty);
+  // TODO: use full quantity without "-stepSizeValue"
+  const safeQty = Math.min(minNotional / tickerPrice, orderQty - stepSizeValue);
+  const minimumQuantity = Math.max(safeQty, minLotSizeQty);
   if (minimumQuantity > orderQty)
     throw new Error(`Quantity error: ${minimumQuantity} > ${orderQty}`);
   const quantity = roundToNDigits(

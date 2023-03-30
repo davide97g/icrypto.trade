@@ -4,7 +4,7 @@ import {
   checkIfAdmin,
   checkIfAuthenticated,
 } from "../middlewares/auth-middleware";
-import { TradeConfig } from "../models/bot";
+import { TradeConfig } from "icrypto.trade-types/bot";
 import { getWS, startWebSockets, stopWebSockets } from "../services/bot/bot";
 import { getHerokuLogs, startHerokuLogs } from "../services/bot/logs";
 import { getCircularReplacer } from "../utils/utils";

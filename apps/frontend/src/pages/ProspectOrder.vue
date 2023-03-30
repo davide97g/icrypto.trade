@@ -42,10 +42,10 @@
             <LinkOutlined @click="openOrder" />
           </span>
         </p>
-        <p v-if="news?.orderStatus">
+        <p v-if="news?.status">
           Status
-          <a-tag :color="getColor(news?.orderStatus)">{{
-            news?.orderStatus?.toUpperCase()
+          <a-tag :color="getColor(news?.status)">{{
+            news?.status?.toUpperCase()
           }}</a-tag>
         </p>
         <p><strong>Title:</strong> {{ news?.title }}</p>
@@ -69,7 +69,7 @@
         <a-button
           type="danger"
           @click="markAsIgnore"
-          :disabled="!!news?.orderId || news?.orderStatus == 'ignore'"
+          :disabled="!!news?.orderId || news?.status == 'ignore'"
         >
           Mark as Ignore
         </a-button>
@@ -103,8 +103,8 @@ import { message } from "ant-design-vue";
 import { ref } from "vue";
 import { ApiClient } from "../api/server";
 import SymbolSelectionModal from "../components/Orders/SymbolSelectionModal.vue";
-import { BinanceError } from "../models/binance";
-import { News, ProspectOrderStatus } from "../models/feed";
+import { BinanceError } from "icrypto.trade-types/binance";
+import { GoodFeedItem, GoodFeedItemStatus } from "icrypto.trade-types/database";
 import { router } from "../router";
 import {
   setIsLoading,
@@ -115,7 +115,7 @@ import {
 import { CopyOutlined } from "@ant-design/icons-vue";
 import { useBinanceStore } from "../stores/binance";
 
-const news = ref<News>();
+const news = ref<GoodFeedItem>();
 
 const props = defineProps<{
   id: string;
@@ -157,13 +157,15 @@ const addSymbolToNews = (symbol: string) => {
     });
 };
 
-const getColor = (status?: ProspectOrderStatus) => {
+const getColor = (status?: GoodFeedItemStatus) => {
   switch (status) {
-    case "linked":
+    case "success":
       return "green";
-    case "prospect":
+    case "missing":
+    case "unavailable":
       return "yellow";
-    case "error":
+    case "market-error":
+    case "oco-error":
       return "red";
     default:
       return "default";

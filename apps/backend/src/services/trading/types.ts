@@ -1,6 +1,6 @@
-import { NewOCOOrderRequest } from "../../models/orders";
 import { WebSocket } from "ws";
-import { ExchangeInfoSymbol } from "../../models/account";
+import { NewOCOOrderRequest } from "icrypto.trade-types/orders";
+import { ExchangeInfoSymbol } from "icrypto.trade-types/account";
 export interface KlineWS {
   e: string;
   E: number;

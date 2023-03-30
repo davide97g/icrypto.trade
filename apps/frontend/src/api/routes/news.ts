@@ -1,11 +1,11 @@
-import { News } from "../../models/feed";
+import { GoodFeedItem } from "icrypto.trade-types/database";
 import { setIsLoading } from "../../services/utils";
 import { getIdToken } from "../auth";
 import { API, apiHost } from "../server";
 
 const routeName = "news";
 export const NewsRoutes = {
-  get: async (options?: { time?: number }): Promise<News[]> => {
+  get: async (options?: { time?: number }): Promise<GoodFeedItem[]> => {
     setIsLoading(true);
     return await API.get(`${apiHost}/${routeName}`, {
       headers: { authorization: `Bearer ${await getIdToken()}` },
@@ -24,19 +24,19 @@ export const NewsRoutes = {
       .catch((err) => console.error(err))
       .finally(() => setIsLoading(false));
   },
-  getById: async (id: string): Promise<News> => {
+  getById: async (id: string): Promise<GoodFeedItem> => {
     setIsLoading(true);
     return await API.get(`${apiHost}/${routeName}/${id}`, {
       headers: { authorization: `Bearer ${await getIdToken()}` },
     })
-      .then((res) => res.data as News)
+      .then((res) => res.data as GoodFeedItem)
       .catch((err) => {
         console.error(err);
         throw err;
       })
       .finally(() => setIsLoading(false));
   },
-  updateById: async (news: News): Promise<boolean> => {
+  updateById: async (news: GoodFeedItem): Promise<boolean> => {
     setIsLoading(true);
     return await API.post(
       `${apiHost}/${routeName}/${news._id}`,

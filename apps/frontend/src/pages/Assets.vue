@@ -36,10 +36,10 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { ApiClient } from "../api/server";
-import { Account } from "../models/trade";
+import { BinanceAccount } from "icrypto.trade-types/account";
 import { OrdersPageName, router } from "../router";
 
-const account = ref<Account>();
+const account = ref<BinanceAccount>();
 
 const getAssets = () => {
   ApiClient.Account.get().then((res) => {

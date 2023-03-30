@@ -1,6 +1,6 @@
 import { BinanceClient } from "../config/binance";
-import { ExchangeInfoSymbol } from "../models/account";
-import { BinanceError, BinanceTicker } from "../models/binance";
+import { ExchangeInfoSymbol } from "icrypto.trade-types/account";
+import { BinanceError, BinanceTicker } from "icrypto.trade-types/binance";
 import {
   stopWords,
   specialCharacters,

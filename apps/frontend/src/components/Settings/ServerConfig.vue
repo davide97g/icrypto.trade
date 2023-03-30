@@ -75,21 +75,17 @@
 
 <script setup lang="ts">
 import { ref, watch } from "vue";
-import { TradeConfig } from "../../models/trade";
+import { TradeConfig } from "icrypto.trade-types/bot";
 import { ApiClient } from "../../api/server";
 import { message } from "ant-design-vue";
 import { isMobile } from "../../services/utils";
 
 const originalTradeConfig = ref<TradeConfig>({
   feedLimit: 0,
-  feedUpdateInterval: 0,
-  goodNewsUpdateInterval: 0,
-  TTL: 0,
   nLikes: 0,
   nMinutes: 0,
   takeProfitPercentage: 0,
   stopLossPercentage: 0,
-  mockSymbol: false,
   tradeAmount: 0,
 });
 const tradeConfig = ref<TradeConfig>(originalTradeConfig.value);

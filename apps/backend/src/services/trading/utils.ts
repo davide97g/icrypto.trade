@@ -1,9 +1,9 @@
 import {
   ExchangeInfoSymbol,
   ExchangeInfoSymbolFilter,
-} from "../../models/account";
-import { BinanceTicker } from "../../models/binance";
-import { Fill } from "../../models/orders";
+} from "icrypto.trade-types/account";
+import { BinanceTicker } from "icrypto.trade-types/binance";
+import { Fill } from "icrypto.trade-types/orders";
 import { roundToNDigits } from "../../utils/utils";
 
 export const findTickerPrice = (

@@ -11,9 +11,9 @@ import {
   removeBannedSymbols,
 } from "../symbols";
 import { trade } from "./trade";
-import { TradeConfig } from "../../models/bot";
-import { GoodFeedItem } from "../../models/database";
-import { FeedItem } from "../../models/feed";
+import { TradeConfig } from "icrypto.trade-types/bot";
+import { GoodFeedItem } from "icrypto.trade-types/database";
+import { FeedItem } from "icrypto.trade-types/feed";
 import { onFeedbackUpdate } from "../trading/strategy";
 
 interface WsFeedItem {

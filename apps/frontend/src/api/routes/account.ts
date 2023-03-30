@@ -1,11 +1,11 @@
-import { Account } from "../../models/trade";
+import { BinanceAccount } from "icrypto.trade-types/account";
 import { setIsLoading } from "../../services/utils";
 import { getIdToken } from "../auth";
 import { API, apiHost } from "../server";
 
 const routeName = "account";
 export const AccountRoutes = {
-  get: async (): Promise<Account> => {
+  get: async (): Promise<BinanceAccount> => {
     setIsLoading(true);
     return await API.get(`${apiHost}/${routeName}`, {
       headers: { authorization: `Bearer ${await getIdToken()}` },

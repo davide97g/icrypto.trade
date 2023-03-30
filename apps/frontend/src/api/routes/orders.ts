@@ -1,11 +1,11 @@
-import { BinanceError } from "../../models/binance";
+import { BinanceError } from "icrypto.trade-types/binance";
 import {
   BinanceOrderDetails,
   BinanceOrderResponse,
   BinanceOCOOrder,
   NewOCOOrderRequest,
   NewOrderRequest,
-} from "../../models/orders";
+} from "icrypto.trade-types/orders";
 import { setIsLoading } from "../../services/utils";
 import { getIdToken } from "../auth";
 import { API, apiHost } from "../server";

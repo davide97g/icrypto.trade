@@ -1,7 +1,10 @@
 import { Router } from "express";
 import { checkIfAdmin } from "../middlewares/auth-middleware";
-import { BinanceErrorData } from "../models/binance";
-import { NewOCOOrderRequest, NewOrderRequest } from "../models/orders";
+import { BinanceErrorData } from "icrypto.trade-types/binance";
+import {
+  NewOCOOrderRequest,
+  NewOrderRequest,
+} from "icrypto.trade-types/orders";
 import { getExchangeInfoSymbol } from "../services/binance/market";
 import {
   cancelAllOpenOrders,

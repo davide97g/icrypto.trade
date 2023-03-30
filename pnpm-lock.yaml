@@ -46,6 +46,9 @@ importers:
       heroku-client:
         specifier: ^3.1.0
         version: 3.1.0
+      icrypto.trade-types:
+        specifier: '*'
+        version: link:../../packages/types
       node-schedule:
         specifier: ^2.1.1
         version: 2.1.1
@@ -122,6 +125,9 @@ importers:
       firebase:
         specifier: ^9.17.1
         version: 9.17.2
+      icrypto.trade-types:
+        specifier: '*'
+        version: link:../../packages/types
       pinia:
         specifier: ^2.0.31
         version: 2.0.33(typescript@4.9.5)(vue@3.2.47)
@@ -146,7 +152,7 @@ importers:
         version: 4.1.4(sass@1.59.2)
       vite-plugin-pwa:
         specifier: ^0.14.4
-        version: 0.14.4(vite@4.1.4)(workbox-build@6.5.4)(workbox-window@6.5.4)
+        version: 0.14.4(vite@4.1.4)
       vue-pwa-asset-generator:
         specifier: ^1.7.3
         version: 1.7.3
@@ -5463,7 +5469,7 @@ packages:
     engines: {node: '>=8'}
     dependencies:
       '@babel/core': 7.21.3
-      '@babel/parser': 7.21.2
+      '@babel/parser': 7.21.3
       '@istanbuljs/schema': 0.1.3
       istanbul-lib-coverage: 3.2.0
       semver: 6.3.0
@@ -8104,12 +8110,10 @@ packages:
       extsprintf: 1.3.0
     dev: true
 
-  /vite-plugin-pwa@0.14.4(vite@4.1.4)(workbox-build@6.5.4)(workbox-window@6.5.4):
+  /vite-plugin-pwa@0.14.4(vite@4.1.4):
     resolution: {integrity: sha512-M7Ct0so8OlouMkTWgXnl8W1xU95glITSKIe7qswZf1tniAstO2idElGCnsrTJ5NPNSx1XqfTCOUj8j94S6FD7Q==}
     peerDependencies:
       vite: ^3.1.0 || ^4.0.0
-      workbox-build: ^6.5.4
-      workbox-window: ^6.5.4
     dependencies:
       '@rollup/plugin-replace': 5.0.2(rollup@3.19.1)
       debug: 4.3.4
@@ -8120,6 +8124,7 @@ packages:
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:
+      - '@types/babel__core'
       - supports-color
     dev: true
 

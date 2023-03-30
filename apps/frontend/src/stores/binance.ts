@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { ExchangeInfo } from "../models/trade";
+import { ExchangeInfo } from "icrypto.trade-types/account";
 
 export const useBinanceStore = defineStore("binance", {
   state: () => {

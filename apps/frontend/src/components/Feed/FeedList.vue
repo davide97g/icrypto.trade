@@ -68,7 +68,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import { FeedItem } from "../../models/feed";
+import { FeedItem } from "icrypto.trade-types/feed";
 import { CopyOutlined } from "@ant-design/icons-vue";
 import { message } from "ant-design-vue";
 import { copyToClipboard, isMobile } from "../../services/utils";

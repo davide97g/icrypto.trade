@@ -74,8 +74,8 @@ import { computed, ref, watch } from "vue";
 import { ApiClient } from "../api/server";
 import { setIsLoading } from "../services/utils";
 import { router, TradesPageName } from "../router";
-import { Account, ExchangeInfo } from "../models/trade";
-import { BinanceError } from "../models/binance";
+import { BinanceAccount, ExchangeInfo } from "icrypto.trade-types/account";
+import { BinanceError } from "icrypto.trade-types/binance";
 import NewOrderModal from "../components/Orders/NewOrderModal.vue";
 import BinanceTradeList from "../components/Trades/BinanceTradeList.vue";
 import TradeList from "../components/Trades/TradeList.vue";
@@ -88,7 +88,7 @@ const symbol = ref(props.symbol);
 
 const activeKey = ref("trades");
 
-const account = ref<Account>();
+const account = ref<BinanceAccount>();
 const exchangeInfo = ref<ExchangeInfo>();
 
 const asset = computed(() =>

@@ -1,5 +1,5 @@
 import { BinanceClient } from "../../config/binance";
-import { NewOCOOrderRequest } from "../../models/orders";
+import { NewOCOOrderRequest } from "icrypto.trade-types/orders";
 import { cancelOCOOrder, newOCOOrder } from "../orders";
 import { cleanKline } from "./mapping";
 import {
@@ -8,7 +8,7 @@ import {
   Strategy,
   StrategyVariableStats,
 } from "./types";
-import { ExchangeInfoSymbol } from "../../models/account";
+import { ExchangeInfoSymbol } from "icrypto.trade-types/account";
 import { subscribeSymbolTrade, unsubscribeSymbolTrade } from "../trades";
 import { telegramApi } from "../../connections/telegram";
 import {

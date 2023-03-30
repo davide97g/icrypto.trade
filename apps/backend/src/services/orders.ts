@@ -1,7 +1,7 @@
 import { BinanceClient } from "../config/binance";
 import { DataBaseClient } from "../connections/database";
-import { BinanceError } from "../models/binance";
-import { FeedItem } from "../models/feed";
+import { BinanceError } from "icrypto.trade-types/binance";
+import { FeedItem } from "icrypto.trade-types/feed";
 import {
   BinanceOCOOrder,
   BinanceOrderDetails,
@@ -9,7 +9,7 @@ import {
   NewOCOOrderRequest,
   NewOrderRequest,
   Order,
-} from "../models/orders";
+} from "icrypto.trade-types/orders";
 import { getAccount, getExchangeInfo } from "./binance/market";
 import { getBinanceTradesByOrderId } from "./binance/trade";
 

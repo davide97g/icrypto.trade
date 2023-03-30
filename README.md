@@ -13,9 +13,8 @@ Apps:
 
 Packages:
 
-- `tsconfig`: a shared Typescript Configuration
 - `design`: design module for the logo
-- `models`: a shared Typescript Interface module (TO BE DONE)
+- `types`: a shared Typescript Interface module
 
 ### Build
 

@@ -4,11 +4,14 @@ import { getKlines } from "../binance/market";
 import { getNews } from "../bot/bot";
 import { WebSocket } from "ws";
 import { KlineRecord, Strategy } from "./types";
+import { DataBaseClient } from "../../connections/database";
 
-// TODO: convert to RTDB
-export const STRATEGY_MAP = new Map<string, Strategy>(); // LOCAL MAP TO STORE WS REFERENCES
+export const getStrategy = async (symbol: string) => {
+  return DataBaseClient.Bot.Strategy.get(symbol);
+};
 
 export const getStrategyByNewsId = async (newsId: string) => {
+  const STRATEGY_MAP = await DataBaseClient.Bot.Strategy.getAll();
   for (const strategy of STRATEGY_MAP.values()) {
     if (strategy.newsId === newsId) return strategy;
   }
@@ -84,18 +87,16 @@ export const addStrategy = async (
     },
   };
   console.info(strategy.lastOcoOrderRequest, strategy.stats);
-  STRATEGY_MAP.set(symbol, strategy); // TODO: replace with RTDB
+  await DataBaseClient.Bot.Strategy.update(symbol, strategy);
 };
 
 export const updateStrategy = async (
   symbol: string,
   data: Partial<Strategy>
 ) => {
-  const strategy = STRATEGY_MAP.get(symbol);
-  if (!strategy) return;
-  STRATEGY_MAP.set(symbol, { ...strategy, ...data }); // TODO: replace with RTDB
+  return DataBaseClient.Bot.Strategy.update(symbol, data);
 };
 
 export const removeStrategy = async (symbol: string) => {
-  STRATEGY_MAP.delete(symbol); // TODO: replace with RTDB
+  return DataBaseClient.Bot.Strategy.delete(symbol);
 };

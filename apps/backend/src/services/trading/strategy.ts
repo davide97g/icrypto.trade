@@ -8,16 +8,14 @@ import {
   Strategy,
   StrategyVariableStats,
 } from "./types";
-import { computePrice } from "./utils";
 import { ExchangeInfoSymbol } from "../../models/account";
-import { getNews, getWS } from "../bot/bot";
 import { subscribeSymbolTrade, unsubscribeSymbolTrade } from "../trades";
 import { telegramApi } from "../../connections/telegram";
 import {
   addStrategy,
+  getStrategy,
   getStrategyByNewsId,
   removeStrategy,
-  STRATEGY_MAP,
   updateStrategy,
 } from "./proxy";
 import { tryUpdate } from "./update";
@@ -30,10 +28,10 @@ const subscribeKlineWS = (symbol: string, interval: BinanceInterval) => {
     close: () => {
       console.log(`close klines@${symbol}`);
     },
-    message: (msg: string) => {
+    message: async (msg: string) => {
       const kline_raw = JSON.parse(msg);
       const klineData = cleanKline(kline_raw);
-      const strategy = STRATEGY_MAP.get(symbol);
+      const strategy = await getStrategy(klineData.symbol);
       if (!strategy) return;
       onKlineUpdate(strategy, klineData.kline, klineData.eventTime);
     },
@@ -45,7 +43,7 @@ const subscribeKlineWS = (symbol: string, interval: BinanceInterval) => {
 };
 
 export const stopStrategy = async (symbol: string) => {
-  const strategy = STRATEGY_MAP.get(symbol);
+  const strategy = await getStrategy(symbol);
   if (!strategy) return;
   const { wsRef } = strategy;
   BinanceClient.unsubscribe(wsRef);

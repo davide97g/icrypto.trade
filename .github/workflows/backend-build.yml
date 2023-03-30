@@ -1,0 +1,23 @@
+name: Deploy on Heroku
+
+on:
+  push:
+    paths:
+      - apps/backend/**
+    branches:
+      - "!main"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 7
+      - name: Use Node.js 18.4.2
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.14.2
+          cache: "pnpm"
+      - run: cd apps/backend && pnpm i

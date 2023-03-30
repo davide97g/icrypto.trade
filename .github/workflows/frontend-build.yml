@@ -1,0 +1,21 @@
+name: Deploy to Firebase Hosting
+"on":
+  push:
+    paths:
+      - apps/frontend/**
+    branches:
+      - "!main"
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 7
+      - name: Use Node.js 18.4.2
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.14.2
+          cache: "pnpm"
+      - run: cd apps/frontend && pnpm i && pnpm build

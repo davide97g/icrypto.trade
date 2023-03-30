@@ -10,8 +10,7 @@
     "build": "turbo run build",
     "lint": "turbo run lint",
     "dev": "turbo run dev",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "prepare": "husky install"
+    "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },
   "devDependencies": {
     "husky": "^8.0.3",

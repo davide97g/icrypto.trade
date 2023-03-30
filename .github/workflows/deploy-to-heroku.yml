@@ -26,11 +26,8 @@ jobs:
       - name: Install dependencies
         run: pnpm i
 
-      - name: Change to backend folder
-        run: cd apps/backend
-
       - name: Build
-        run: pnpm build
+        run: cd apps/backend && pnpm build
 
       - name: Deploy to Heroku
         env:
@@ -39,7 +36,7 @@ jobs:
         run: |
           curl https://cli-assets.heroku.com/install.sh | sh
           heroku container:login
-          tar czvf deploy.tar.gz ./dist
+          tar czvf deploy.tar.gz ./apps/backend/dist
           echo "{\"version\":\"$(date +%s)\",\"buildpack\":\"heroku/nodejs\"}" > ./dist/.slugignore
           heroku plugins:install heroku-slugs
           heroku slugs:push -a $HEROKU_APPLICATION_NAME deploy.tar.gz

@@ -47,6 +47,7 @@ export const getPrecision = (sizeString: string, precision: number) => {
 export const computeQuantity = (
   exchangeInfoSymbol: ExchangeInfoSymbol,
   orderQty: number,
+  tickerPrice: number,
   precision: number
 ) => {
   const filterLotSize = findFilterByType(
@@ -73,7 +74,8 @@ export const computeQuantity = (
 
   // const safeQty = orderQty - stepSizeValue; // ? To avoid Binance API error
   const safeQty = orderQty; // ! test exact quantity
-  const minimumQuantity = Math.max(safeQty, minNotional, minLotSizeQty);
+  const notional = Math.min(minNotional, safeQty * tickerPrice);
+  const minimumQuantity = Math.max(safeQty, notional, minLotSizeQty);
   if (minimumQuantity > orderQty)
     throw new Error(`Quantity error: ${minimumQuantity} > ${orderQty}`);
   const quantity = roundToNDigits(

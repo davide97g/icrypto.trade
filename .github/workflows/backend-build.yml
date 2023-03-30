@@ -5,7 +5,7 @@ on:
     paths:
       - apps/backend/**
     branches:
-      - "!main"
+      - develop
 
 jobs:
   build:

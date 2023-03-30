@@ -1,8 +1,8 @@
 import axios from "axios";
 import { extractSymbolsFromTitle, removeBannedSymbols } from "./symbols";
-import { FeedItem } from "icrypto.trade-types/feed";
+import { FeedItem } from "../models/feed";
 import { DataBaseClient } from "../connections/database";
-import { TradeConfig } from "icrypto.trade-types/bot";
+import { TradeConfig } from "../models/bot";
 
 let bannedTokens: { symbol: string }[] = [];
 

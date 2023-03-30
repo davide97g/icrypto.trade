@@ -1,4 +1,4 @@
-import { FeedItem } from "icrypto.trade-types/feed";
+import { FeedItem } from "../../models/feed";
 import { setIsLoading } from "../../services/utils";
 import { getIdToken } from "../auth";
 import { API, apiHost } from "../server";

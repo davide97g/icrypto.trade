@@ -1,5 +1,5 @@
 import { DataBaseClient } from "../connections/database";
-import { GoodFeedItem } from "icrypto.trade-types/database";
+import { GoodFeedItem } from "../models/database";
 
 // TODO: move function here from router (decouple db instance from router)
 

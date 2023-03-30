@@ -103,8 +103,8 @@ import { message } from "ant-design-vue";
 import { ref } from "vue";
 import { ApiClient } from "../api/server";
 import SymbolSelectionModal from "../components/Orders/SymbolSelectionModal.vue";
-import { BinanceError } from "icrypto.trade-types/binance";
-import { GoodFeedItem, GoodFeedItemStatus } from "icrypto.trade-types/database";
+import { BinanceError } from "../models/binance";
+import { GoodFeedItem, GoodFeedItemStatus } from "../models/database";
 import { router } from "../router";
 import {
   setIsLoading,

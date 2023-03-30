@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { checkIfAuthenticated } from "../middlewares/auth-middleware";
-import { GoodFeedItem } from "icrypto.trade-types/database";
+import { GoodFeedItem } from "../models/database";
 import { getAll, getById, updateById } from "../services/news";
 
 const router = Router();

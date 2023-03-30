@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { checkIfAdmin } from "../middlewares/auth-middleware";
-import { NewOrderRequest } from "icrypto.trade-types/orders";
+import { NewOrderRequest } from "../models/orders";
 import { getExchangeInfo } from "../services/binance/market";
 import {
   getBinanceTrades,

@@ -1,5 +1,5 @@
 import { BinanceClient } from "../../config/binance";
-import { BinanceError, MyTrade } from "icrypto.trade-types/binance";
+import { BinanceError, MyTrade } from "../../models/binance";
 
 export const getBinanceTrades = async (symbol: string) => {
   return BinanceClient.myTrades(symbol)

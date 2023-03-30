@@ -1,5 +1,5 @@
-import { ExchangeInfoSymbol } from "icrypto.trade-types/account";
-import { NewOCOOrderRequest } from "icrypto.trade-types/orders";
+import { ExchangeInfoSymbol } from "../../models/account";
+import { NewOCOOrderRequest } from "../../models/orders";
 import { getKlines } from "../binance/market";
 import { getNews } from "../bot/bot";
 import { WebSocket } from "ws";

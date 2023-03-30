@@ -1,5 +1,5 @@
-import { ServerLog } from "icrypto.trade-types/bot";
-import { TradeConfig } from "icrypto.trade-types/bot";
+import { ServerLog } from "../../models/bot";
+import { TradeConfig } from "../../models/bot";
 import { setIsLoading } from "../../services/utils";
 import { getIdToken } from "../auth";
 import { API, apiHost } from "../server";

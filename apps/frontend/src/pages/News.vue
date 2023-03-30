@@ -19,7 +19,7 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import { FeedItem } from "icrypto.trade-types/feed";
+import { FeedItem } from "../models/feed";
 import { ApiClient } from "../api/server";
 import FeedList from "../components/Feed/FeedList.vue";
 import NewsList from "../components/Feed/NewsList.vue";

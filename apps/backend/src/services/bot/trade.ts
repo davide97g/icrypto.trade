@@ -1,18 +1,18 @@
 import { WebSocket } from "ws";
 import { BinanceClient } from "../../config/binance";
-import { BinanceTicker } from "icrypto.trade-types/binance";
+import { BinanceTicker } from "../../models/binance";
 import {
   NewOCOOrderRequest,
   NewOrderRequest,
   Order,
-} from "icrypto.trade-types/orders";
+} from "../../models/orders";
 import { roundToNDigits } from "../../utils/utils";
 import { sendErrorMail, sendOrderMail } from "../mail";
 import { newOrder, newOCOOrder } from "../orders";
 import { subscribeSymbolTrade } from "../trades";
 import { DataBaseClient } from "../../connections/database";
-import { ExchangeInfoSymbol } from "icrypto.trade-types/account";
-import { TradeConfig } from "icrypto.trade-types/bot";
+import { ExchangeInfoSymbol } from "../../models/account";
+import { TradeConfig } from "../../models/bot";
 import { getBinanceTradesByOrderId } from "../binance/trade";
 import {
   findTickerPrice,

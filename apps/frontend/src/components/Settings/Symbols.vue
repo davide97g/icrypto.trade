@@ -5,7 +5,7 @@
 </template>
 
 <script setup lang="ts">
-import { ExchangeInfoSymbol } from "icrypto.trade-types/account";
+import { ExchangeInfoSymbol } from "../../models/account";
 
 defineProps<{
   symbols: ExchangeInfoSymbol[];

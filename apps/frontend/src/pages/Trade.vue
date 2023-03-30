@@ -63,7 +63,7 @@
 import { message } from "ant-design-vue";
 import { ref } from "vue";
 import { ApiClient } from "../api/server";
-import { BinanceError, MyTrade } from "icrypto.trade-types/binance";
+import { BinanceError, MyTrade } from "../models/binance";
 import { router, OrdersPageName } from "../router";
 import { loading } from "../services/utils";
 

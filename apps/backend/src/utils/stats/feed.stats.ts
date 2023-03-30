@@ -1,4 +1,4 @@
-import { FeedItem } from "icrypto.trade-types/feed";
+import { FeedItem } from "../../models/feed";
 import { getFeed } from "../../services/feed";
 
 export const feedStats = async () => {

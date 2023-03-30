@@ -12,13 +12,9 @@ import {
 import { set, get, ref, remove } from "firebase/database";
 import "firebase/auth";
 import { db, rtdb } from "../config/firebase";
-import { MyTrade } from "icrypto.trade-types/binance";
-import {
-  GoodFeedItem,
-  GoodFeedItemStatus,
-  User,
-} from "icrypto.trade-types/database";
-import { TradeConfig } from "icrypto.trade-types/bot";
+import { MyTrade } from "../models/binance";
+import { GoodFeedItem, GoodFeedItemStatus, User } from "../models/database";
+import { TradeConfig } from "../models/bot";
 import { Strategy } from "../services/trading/types";
 
 export const DataBaseClient = {

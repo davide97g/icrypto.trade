@@ -1,7 +1,7 @@
 import { env } from "../config/environment";
 import { heroku } from "../config/heroku";
 import EventSource from "eventsource";
-import { ServerLog } from "icrypto.trade-types/bot";
+import { ServerLog } from "../models/bot";
 
 export const getApps = async () => {
   return heroku.get("/apps");

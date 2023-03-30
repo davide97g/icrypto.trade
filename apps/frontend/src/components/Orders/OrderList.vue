@@ -118,7 +118,7 @@
 <script lang="ts" setup>
 import { computed, ref, watch } from "vue";
 import { CopyOutlined, WalletOutlined } from "@ant-design/icons-vue";
-import { BinanceOrderDetails } from "icrypto.trade-types/orders";
+import { BinanceOrderDetails } from "../../models/orders";
 import { copyToClipboard, isMobile, setIsLoading } from "../../services/utils";
 import { OrderPageName, router } from "../../router";
 import { ApiClient } from "../../api/server";

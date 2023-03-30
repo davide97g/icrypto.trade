@@ -1,4 +1,4 @@
-import { GoodFeedItem } from "icrypto.trade-types/database";
+import { GoodFeedItem } from "../../models/database";
 import { setIsLoading } from "../../services/utils";
 import { getIdToken } from "../auth";
 import { API, apiHost } from "../server";

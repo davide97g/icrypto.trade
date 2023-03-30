@@ -1,4 +1,4 @@
-import { NewOCOOrderRequest } from "icrypto.trade-types/orders";
+import { NewOCOOrderRequest } from "../../models/orders";
 import { getNews, getWS } from "../bot/bot";
 import { Strategy } from "./types";
 import { computePrice } from "./utils";

@@ -5,12 +5,12 @@ import {
   BinanceAccount,
   ExchangeInfo,
   ExchangeInfoSymbol,
-} from "icrypto.trade-types/account";
+} from "../../models/account";
 import {
   BinanceError,
   BinanceErrorData,
   BinanceResponse,
-} from "icrypto.trade-types/binance";
+} from "../../models/binance";
 import { BinanceInterval, KlineRecord } from "../trading/types";
 import { buildKlineRecord } from "../trading/mapping";
 

@@ -75,7 +75,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from "vue";
-import { TradeConfig } from "icrypto.trade-types/bot";
+import { TradeConfig } from "../../models/bot";
 import { ApiClient } from "../../api/server";
 import { message } from "ant-design-vue";
 import { isMobile } from "../../services/utils";

@@ -1,6 +1,6 @@
 import { BinanceClient } from "../config/binance";
 import { DataBaseClient } from "../connections/database";
-import { BinanceTradeStream } from "icrypto.trade-types/binance";
+import { BinanceTradeStream } from "../models/binance";
 import { getBinanceTradesByOrderId } from "./binance/trade";
 import { stopStrategy } from "./trading/strategy";
 

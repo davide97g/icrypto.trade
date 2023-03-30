@@ -50,7 +50,7 @@
 import { message } from "ant-design-vue";
 import { computed, ref } from "vue";
 import { ApiClient } from "../../api/server";
-import { GoodFeedItem } from "icrypto.trade-types/database";
+import { GoodFeedItem } from "../../models/database";
 import { router } from "../../router";
 import { isMobile, setIsLoading } from "../../services/utils";
 

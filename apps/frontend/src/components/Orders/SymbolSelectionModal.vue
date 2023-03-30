@@ -29,7 +29,7 @@
 <script setup lang="ts">
 import { message } from "ant-design-vue";
 import { ref, watch } from "vue";
-import { ExchangeInfoSymbol } from "icrypto.trade-types/account";
+import { ExchangeInfoSymbol } from "../../models/account";
 
 interface SymbolOption {
   symbol: string;

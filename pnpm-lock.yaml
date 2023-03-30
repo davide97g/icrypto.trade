@@ -46,9 +46,6 @@ importers:
       heroku-client:
         specifier: ^3.1.0
         version: 3.1.0
-      icrypto.trade-types:
-        specifier: '*'
-        version: link:../../packages/types
       node-schedule:
         specifier: ^2.1.1
         version: 2.1.1
@@ -125,9 +122,6 @@ importers:
       firebase:
         specifier: ^9.17.1
         version: 9.17.2
-      icrypto.trade-types:
-        specifier: '*'
-        version: link:../../packages/types
       pinia:
         specifier: ^2.0.31
         version: 2.0.33(typescript@4.9.5)(vue@3.2.47)
@@ -162,8 +156,6 @@ importers:
       workbox-precaching:
         specifier: ^6.5.4
         version: 6.5.4
-
-  packages/tsconfig: {}
 
   packages/types: {}
 

@@ -88,7 +88,7 @@ import { ApiClient } from "../../api/server";
 import { setIsLoading } from "../../services/utils";
 import { CopyOutlined, WalletOutlined } from "@ant-design/icons-vue";
 import { router, TradePageName } from "../../router";
-import { MyTrade } from "icrypto.trade-types/binance";
+import { MyTrade } from "../../models/binance";
 
 const props = defineProps<{
   symbol?: string;

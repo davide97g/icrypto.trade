@@ -86,14 +86,11 @@
 
 <script setup lang="ts">
 import { ref, watch } from "vue";
-import { ExchangeInfoSymbol } from "icrypto.trade-types/account";
+import { ExchangeInfoSymbol } from "../../models/account";
 import { ApiClient } from "../../api/server";
 import { message } from "ant-design-vue";
-import {
-  NewOCOOrderRequest,
-  NewOrderRequest,
-} from "icrypto.trade-types/orders";
-import { OrderSide, OrderType } from "icrypto.trade-types/types";
+import { NewOCOOrderRequest, NewOrderRequest } from "../../models/orders";
+import { OrderSide, OrderType } from "../../models/types";
 
 const props = defineProps<{
   visible: boolean;

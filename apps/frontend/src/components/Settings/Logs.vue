@@ -17,7 +17,7 @@
 import { message } from "ant-design-vue";
 import { computed, ref } from "vue";
 import { ApiClient } from "../../api/server";
-import { ServerLog } from "icrypto.trade-types/bot";
+import { ServerLog } from "../../models/bot";
 import { isMobile } from "../../services/utils";
 
 const logs = ref<ServerLog[]>([]);

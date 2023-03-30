@@ -23,7 +23,7 @@
 import { DeleteFilled } from "@ant-design/icons-vue";
 import { ref } from "vue";
 // import { ApiClient } from "../api/server";
-// import { Token } from "icrypto.trade-types/token";
+// import { Token } from "../../models/token";
 
 import {
   collection,

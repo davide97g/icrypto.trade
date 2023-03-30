@@ -90,7 +90,7 @@ import { ApiClient } from "../api/server";
 import NewOrderModal from "../components/Orders/NewOrderModal.vue";
 import OrderList from "../components/Orders/OrderList.vue";
 import OrderOCOList from "../components/Orders/OrderOCOList.vue";
-import { BinanceAccount } from "icrypto.trade-types/account";
+import { BinanceAccount } from "../models/account";
 import { OrdersPageName, router } from "../router";
 import { loading, setIsLoading } from "../services/utils";
 import { useBinanceStore } from "../stores/binance";

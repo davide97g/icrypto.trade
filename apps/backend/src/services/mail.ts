@@ -1,10 +1,10 @@
 import { env } from "../config/environment";
 import { ADDRESSES, MailClient, SENDER } from "../config/email";
 import { telegramApi } from "../connections/telegram";
-import { BinanceOrderResult, Order } from "icrypto.trade-types/orders";
-import { BinanceOCOOrder } from "icrypto.trade-types/orders";
+import { BinanceOrderResult, Order } from "../models/orders";
+import { BinanceOCOOrder } from "../models/orders";
 import { getCircularReplacer } from "../utils/utils";
-import { GoodFeedItem } from "icrypto.trade-types/database";
+import { GoodFeedItem } from "../models/database";
 
 // ? Generic template for sending an email
 const sendMail = async (subject: string, content: string) => {

@@ -1,5 +1,5 @@
-import { BinanceError, MyTrade } from "icrypto.trade-types/binance";
-import { ExchangeInfo } from "icrypto.trade-types/account";
+import { BinanceError, MyTrade } from "../../models/binance";
+import { ExchangeInfo } from "../../models/account";
 import { setIsLoading } from "../../services/utils";
 import { getIdToken } from "../auth";
 import { API, apiHost } from "../server";

@@ -1,4 +1,4 @@
-import { BinanceAccount } from "icrypto.trade-types/account";
+import { BinanceAccount } from "../../models/account";
 import { setIsLoading } from "../../services/utils";
 import { getIdToken } from "../auth";
 import { API, apiHost } from "../server";

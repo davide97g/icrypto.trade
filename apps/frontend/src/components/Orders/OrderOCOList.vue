@@ -64,7 +64,7 @@ import { copyToClipboard, isMobile, setIsLoading } from "../../services/utils";
 import { OCOOrderPageName, router } from "../../router";
 import { ApiClient } from "../../api/server";
 import { message } from "ant-design-vue";
-import { BinanceOCOOrder } from "icrypto.trade-types/orders";
+import { BinanceOCOOrder } from "../../models/orders";
 
 const props = defineProps<{
   symbol?: string;

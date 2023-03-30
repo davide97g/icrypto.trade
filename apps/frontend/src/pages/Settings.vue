@@ -24,7 +24,7 @@ import BannedTokens from "../components/Settings/BannedTokens.vue";
 import Logs from "../components/Settings/Logs.vue";
 import ServerConfig from "../components/Settings/ServerConfig.vue";
 import Symbols from "../components/Settings/Symbols.vue";
-import { ExchangeInfo } from "icrypto.trade-types/account";
+import { ExchangeInfo } from "../models/account";
 
 const activeKey = ref("server-config");
 

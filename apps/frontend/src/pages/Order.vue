@@ -67,8 +67,8 @@
 import { message } from "ant-design-vue";
 import { ref } from "vue";
 import { ApiClient } from "../api/server";
-import { BinanceError } from "icrypto.trade-types/binance";
-import { BinanceOrderDetails } from "icrypto.trade-types/orders";
+import { BinanceError } from "../models/binance";
+import { BinanceOrderDetails } from "../models/orders";
 import { loading } from "../services/utils";
 
 const order = ref<BinanceOrderDetails>();

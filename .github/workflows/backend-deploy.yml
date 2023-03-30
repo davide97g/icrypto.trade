@@ -2,6 +2,10 @@ name: Deploy on Heroku
 
 on:
   push:
+    paths:
+      - apps/backend/**
+    branches:
+      - main
 
 jobs:
   deploy:
@@ -14,3 +18,4 @@ jobs:
           heroku_api_key: ${{secrets.HEROKU_API_KEY}}
           heroku_app_name: ${{secrets.HEROKU_APPLICATION_NAME}}
           heroku_email: ${{secrets.HEROKU_EMAIL}}
+          appdir: apps/backend

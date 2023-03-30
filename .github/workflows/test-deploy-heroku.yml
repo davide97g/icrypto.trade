@@ -36,7 +36,7 @@ jobs:
         run: |
           curl https://cli-assets.heroku.com/install.sh | sh
           heroku container:login
-          tar czvf deploy.tar.gz ./dist
+          tar czvf deploy.tar.gz ./apps/backend/dist
 
           # Log application name
           echo $HEROKU_APPLICATION_NAME

@@ -37,7 +37,6 @@ jobs:
           curl https://cli-assets.heroku.com/install.sh | sh
           heroku container:login
           tar czvf deploy.tar.gz ./apps/backend/dist
-          echo "{\"version\":\"$(date +%s)\",\"buildpack\":\"heroku/nodejs\"}" > ./dist/.slugignore
           heroku plugins:install heroku-slugs
           heroku slugs:push -a $HEROKU_APPLICATION_NAME deploy.tar.gz
           heroku releases:create -a $HEROKU_APPLICATION_NAME --message "Deploy from GitHub Actions"

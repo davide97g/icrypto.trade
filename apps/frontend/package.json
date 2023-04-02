@@ -9,7 +9,7 @@
     "build": "vue-tsc && vite build",
     "lint": "vue-tsc",
     "preview": "vite preview",
-    "pwa:generate:icons": "npx vue-pwa-asset-generator -a ./src/assets/logo.png -o public/img/icons --no-manifest"
+    "pwa:generate:icons": "npx vue-pwa-asset-generator -a ./src/assets/logo.png -o public/img/icons --no-manifest -b '#202020'"
   },
   "dependencies": {
     "@ant-design/icons-vue": "6.1.0",

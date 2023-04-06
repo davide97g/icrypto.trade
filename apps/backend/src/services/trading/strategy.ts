@@ -85,6 +85,7 @@ export const onFeedbackUpdate = async (
 };
 
 const onKlineUpdate = (strategy: Strategy, kline: Kline, eventTime: number) => {
+  if (!strategy.data) strategy.data = [];
   if (!strategy.data.length) strategy.data.push(kline);
   else {
     const previous = strategy.data[strategy.data.length - 1];
@@ -112,7 +113,9 @@ const onKlineUpdate = (strategy: Strategy, kline: Kline, eventTime: number) => {
   const previous =
     strategy.data.length > 1 ? strategy.data[strategy.data.length - 2] : kline;
   const previousOpenPrice = parseFloat(previous.openPrice);
-  const lastMove = Math.abs(parseFloat(previous.closePrice) - previousOpenPrice) / previousOpenPrice;
+  const lastMove =
+    Math.abs(parseFloat(previous.closePrice) - previousOpenPrice) /
+    previousOpenPrice;
 
   const variableStats: StrategyVariableStats = {
     eventTime,

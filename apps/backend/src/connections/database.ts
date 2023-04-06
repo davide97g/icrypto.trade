@@ -173,6 +173,7 @@ export const DataBaseClient = {
         }
       },
       update: async (symbol: string, strategy: Partial<Strategy>) => {
+        strategy.wsRef = undefined;
         try {
           await set(
             ref(rtdb, `strategy/${symbol}`),

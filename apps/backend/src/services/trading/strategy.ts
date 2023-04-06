@@ -106,11 +106,13 @@ const onKlineUpdate = (strategy: Strategy, kline: Kline, eventTime: number) => {
 
   const { stats } = strategy;
 
-  //lastMove is the difference between the last price and the previous last price, i.e. the closing price of the previous kline
+  //lastMove is the difference between the previous close price and the previous open price
+  //lastMove can not be refered to current kline because it is not closed yet and we can not extrapolate uniformly
+  //with the volume we can suppose that the distribution during the 60 seconds is uniform, with the move we can not
   const previous =
     strategy.data.length > 1 ? strategy.data[strategy.data.length - 2] : kline;
-  const previousLastPrice = parseFloat(previous.closePrice);
-  const lastMove = Math.abs(lastPrice - previousLastPrice) / previousLastPrice;
+  const previousOpenPrice = parseFloat(previous.openPrice);
+  const lastMove = Math.abs(parseFloat(previous.closePrice) - previousOpenPrice) / previousOpenPrice;
 
   const variableStats: StrategyVariableStats = {
     eventTime,

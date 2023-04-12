@@ -85,6 +85,7 @@ export const onFeedbackUpdate = async (
 };
 
 const onKlineUpdate = (strategy: Strategy, kline: Kline, eventTime: number) => {
+  if (!strategy.data) strategy.data = [];
   if (!strategy.data.length) strategy.data.push(kline);
   else {
     const previous = strategy.data[strategy.data.length - 1];
@@ -102,15 +103,26 @@ const onKlineUpdate = (strategy: Strategy, kline: Kline, eventTime: number) => {
   const lastPrice = parseFloat(kline.closePrice);
   const highPrice = parseFloat(kline.highPrice);
   const lowPrice = parseFloat(kline.lowPrice);
-  const baseAssetVolume = parseFloat(kline.baseAssetVolume);
 
   const { stats } = strategy;
 
-  //lastMove is the difference between the last price and the previous last price, i.e. the closing price of the previous kline
+  //lastMove is the difference between the previous close price and the previous open price
+  //lastMove can not be refered to current kline because it is not closed yet and we can not extrapolate uniformly
+  //with the volume we can suppose that the distribution during the 60 seconds is uniform, with the move we can not
   const previous =
     strategy.data.length > 1 ? strategy.data[strategy.data.length - 2] : kline;
-  const previousLastPrice = parseFloat(previous.closePrice);
-  const lastMove = Math.abs(lastPrice - previousLastPrice) / previousLastPrice;
+  const previousOpenPrice = parseFloat(previous.openPrice);
+  const lastMove =
+    Math.abs(parseFloat(previous.closePrice) - previousOpenPrice) /
+    previousOpenPrice;
+
+  //regarding the volume, it's better to update the last volume only if the kline has started not too recently, i.e. the seconds in the event time are >10
+  //this is to adjust only when the eventTime is less than the closeTime of the kline, i.e. the kline is still open
+  //when the kline closes, a last onKlineUpdate is called but with eventTime > closeTime and eventTime really close to % 60*1000. That would cancel the last data
+  const baseAssetVolume =
+    eventTime % (60 * 1000) > 10 * 1000 || eventTime > kline.closeTime
+      ? parseFloat(kline.baseAssetVolume)
+      : parseFloat(previous.baseAssetVolume);
 
   const variableStats: StrategyVariableStats = {
     eventTime,

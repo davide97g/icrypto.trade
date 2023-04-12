@@ -4,14 +4,17 @@ import { getKlines } from "../binance/market";
 import { getNews } from "../bot/bot";
 import { WebSocket } from "ws";
 import { KlineRecord, Strategy } from "./types";
-import { DataBaseClient } from "../../connections/database";
+// import { DataBaseClient } from "../../connections/database";
+
+const STRATEGY_MAP = new Map<string, Strategy>();
 
 export const getStrategy = async (symbol: string) => {
-  return DataBaseClient.Bot.Strategy.get(symbol);
+  return STRATEGY_MAP.get(symbol);
+  // return DataBaseClient.Bot.Strategy.get(symbol);
 };
 
 export const getStrategyByNewsId = async (newsId: string) => {
-  const STRATEGY_MAP = await DataBaseClient.Bot.Strategy.getAll();
+  // const STRATEGY_MAP = await DataBaseClient.Bot.Strategy.getAll();
   for (const strategy of STRATEGY_MAP.values()) {
     if (strategy.newsId === newsId) return strategy;
   }
@@ -79,24 +82,30 @@ export const addStrategy = async (
         lastPrice: openPrice, // ? ultimo prezzo = prezzo di apertura
         lastVolume: openVolume, // ? ultimo volume = volume di apertura
         lastMove: 0.0, // ? partiamo da un cambiamento nullo
-        averageMoveSinceOpenList: [0.0], // ? lista dei cambiamenti dall'apertura
-        averageVolumeSinceOpenList: [0.0], // ? lista dei volumi dall'apertura
+        averageMoveSinceOpenList: [], // ? lista dei cambiamenti dall'apertura
+        averageVolumeSinceOpenList: [], // ? lista dei volumi dall'apertura
         maxPriceSinceOpen: openPrice, // ? massimo prezzo dall'apertura
         minPriceSinceOpen: openPrice, // ? minimo prezzo dall'apertura
       },
     },
   };
   console.info(strategy.lastOcoOrderRequest, strategy.stats);
-  await DataBaseClient.Bot.Strategy.update(symbol, strategy);
+  STRATEGY_MAP.set(symbol, strategy);
+  // await DataBaseClient.Bot.Strategy.update(symbol, strategy);
 };
 
 export const updateStrategy = async (
   symbol: string,
   data: Partial<Strategy>
 ) => {
-  return DataBaseClient.Bot.Strategy.update(symbol, data);
+  // return DataBaseClient.Bot.Strategy.update(symbol, data);
+  const strategy = STRATEGY_MAP.get(symbol);
+  if (!strategy) return;
+  const newStrategy = { ...strategy, ...data };
+  STRATEGY_MAP.set(symbol, newStrategy);
 };
 
 export const removeStrategy = async (symbol: string) => {
-  return DataBaseClient.Bot.Strategy.delete(symbol);
+  // return DataBaseClient.Bot.Strategy.delete(symbol);
+  STRATEGY_MAP.delete(symbol);
 };

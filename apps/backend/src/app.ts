@@ -12,6 +12,7 @@ import bot from "./routes/bot";
 import "./config/telegram";
 import { env } from "./config/environment";
 import { telegramApi } from "./connections/telegram";
+import { cleanResponse } from "./utils/utils";
 
 const packageJson = require("../package.json");
 
@@ -72,6 +73,16 @@ app.use("/trades", trades);
 app.use("/orders", orders);
 
 app.use("/bot", bot);
+
+// ? intercept all responses and clean them with circular replacer
+app.use((req, res, next) => {
+  const oldSend = res.send;
+  res.send = (data) => {
+    res.send = oldSend;
+    return res.send(cleanResponse(data));
+  };
+  next();
+});
 
 // *** SERVER LISTEN ***)
 

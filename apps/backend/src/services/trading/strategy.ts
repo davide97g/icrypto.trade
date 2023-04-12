@@ -103,7 +103,6 @@ const onKlineUpdate = (strategy: Strategy, kline: Kline, eventTime: number) => {
   const lastPrice = parseFloat(kline.closePrice);
   const highPrice = parseFloat(kline.highPrice);
   const lowPrice = parseFloat(kline.lowPrice);
-  const baseAssetVolume = parseFloat(kline.baseAssetVolume);
 
   const { stats } = strategy;
 
@@ -116,6 +115,12 @@ const onKlineUpdate = (strategy: Strategy, kline: Kline, eventTime: number) => {
   const lastMove =
     Math.abs(parseFloat(previous.closePrice) - previousOpenPrice) /
     previousOpenPrice;
+
+  //regarding the volume, it's better to update the last volume only if the kline has started not too recently, i.e. the seconds in the event time are >10
+  //this is to adjust only when the eventTime is less than the closeTime of the kline, i.e. the kline is still open
+  //when the kline closes, a last onKlineUpdate is called but with eventTime > closeTime and eventTime really close to % 60*1000. That would cancel the last data
+  const baseAssetVolume = ((eventTime % (60 * 1000)) > 10 *1000 || eventTime>kline.closeTime) ? 
+                          parseFloat(kline.baseAssetVolume) : parseFloat(previous.baseAssetVolume);
 
   const variableStats: StrategyVariableStats = {
     eventTime,

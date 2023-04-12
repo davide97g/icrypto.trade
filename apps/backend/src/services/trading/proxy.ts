@@ -82,8 +82,8 @@ export const addStrategy = async (
         lastPrice: openPrice, // ? ultimo prezzo = prezzo di apertura
         lastVolume: openVolume, // ? ultimo volume = volume di apertura
         lastMove: 0.0, // ? partiamo da un cambiamento nullo
-        averageMoveSinceOpenList: [0.0], // ? lista dei cambiamenti dall'apertura
-        averageVolumeSinceOpenList: [0.0], // ? lista dei volumi dall'apertura
+        averageMoveSinceOpenList: [], // ? lista dei cambiamenti dall'apertura
+        averageVolumeSinceOpenList: [], // ? lista dei volumi dall'apertura
         maxPriceSinceOpen: openPrice, // ? massimo prezzo dall'apertura
         minPriceSinceOpen: openPrice, // ? minimo prezzo dall'apertura
       },
